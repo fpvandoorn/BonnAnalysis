@@ -1,0 +1,30 @@
+\chapter{Plancherel's Theorem}
+\label{chap:plancherel}
+
+
+\begin{lemma}
+  \label{lem:plancherel}
+  \uses{}
+  \lean{MeasureTheory.memℒp_fourierIntegral, MeasureTheory.snorm_fourierIntegral} % the full Lean name this corresponds to (can be a comma-separated list)
+  \leanok % the *statement* of the lemma is formalized
+  Let $V$ be a finite-dimensional inner product space over $\R$ and let $E$ be a normed space over $\C$. If $f : V \to C$ is in $L^1(V,E)\cap L^2(V,E)$ and let $\widehat{f}$ be the Fourier transform of $f$. Then $\widehat{f}\in L^2(V,E)$ and
+  \[\|\widehat{f}\|_{L^2} = \|f\|_{L^2}.\]
+  \end{lemma}
+    \begin{proof}
+    % \uses{} % Put any results used in the proof but not in the statement here
+    % \leanok % uncomment if the lemma has been proven
+    Write proof here
+\end{proof}
+
+\begin{corollary}
+  \label{lem:reparametrization}
+  \uses{lem:plancherel} % the (list of) LaTeX labels of the lemmas that are used for this result
+  \lean{MeasureTheory.fourierIntegralL2} % the full Lean name this corresponds to (can be a comma-separated list)
+  \leanok % the *statement* of the lemma is formalized
+  Let $V$ be a finite-dimensional inner product space over $\R$ and let $E$ be a normed space over $\C$. The Fourier transform induces a continuous linear map $L^2(V,E) \to L^2(V,E)$.
+  \end{corollary}
+  \begin{proof}
+    % \uses{} % Put any results used in the proof but not in the statement here
+    % \leanok % uncomment if the lemma has been proven
+    Write proof here
+\end{proof}
