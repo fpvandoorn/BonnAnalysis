@@ -1,6 +1,10 @@
 # Collaborative Analysis Formalisation seminar
 For the course at Bonn SuSe 24.
 
+* We will use a private channel on the [Lean Zulip](https://leanprover.zulipchat.com/) to coordinate.
+* [Blueprint](http://florisvandoorn.com/BonnAnalysis/blueprint/)
+* [Blueprint as pdf](http://florisvandoorn.com/BonnAnalysis/blueprint.pdf)
+
 ## Installation
 
 Note: To get this repository, you will need to download Lean's mathematical library, which takes about 5 GB of storage space.
@@ -56,3 +60,29 @@ Note: To get this repository, you will need to download Lean's mathematical libr
 
 * Test that everything is working by opening `BonnAnalysis/Test.lean`.
   It is normal if it takes 10-60 seconds for Lean to start up.
+
+## Building the blueprint
+
+To test the Blueprint locally, you can compile `print.tex` using XeLaTeX. If you have the Python package `invoke` you can also run `inv bp`.
+If you feel adventurous and want to build the web version of the blueprint locally, you need to install some packages by following the instructions [here](https://pypi.org/project/leanblueprint/). But if the pdf builds locally, you can just make a pull request and use the online blueprint.
+
+## Making a pull request
+
+* Update this repository to the latest version (run `git pull` or `git fetch` + `git merge` or their equivalents using VSCode source control).
+
+* Switch to a branch. You can create a new branch using `git switch -c mynewbranch` or use `... > Checkout to > Create new branch` in VSCode. (This can also be done after the next step if you forget.)
+
+* Write some Lean code
+  - Try to follow the style guide: https://leanprover-community.github.io/contribute/style.html
+  - Make sure it compiles
+
+* Push your branch to your fork of this repository
+  - Using the terminal you first have to create a fork on Github and use `git remote add` to add this fork
+  - Using VSCode this fork automatically created for you
+
+* Open a pull request
+  - Just after you push [this page](https://github.com/fpvandoorn/BonnAnalysis) will have a message on the top prompting you to open a pull request.
+
+* If it builds, I'll merge it.
+
+Reminder: Some additional details can be found in the instructions of the LeanCourse repository: https://github.com/fpvandoorn/LeanCourse23/blob/master/LeanCourse/Project/README.md
