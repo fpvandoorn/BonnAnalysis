@@ -8,13 +8,11 @@ usemathjax: true
 
 {% include mathjax.html %}
 
-# Carleson's theorem
+# Bonn Analysis Seminar
 
-WIP formalization of a generalized Carleson's theorem
-
-* [Blueprint of the proof](https://florisvandoorn.com/carleson/blueprint/)
-* [Blueprint (pdf)](https://florisvandoorn.com/carleson/blueprint.pdf)
-* [Documentation of the methods](https://florisvandoorn.com/carleson/docs/)
+* [Blueprint of the proof](https://florisvandoorn.com/BonnAnalysis/blueprint/)
+* [Blueprint (pdf)](https://florisvandoorn.com/BonnAnalysis/blueprint.pdf)
+* [Documentation of the methods](https://florisvandoorn.com/BonnAnalysis/docs/)
 
 ## Build the Lean files
 

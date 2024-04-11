@@ -18,7 +18,7 @@ jobs:
         if: always()
         run: |
           ! (find BonnAnalysis -name "*.lean" -type f -exec grep -E -H -n '^.{101,}$' {} \; | grep -v -E 'https?://')
-
+BonnAnalysis
   build_project:
     runs-on: ubuntu-latest
     name: Build project
@@ -35,7 +35,7 @@ jobs:
         run: ~/.elan/bin/lake -Kenv=dev exe cache get || true
 
       - name: Build project
-        run: ~/.elan/bin/lake -Kenv=dev build Carleson
+        run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis
 
       - name: Cache mathlib docs
         uses: actions/cache@v3
@@ -46,7 +46,7 @@ jobs:
             DocGen4-
 
       - name: Build documentation
-        run: ~/.elan/bin/lake -Kenv=dev build Carleson:docs
+        run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs
 
       - name: Install Python
         uses: actions/setup-python@v4
