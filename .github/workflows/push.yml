@@ -18,7 +18,7 @@ jobs:
         if: always()
         run: |
           ! (find BonnAnalysis -name "*.lean" -type f -exec grep -E -H -n '^.{101,}$' {} \; | grep -v -E 'https?://')
-BonnAnalysis
+
   build_project:
     runs-on: ubuntu-latest
     name: Build project

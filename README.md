@@ -32,17 +32,17 @@ Note: To get this repository, you will need to download Lean's mathematical libr
 
 * Open a terminal (I recommend `git bash` on Windows, which was installed as part of git in the first step).
 
-* Use `cd` to navigate to a directory where you would like to create the `LeanInRome` folder.
+* Use `cd` to navigate to a directory where you would like to create the `BonnAnalysis` folder.
 
-* Run `git clone https://github.com/fpvandoorn/LeanInRome.git`.
+* Run `git clone https://github.com/fpvandoorn/BonnAnalysis.git`.
 
-* Run `cd LeanInRome`
+* Run `cd BonnAnalysis`
 
 * Run `lake exe cache get!`
   * This downloads mathlib, and will take a bit of time
   * On Windows, if you get an error that starts with `curl: (35) schannel: next InitializeSecurityContext failed` it is probably your antivirus program that doesn't like that we're downloading many files. The easiest solution is to temporarily disable your antivirus program.
 
-* Run `lake build +LeanInRome.Common`
+* Run `lake build +BonnAnalysis.Common`
   * This should take less than 1 minute. If you get more than a few lines of output, then you're rebuilding Mathlib from scratch, which means that the previous step went wrong. You can quit the execution and ask for help.
 
 * Launch VS Code, either through your application menu or by typing
@@ -52,7 +52,7 @@ Note: To get this repository, you will need to download Lean's mathematical libr
 
 * If you launched VS Code from a menu, on the main screen, or in the File menu,
   click "Open folder" (just "Open" on a Mac), and choose the folder
-  `LeanInRome` (*not* one of its subfolders).
+  `BonnAnalysis` (*not* one of its subfolders).
 
-* Test that everything is working by opening `LeanInRome/Test.lean`.
+* Test that everything is working by opening `BonnAnalysis/Test.lean`.
   It is normal if it takes 10-60 seconds for Lean to start up.
