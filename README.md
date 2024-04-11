@@ -84,5 +84,6 @@ If you feel adventurous and want to build the web version of the blueprint local
   - Just after you push [this page](https://github.com/fpvandoorn/BonnAnalysis) will have a message on the top prompting you to open a pull request.
 
 * If it builds, I'll merge it.
+  - Feel free to make a pull request with partial work and a lot of sorry's, as long as it builds.
 
 Reminder: Some additional details can be found in the instructions of the LeanCourse repository: https://github.com/fpvandoorn/LeanCourse23/blob/master/LeanCourse/Project/README.md
