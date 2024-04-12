@@ -10,9 +10,7 @@ usemathjax: true
 
 # Bonn Analysis Seminar
 
-* [Blueprint of the proof](https://florisvandoorn.com/BonnAnalysis/blueprint/)
-* [Blueprint (pdf)](https://florisvandoorn.com/BonnAnalysis/blueprint.pdf)
-* [Documentation of the methods](https://florisvandoorn.com/BonnAnalysis/docs/)
+We will formalize results in Fourier analysis, such as Plancherel's theorem and the interpolation theorems.
 
 ## Build the Lean files
 
@@ -21,11 +19,7 @@ See [the installation instructions](https://leanprover-community.github.io/get_s
 
 To build the project, run `lake exe cache get` and then `lake build`.
 
-## Build the blueprint
-
-The blueprint is automatically built on each push to the project.
-You can test whether the build is working by building the pdf locally:
-`xelatex blueprint/src/print.tex`.
+For more detailed build and contribution instructions see the Github README.
 
 <!-- To build the web version of the blueprint locally, you need a working LaTeX installation.
 Furthermore, you need some packages:
