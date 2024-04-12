@@ -60,7 +60,7 @@ Note: To get this repository, you will need to download Lean's mathematical libr
 
 ## Building the blueprint
 
-To test the Blueprint locally, you can compile `print.tex` using XeLaTeX (i.e. `xelatex blueprint/src/print.tex`). If you have the Python package `invoke` you can also run `inv bp`.
+To test the Blueprint locally, you can compile `print.tex` using XeLaTeX (i.e. `xelatex print.tex` in the folder `blueprint/src`). If you have the Python package `invoke` you can also run `inv bp`.
 If you feel adventurous and want to build the web version of the blueprint locally, you need to install some packages by following the instructions [here](https://pypi.org/project/leanblueprint/). But if the pdf builds locally, you can just make a pull request and use the online blueprint.
 
 ## Making a pull request

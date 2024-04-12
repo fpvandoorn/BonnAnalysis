@@ -2,6 +2,7 @@
 *.paux
 *.aux
 *.log
+*.toc
 print
 web
 __pycache__
@@ -14,4 +15,3 @@ __pycache__
 *.mtc
 *.mtc0
 build
-*.toc
