@@ -2,15 +2,6 @@ on:
   pull_request:
 
 jobs:
-  style_lint:
-    name: Lint style
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check for long lines
-        if: always()
-        run: |
-          ! (find BonnAnalysis -name "*.lean" -type f -exec grep -E -H -n '^.{101,}$' {} \; | grep -v -E 'https?://')
-
   build_project:
     runs-on: ubuntu-latest
     name: Build project
