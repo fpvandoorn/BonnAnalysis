@@ -46,9 +46,6 @@ Note: To get this repository, you will need to download Lean's mathematical libr
   * This downloads mathlib, and will take a bit of time
   * On Windows, if you get an error that starts with `curl: (35) schannel: next InitializeSecurityContext failed` it is probably your antivirus program that doesn't like that we're downloading many files. The easiest solution is to temporarily disable your antivirus program.
 
-* Run `lake build +BonnAnalysis.Common`
-  * This should take less than 1 minute. If you get more than a few lines of output, then you're rebuilding Mathlib from scratch, which means that the previous step went wrong. You can quit the execution and ask for help.
-
 * Launch VS Code, either through your application menu or by typing
   `code .` (note the dot!). (MacOS users need to take a one-off
   [extra step](https://code.visualstudio.com/docs/setup/mac#_launching-from-the-command-line)
