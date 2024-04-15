@@ -5,3 +5,5 @@ import Mathlib.Tactic
 #eval 2 ^ 5
 
 example (x : ℝ) : x - x = 0 := by simp
+
+example (x : ℕ) : x + x = 2 * x :=  (Nat.two_mul x).symm
