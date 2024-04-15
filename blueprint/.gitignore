@@ -14,3 +14,4 @@ __pycache__
 *.mtc
 *.mtc0
 build
+*.toc
