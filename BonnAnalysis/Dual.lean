@@ -34,7 +34,11 @@ namespace IsConjExponent
 
 lemma one_le_left (hpq : p.IsConjExponent q) : 1 ≤ p := sorry
 
-lemma symm (hpq : p.IsConjExponent q) : q.IsConjExponent p := sorry
+lemma symm (hpq : p.IsConjExponent q) : q.IsConjExponent p where
+  inv_add_inv_conj := by
+    rw [add_comm]
+    exact hpq.inv_add_inv_conj
+
 
 lemma one_le_right (hpq : p.IsConjExponent q) : 1 ≤ q := hpq.symm.one_le_left
 
