@@ -76,6 +76,7 @@ If you feel adventurous and want to build the web version of the blueprint local
 * Push your branch to your fork of this repository
   - Using the terminal you first have to create a fork on Github and use `git remote add` to add this fork
   - Using VSCode this fork automatically created for you
+  - When you have added a new file, please import it in `BonnAnalysis.lean`.
 
 * Open a pull request
   - Just after you push [this page](https://github.com/fpvandoorn/BonnAnalysis) will have a message on the top prompting you to open a pull request.
