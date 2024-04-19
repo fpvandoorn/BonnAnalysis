@@ -34,8 +34,12 @@ namespace IsConjExponent
 
 lemma one_le_left (hpq : p.IsConjExponent q) : 1 ≤ p := sorry
 
-lemma symm (hpq : p.IsConjExponent q) : q.IsConjExponent p := sorry
+lemma symm (hpq : p.IsConjExponent q) : q.IsConjExponent p where
+  inv_add_inv_conj := by
+    rw [add_comm]
+    exact hpq.inv_add_inv_conj
 
+/-
 lemma one_le_right (hpq : p.IsConjExponent q) : 1 ≤ q := hpq.symm.one_le_left
 
 /- maybe useful: formulate an induction principle. To show something when `p.IsConjExponent q` then it's sufficient to show it in the following cases:
@@ -91,3 +95,4 @@ def dualIsometry (L : E₁ →L[𝕜] Dual 𝕜 E₂) :
 
 end Lp
 end MeasureTheory
+-/
