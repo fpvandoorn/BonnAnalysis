@@ -89,7 +89,7 @@ def toDualₗᵢ : Lp E₁ q μ →ₗᵢ[𝕜] Lp E₂ p μ →L[𝕜] E₃ :=
 
 /- The map sending `g` to `f ↦ ∫ x, L (f x) (g x) ∂μ` is a linear isometric equivalence.  -/
 variable (p q μ) in
-def dualIsometry (L : E₁ →L[𝕜] Dual 𝕜 E₂) :
+def dualIsometry (L : E₁ ≃L[𝕜] Dual 𝕜 E₂) :
     Dual 𝕜 (Lp E₂ p μ) ≃ₗᵢ[𝕜] Lp E q μ :=
   sorry
 

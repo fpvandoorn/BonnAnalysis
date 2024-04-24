@@ -1,3 +1,6 @@
--- When adding a new file, import it in this file
+import BonnAnalysis.ComplexInterpolation
 import BonnAnalysis.Dual
+import BonnAnalysis.Examples
+import BonnAnalysis.LorentzSpace
 import BonnAnalysis.Plancherel
+import BonnAnalysis.RealInterpolation
