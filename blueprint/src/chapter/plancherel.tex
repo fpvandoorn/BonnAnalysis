@@ -1,30 +1,303 @@
 \chapter{Plancherel's Theorem}
 \label{chap:plancherel}
+\section{Basic Properties of the Fourier Transform}
+In this section we record, mostly without proofs, basic statements about the Fourier transform on
+$L^1$ functions. Most of these are already formalized in mathlib.
 
-
-\begin{theorem}
-  \label{lem:plancherel}
+Let $(V,\mu),(W,\nu)$ be vector spaces over $\R$ with a $\sigma$-finite measure,
+$E,F$ be normed spaces over $\C$ and let $L:V\times W\to \R$, $M:E\times F\to\C$
+be bilinear maps.
+\begin{definition}
+  \label{def:fourier-transform}
   \uses{}
+  \lean{VectorFourier.fourierIntegral, Fourier.fourierIntegral, Real.fourierIntegral,
+        Real.fourierIntegralInv}
+  \leanok
+  Let $f\in L^1(V,E)$. Its \emph{Fourier transform} (w.r.t. $L$) is the function
+  $\mathcal Ff=\widehat f:W\to E$ given by
+  $$\mathcal Ff(w):=\widehat f(w):=\int_V e^{-2\pi i L(v,w)}f(v)\,d\mu.$$
+  The \emph{inverse Fourier transform} (w.r.t. $L$) is similarly defined as
+  $$\mathcal F^{-1}f(w)=\check f(w):=\int_Ve^{2\pi iL(v,w)}f(v)\,d\mu.$$
+\end{definition}
+
+\begin{lemma}
+  \label{lem:fourier-bounded}
+  \uses{def:fourier-transform}
+  \lean{VectorFourier.fourierIntegral_convergent_iff,
+       VectorFourier.norm_fourierIntegral_le_integral_norm}
+  \leanok
+  Let $f\in L^1(V,E)$. Then its Fourier transform $\widehat f$ is well-defined and bounded.
+  In particular, the Fourier transform defines a map $\mathcal F:L^1(V,E)\to L^\infty(V,E)$.
+\end{lemma}
+
+From now on assume that $V$ and $W$ are equipped with second-countable topologies such that
+$L$ is continuous.
+\begin{lemma}
+  \label{lem:fourier-cont}
+  \uses{def:fourier-transform}
+  \lean{VectorFourier.fourierIntegral_continuous}
+  \leanok
+  Let $f\in L^1(V,E)$. Then $\widehat f$ is continuous.
+\end{lemma}
+
+\begin{lemma}[Multiplication formula]
+\label{lem:fourier-multiplication}
+\uses{lem:fourier-cont}
+\lean{VectorFourier.integral_bilin_fourierIntegral_eq_flip}
+\leanok
+Let $f,g\in L^1(V,E)$. Then
+$$\int_WM(\widehat f(w),g(w))\,d\nu(w)=\int_VM(f(v),\widehat g(v))\,d\mu(v).$$
+\end{lemma}
+
+\begin{lemma}
+  \label{lem:fourier-prop}
+  \uses{def:fourier-transform}
+  \lean{}
+  % \leanok
+Lef $f,g\in L^1(V,E)$, $t\in\R$ and $a,b\in\C$. The Fourier transform satisfies the following elementary properties:
+\begin{enumerate}
+  \item[(i)] $\mathcal F(af+bg)=a\mathcal Ff+b\mathcal Fg$\hfill(Linearity)
+  \item[(ii)] $\mathcal F(f(x-t)) = e^{-2\pi i ty}\mathcal F f(y)$\hfill (Shifting)
+  \item[(iii)] $\mathcal F(f(tx)) = \frac1{|t|}\mathcal F f(\frac yt)$\hfill (Scaling)
+  \item[(iv)] $\mathcal F(\overline{f(x)}) = \overline{\mathcal Ff(-y)}$\hfill (Conjugation)
+  \item[(v)] Assume $V,E$ are inner product spaces. Then $\mathcal F(f\ast g) =\mathcal Ff\cdot\mathcal Fg$ \hfill (Convolution)
+\end{enumerate}
+\end{lemma}
+From now on, let $V$ be a finite-dimensional inner product space.
+We denote this product as ordinary multiplication, and the induced norm as $|\cdot|.$
+
+We now study a family of functions which is useful for later proofs.
+\begin{lemma}
+\label{lem:fourier-gaussian}
+\uses{def:fourier-transform, lem:fourier-prop}
+\lean{fourierIntegral_gaussian_innerProductSpace'}
+\leanok
+Let $x\in V$ and $\delta>0$. Define the \emph{modulated Gaussian}
+$$u_{x,\delta}(y):V\to\C,\quad y\mapsto e^{-\pi|y|^2}e^{2\pi i x y}.$$
+Its Fourier transform (w.r.t. the inner product) is given by
+$$\widehat{u_{x,\delta}}(z)=\delta^{-n/2}e^{-\pi|x-y|^2/\delta}=:K_\delta(x-z).$$
+\end{lemma}
+\begin{proof}
+  \leanok
+  By choosing an orthonormal basis, wlog we may assume $V=\R^n$.
+  First note $\widehat{u_{x,\delta}}(z-x)=\widehat{u_{0,\delta}}(z)$, so it is enough to consider $x=0$.
+  Next, $$\widehat{u_{0,\delta}}(z)=\int_{\R^n}e^{-\pi\delta|y|^2-2\pi iyz}\,dy=
+  \prod_{i=1}^n\int_{\R^n}e^{-\pi\delta y_i^2-2\pi iy_iz_i}dy_i\quad\text{and}\quad
+  K_\delta(-z)=\prod_{i=1}^n\delta^{-1/2}e^{-\pi y_i^2/\delta},$$ hence we may assume $n=1$.
+  The change of variables $w=\delta^{1/2}y+iz/\delta^{1/2}$ results in
+  $$\widehat{u_{0,\delta}}(z)=\int_{\R} e^{-\pi\delta y^2-2\pi i y z}\,dy=
+  \delta^{-1/2}e^{-\pi z^2/\delta}\int_{Im(w)=-z/\delta^{1/2}}e^{-\pi w^2}\,dw.$$
+  Contour integration along the rectangle with vertices $(\pm R,0),(\pm R,-iz/\delta^{1/2})$, together
+  with the bound $$\left|\int_{\pm R}^{\pm R-iz/\delta^{1/2}}e^{-\pi w^2}\right|\leq
+  \frac{|z|}{\delta^{1/2}}\sup_{w\in[R,R-iz/\delta^{1/2}]}|e^{-\pi w^2}|=
+  \frac{|z|}{\delta^{1/2}}e^{-(R^2+z^2/\delta)}\xrightarrow{R\to\infty}0$$
+  yields
+  $$\int_{Im(w)=-z/\delta^{1/2}}e^{-\pi w^2}\,dw=
+  \int_{\R} e^{-\pi w^2}\,dw=1,$$ finishing the proof.
+\end{proof}
+
+\begin{lemma}
+\label{lem:weierstrass-kernel}
+\uses{}
+\lean{}
+% \leanok
+Let $K_\delta(v)=\delta^{-n/2}e^{-\pi|v|^2/\delta}$
+as in Lemma \ref{lem:fourier-gaussian}. This is a
+\emph{good kernel}, called the \emph{Weierstrass kernel}, satisfying
+$$\int_{V}K_\delta(x)\,dx= 1\quad\text{and}\quad
+\int_{|x|>\eta}K_\delta(x)\,dx\xrightarrow{\delta\to0}0\quad\text{for all }\eta>0.$$
+Furthermore, it satisfies the stronger bounds
+$$K_\delta(x)\leq \delta^{-n/2}\quad\text{and}\quad K_\delta(x)\leq B\delta^{1/2}|x|^{-n-1}$$ for
+some constant $B$ independent of $\delta$.
+\end{lemma}
+\begin{proof}
+  % \leanok
+  By choosing an orthonormal basis, wlog we may assume $V=\R^n$. Then these are all straight-forward calculations:
+  $$\int_{\R^n}e^{-\pi|x|^2/\delta}\,dx=\delta^{n/2}\int_{\R^n}e^{-\pi|x|^2}\,dx=1.$$
+  $$\int_{|x|>\eta}\delta^{-n/2}e^{-\pi|x|^2/\delta}\,dx=\int_{|x|>\eta/\delta^{1/2}}e^{-\pi|x|^2}\xrightarrow{\delta\to0}0.$$
+  The first upper bound is trivial. For the second one, consider for $r,z>0$ the inequality
+  $$\Gamma(r+1)=\int_0^\infty e^{-y}y^r\,dy\geq\int_z^\infty e^{-y}y^r\,dy\geq z^r\int_z^\infty e^{-y}\,dy=z^re^{-z}.$$
+  Applied to $z=\pi|x|^2/\delta$ and $r=(n+1)/2$, this gives
+  $$|x|^{n+1}=\delta^{n+1/2}\frac{|x|^{n+1}}{\delta^{(n+1)/2}}\leq
+  \underbrace{\frac{\Gamma((n+3)/2)}{\pi^{(n+1)/2}}}_{=:B}\delta^{(n+1)/2}e^{\pi|x|^2/\delta},$$
+  which is equivalent to the second upper bound of the lemma.
+\end{proof}
+
+The following technical theorem is used in the proofs of both the inversion formula and Plancharel's theorem.
+\begin{theorem}
+\label{thm:kernel-approximation}
+\uses{lem:weierstrass-kernel}
+\lean{}
+% \leanok
+Let $f:V\to E$ be integrable. Let $K_\delta$ be the Weierstrass kernel from \ref{lem:weierstrass-kernel},
+or indeed any family of functions satisfying the conditions of lemma \ref{lem:weierstrass-kernel}. Then
+$$(K_\delta\ast f)(x):=\int_V K_\delta(y)f(x-y)\,d\mu(y)\xrightarrow{\delta\to0}f(x)$$ in the $L^1$-norm.
+If $f$ is continuous, the convergence also holds pointwise.
+\end{theorem}
+\begin{proof}
+% \leanok
+Again we may assume $V=\R^n$. Consider the difference $$\Delta_\delta(x):=(K_\delta\ast f)(x)-f(x)=
+\int_{\R^n}(f(x-y)-f(x))K_\delta(y)\,dy.$$ We prove $L^1$-convergence first:
+Take $L^1$-norms and use Fubini's theorem to conclude
+$$\|\Delta_\delta\|_1\leq\int_{\R^n}\|f(x-y)-f(x)\|_1K_\delta(y)\,dy.$$ For $\varepsilon>0$ find $\eta>0$
+small enough so that $\|f(x-y)-f(x)\|_1<\varepsilon$ when $|y|\eta$. Thus
+$$\|\Delta_\delta\|_1\leq\varepsilon+\int_{|y|>\eta}\|f(x-y)-f(x)\|K_\delta(y)\,dy\leq\varepsilon+2\|f\|_1\int_{\|y\|>\eta}K_\delta(y)\,dy.$$
+By one of the properties in lemma \ref{lem:weierstrass-kernel}, we can choose $\delta$ small enough so that the second integral
+is less than $\varepsilon$, which finishes the proof in this case.
+
+Now assume that $f$ is continuous.
+Let $d=\delta^{1/2}$ and shorten $g_\delta(x,y)=|f(x-y)-f(x)|K_\delta(y)$.Then
+ $$|\Delta_\delta(x)|\leq\int_{0<|y|<d}g_\delta(x,y)\,dy+\sum_{k\in\mathbb N}\int_{2^kd<|y|<2^{k+1}d}g_\delta(x,y)\,dy.$$
+ To bound these integrals, consider
+ $$\varphi(r)=\frac1{r^n}\int_{|y|<r}|f(x-y)-f(x)|\,dy.$$
+ It is easy to see that $\varphi$ is continuous, bounded, and approaches $0$ for $r\to0$, by continuity of $f$.
+ Now $$\int_{0<|y|<d}g_\delta(x,y)\,dy\overset{(\ast)}\leq d^{-n}\int_{0<|y|<d}|f(x-y)-f(x)|\,dy=\varphi(d)$$ and
+ $$\int_{2^kd<|y|<2^{k+1}d}g\,dy\overset{(\ast)}\leq
+ \frac{Bd}{(2^kd)^{n+1}}\int_{2^kd<|y|<2^{k+1}d}|f(x-y)-f(x)|\,dy\leq2^{n-k}B\varphi(2^{k+1}d),$$
+ where for the inequalities labeled $(\ast)$ we used the upper bounds from lemma \ref{lem:weierstrass-kernel}.
+ Together, we find
+ $$|\Delta_\delta(x)|\leq\varphi(d)+C\sum_{k\in\mathbb N}2^{-k}\varphi(2^{k+1}d)$$ for
+ $C=\frac{2^n\Gamma((n+3)/2)}{\pi^{(n+1)/2}}$. Say $\varphi$ is bounded by $M\in\R$ and let $\varepsilon>0$.
+ Take $N$ large enough such that $\sum_{k\geq N}2^{-k}<\varepsilon$. Choose $\delta$ small enough that
+ $A(2^kd)<\varepsilon/N$ for all $k<N$. Then
+ $$|\Delta_\delta(x)|\leq\varepsilon/N+(N-1)C\varepsilon/N+C\varepsilon M\leq \varepsilon C(M+1).$$
+\end{proof}
+\begin{remark}
+  One can drop the continuity assumption and still get pointwise convergence almost everywhere. The proof stays the same,
+  but one focuses on Lebesgue points of $f$. It takes slightly more work to argue that $\varphi$ behaves nicely,
+  but the rest of the proof stays the same.
+\end{remark}
+
+\begin{theorem}[Inversion formula]
+  \label{thm:fourier-inversion}
+  \uses{thm:kernel-approximation, lem:fourier-multiplication}
+  \lean{MeasureTheory.Integrable.fourier_inversion, Continuous.fourier_inversion}
+  Let $f:V\to E$ be integrable and continuous. Assume $\widehat f$ is integrable as well. Then
+  $$\mathcal F^{-1}\mathcal F f=f.$$
+  \leanok
+\end{theorem}
+\begin{proof}
+\leanok
+Apply the multiplication formula \ref{lem:fourier-multiplication} to $u_{x,\delta}$ and $f$, and conclude with
+theorem \ref{thm:kernel-approximation}.
+\end{proof}
+
+\begin{remark}
+  Note that both assumptions are necessary, since $\mathcal F^{-1}\mathcal Ff$ is continuous, and
+  only defined if $\mathcal Ff$ is integrable.
+\end{remark}
+
+\section{\texorpdfstring{Plancharel's Theorem and the Fourier Transform on $L^2$}
+                        {Plancharel's Theorem and the Fourier Transform on L2}}
+Again let $V$ be a finite-dimensional inner product space over $\R$ and let $E$ be a normed space over $\C$.
+%TODO: The proof needs convolutions of functions into E. Is there another proof? Or assume E has products?
+\begin{theorem}
+  \label{thm:plancherel}
+  \uses{thm:kernel-approximation, lem:fourier-multiplication, lem:fourier-gaussian, lem:fourier-prop}
   \lean{MeasureTheory.memℒp_fourierIntegral, MeasureTheory.snorm_fourierIntegral} % the full Lean name this corresponds to (can be a comma-separated list)
   \leanok % the *statement* of the lemma is formalized
-  Let $V$ be a finite-dimensional inner product space over $\R$ and let $E$ be a normed space over $\C$. Suppose that $f : V \to C$ is in $L^1(V,E)\cap L^2(V,E)$ and let $\widehat{f}$ be the Fourier transform of $f$. Then $\widehat{f}\in L^2(V,E)$ and
-  \[\|\widehat{f}\|_{L^2} = \|f\|_{L^2}.\]
+   Suppose that $f : V \to E$ is in $L^1(V,E)\cap L^2(V,E)$ and let $\widehat{f}$ be the Fourier transform of $f$. Then $\widehat{f},\check{f}\in L^2(V,E)$ and
+  \[\|\widehat{f}\|_{L^2} = \|f\|_{L^2}=\|\check f\|_{L^2}.\]
   \end{theorem}
     \begin{proof}
-    % \uses{} % Put any results used in the proof but not in the statement here
     % \leanok % uncomment if the lemma has been proven
-    Write proof here
+    Let $g(x)=\overline{f(-x)}$ and apply the multiplication formula \ref{lem:fourier-multiplication}
+    to $f\ast g$ and $u_{0,\delta}$: $$\int_V\widehat{f\ast g}\cdot u_{0,\delta}(x)\,dx=\int_V(f\ast g)(x)K_\delta(-x)\,dx
+    \overset{\delta\to0}\to(f\ast g)(0)=\int_Vf(x)\overline{f(x)}\,dx=\| f\|_2^2$$ by theorem \ref{thm:kernel-approximation}.
+    On the other hand, by lemma \ref{lem:fourier-prop} the left hand side simplifies to
+    $$\int_V|\widehat f(x)|^2e^{-\delta\pi|x|^2}\xrightarrow{\delta\to0}\|\widehat f\|_2^2$$ by dominated convergence.
+
+    Since $\check f(x)=\widehat f(-x)$, the corresponding statements for $\check f$ follow immediately from the ones for $\widehat f$.
+\end{proof}
+
+We now want to extend the Fourier transform to $L^2(V,E)$. For this, take a sequence of functions $(f_n)_n\subset L^1(V,E)\cap L^2(V,E)$
+such that $f_n\xrightarrow[L^2]{}f$. Such sequences exist:
+\begin{lemma}
+  \label{lem:L12-dense}
+  \uses{MeasureTheory.Memℒp.exists_hasCompactSupport_snorm_sub_le}
+  \lean{}
+  % \leanok
+  $L^1(V,E)\cap L^2(V,E)$ is dense in $L^2(V,E)$.
+\end{lemma}
+\begin{proof}
+  %\leanok
+  It is well-known that the space of compactly supported continuous functions is dense in every $L^p(V,E)$.
+  Since those are contained in $L^1(V,E)\cap L^2(V,E)$, the claim follows.
+\end{proof}
+
+Let $f\in L^2(V,E)$. Plancharel's theorem lets us now approximate a potential $\widehat f$:
+\begin{lemma}
+  \label{lem:fourier12-cauchy}
+  \uses{lem:L12-dense, thm:plancharel, lem:fourier-prop}
+  \lean{}
+  % \leanok
+  Let $f\in L^2(V,E)$ and $(f_n)_n\subset L^1(V,E)\cap L^2(V,E)$ a sequence with $f_n\xrightarrow[L^2]{}f$. Then $(\widehat f_n)_n$ is a Cauchy sequence,
+  hence converges in $L^2(V,E)$.
+\end{lemma}
+\begin{proof}
+  % \leanok
+  $$\|\widehat f_n-\widehat f_m\|_2=\|\widehat{f_n-f_m}\|_2\overset{\text{Plancharel}}=\|f_n-f_m\|_2$$ goes to $0$ for $n,m$ large, as $(f_n)_n$ is
+  convergent, hence Cauchy. Since $L^2(V,E)$ is complete, $(\widehat f_n)_n$ converges.
+\end{proof}
+\begin{definition}
+  \label{def:fourier-L2}
+  \uses{lem:fourier12-cauchy}
+  \lean{}
+  % \leanok
+  Let $f\in L^2(V,E)$ and take a sequence $(f_n)_n\subset L^1(V,E)\cap L^2(V,E)$ with $f_n\xrightarrow[L^2]{}f$. Set
+  $$\mathcal Ff:=\widehat f:=\lim_{n\to\infty}\widehat{f_n},$$ the limit taken in the $L^2$-sense.
+\end{definition}
+\begin{lemma}
+  \label{lem:fourier2-welldef}
+  \uses{def:fourier-L2, lem:fourier12-cauchy, thm:plancharel}
+  \lean{}
+  % \leanok
+  This is well-defined: By \ref{lem:fourier12-cauchy}, the limit exists. Further it does not depend
+  on the choice of sequence $(f_n)_n$. If $f\in L^1(V,E)\cap L^2(V,E)$, this definition agrees with
+  the Fourier transform on $L^1(V,E)$.
+\end{lemma}
+\begin{proof}
+  % \leanok
+  Let $(g_n)_n$ be another sequence approximating $f$. Then
+  $$\|\widehat f_n-\widehat g_n\|_2=\|f_n-g_n\|\leq\|f_n-f\|+\|g_n-g\|\to0.$$
+  If $f\in L^1(V,E)\cap L^2(V,E)$, we can choose the constant sequence $(f_n)_n=(f)_n$.
+\end{proof}
+
+\begin{definition}
+  \label{def:invFourier-L2}
+  \uses{lem:fourier12-cauchy, thm:plancharel}
+  \lean{}
+  % \leanok
+  Define analogously $\mathcal F^{-1}f:=\check f:=\lim_{n\to\infty}\check f_n$, if $f_n\xrightarrow[L^2]{}f\in L^2(V,E)$
+  with $(f_n)_n\subset L^1(V,E)\cap L^2(V,E)$. By the same arguments as above, this is well-defined.
+\end{definition}
+
+\begin{corollary}
+  \label{thm:fourier2-properties}
+  \uses{def:fourier-L2, def:invFourier-L2, thm:plancharel, thm:fourier-inversion, lem:fourier-prop}
+  \lean{}
+  % \leanok
+  Plancharel's Theorem, the inversion formula, and the properties of lemma \ref{lem:fourier-prop} hold
+  for the Fourier transform on $L^2(V,E)$ as well.
+\end{corollary}
+\begin{proof}
+  % \leanok
+  All of these follow immediately from the definition and the oberservation, that all operations (norms, sums, conjugation, $\ldots$) are continuous.
+  For example, let $f\in L^2(V,E)$ and take an approximating sequence $(f_n)_n$ as before. Then
+  $$\|\widehat f\|_2=\|\lim_{n\to\infty}\widehat f_n\|_2=\|\lim_{n\to\infty}\|\widehat f_n\|_2=\lim_{n\to\infty}\|f_n\|_2
+  =\|\lim_{n\to\infty}f_n\|_2=\|f\|_2.$$
 \end{proof}
 
 \begin{corollary}
-  \label{lem:fourier-is-l2-linear}
-  \uses{lem:plancherel} % the (list of) LaTeX labels of the lemmas that are used for this result
+  \label{thm:fourier-is-l2-linear}
+  \uses{thm:fourier2-properties} % the (list of) LaTeX labels of the lemmas that are used for this result
   \lean{MeasureTheory.fourierIntegralL2} % the full Lean name this corresponds to (can be a comma-separated list)
   \leanok % the *statement* of the lemma is formalized
-  Let $V$ be a finite-dimensional inner product space over $\R$ and let $E$ be a normed space over $\C$. The Fourier transform induces a continuous linear map $L^2(V,E) \to L^2(V,E)$.
+  The Fourier transform induces a continuous linear map $L^2(V,E) \to L^2(V,E)$.
   \end{corollary}
   \begin{proof}
     % \uses{} % Put any results used in the proof but not in the statement here
     % \leanok % uncomment if the lemma has been proven
-    Write proof here
+    This follows immediately from \ref{thm:fourier2-properties}: Linearity from the $L^2$-version of
+    \ref{lem:fourier-prop}, and continuity and well-definedness from the $L^2$-version of Plancharel's theorem.
 \end{proof}
