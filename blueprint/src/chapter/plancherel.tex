@@ -207,6 +207,8 @@ Again let $V$ be a finite-dimensional inner product space over $\R$ and let $E$ 
   \leanok % the *statement* of the lemma is formalized
    Suppose that $f : V \to E$ is in $L^1(V,E)\cap L^2(V,E)$ and let $\widehat{f}$ be the Fourier transform of $f$. Then $\widehat{f},\check{f}\in L^2(V,E)$ and
   \[\|\widehat{f}\|_{L^2} = \|f\|_{L^2}=\|\check f\|_{L^2}.\]
+   Suppose that $f : V \to E$ is in $L^1(V,E)\cap L^2(V,E)$ and let $\widehat{f}$ be the Fourier transform of $f$. Then $\widehat{f},\check{f}\in L^2(V,E)$ and
+  \[\|\widehat{f}\|_{L^2} = \|f\|_{L^2}=\|\check f\|_{L^2}.\]
   \end{theorem}
     \begin{proof}
     % \leanok % uncomment if the lemma has been proven
@@ -303,8 +305,11 @@ Let $f\in L^2(V,E)$. Plancherel's theorem lets us now approximate a potential $\
 \begin{corollary}
   \label{thm:fourier-is-l2-linear}
   \uses{thm:fourier2-properties} % the (list of) LaTeX labels of the lemmas that are used for this result
+  \label{thm:fourier-is-l2-linear}
+  \uses{thm:fourier2-properties} % the (list of) LaTeX labels of the lemmas that are used for this result
   \lean{MeasureTheory.fourierIntegralL2} % the full Lean name this corresponds to (can be a comma-separated list)
   \leanok % the *statement* of the lemma is formalized
+  The Fourier transform induces a continuous linear map $L^2(V,E) \to L^2(V,E)$.
   The Fourier transform induces a continuous linear map $L^2(V,E) \to L^2(V,E)$.
   \end{corollary}
   \begin{proof}
