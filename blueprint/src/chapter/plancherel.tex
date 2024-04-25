@@ -60,7 +60,9 @@ Lef $f,g\in L^1(V,E)$, $t\in\R$ and $a,b\in\C$. The Fourier transform satisfies 
   \item[(ii)] $\mathcal F(f(x-t)) = e^{-2\pi i ty}\mathcal F f(y)$\hfill (Shifting)
   \item[(iii)] $\mathcal F(f(tx)) = \frac1{|t|}\mathcal F f(\frac yt)$\hfill (Scaling)
   \item[(iv)] $\mathcal F(\overline{f(x)}) = \overline{\mathcal Ff(-y)}$\hfill (Conjugation)
-  \item[(v)] Assume $V,E$ are inner product spaces. Then $\mathcal F(f\ast g) =\mathcal Ff\cdot\mathcal Fg$ \hfill (Convolution)
+  \item[(v)] Define the convolution of $f$ and $g$ w.r.t. a bilinear map $M:E\times E\to F$ as
+             $$(f\ast_Mg)(w):=\int_VM(f(v),g(w-v))\,d\mu(v).$$ Then
+             $\mathcal F(f\ast_M g) =M(\mathcal Ff,\mathcal Fg)$ \hfill (Convolution)
 \end{enumerate}
 \end{lemma}
 From now on, let $V$ be a finite-dimensional inner product space.
@@ -82,15 +84,15 @@ $$\widehat{u_{x,\delta}}(z)=\delta^{-n/2}e^{-\pi|x-y|^2/\delta}=:K_\delta(x-z).$
   By choosing an orthonormal basis, wlog we may assume $V=\R^n$.
   First note $\widehat{u_{x,\delta}}(z-x)=\widehat{u_{0,\delta}}(z)$, so it is enough to consider $x=0$.
   Next, $$\widehat{u_{0,\delta}}(z)=\int_{\R^n}e^{-\pi\delta|y|^2-2\pi iyz}\,dy=
-  \prod_{i=1}^n\int_{\R^n}e^{-\pi\delta y_i^2-2\pi iy_iz_i}dy_i\quad\text{and}\quad
+  \prod_{i=1}^n\int_{\R}e^{-\pi\delta y_i^2-2\pi iy_iz_i}dy_i\quad\text{and}\quad
   K_\delta(-z)=\prod_{i=1}^n\delta^{-1/2}e^{-\pi y_i^2/\delta},$$ hence we may assume $n=1$.
   The change of variables $w=\delta^{1/2}y+iz/\delta^{1/2}$ results in
   $$\widehat{u_{0,\delta}}(z)=\int_{\R} e^{-\pi\delta y^2-2\pi i y z}\,dy=
-  \delta^{-1/2}e^{-\pi z^2/\delta}\int_{Im(w)=-z/\delta^{1/2}}e^{-\pi w^2}\,dw.$$
-  Contour integration along the rectangle with vertices $(\pm R,0),(\pm R,-iz/\delta^{1/2})$, together
-  with the bound $$\left|\int_{\pm R}^{\pm R-iz/\delta^{1/2}}e^{-\pi w^2}\right|\leq
-  \frac{|z|}{\delta^{1/2}}\sup_{w\in[R,R-iz/\delta^{1/2}]}|e^{-\pi w^2}|=
-  \frac{|z|}{\delta^{1/2}}e^{-(R^2+z^2/\delta)}\xrightarrow{R\to\infty}0$$
+  \delta^{-1/2}e^{-\pi z^2/\delta}\int_{Im(w)=z/\delta^{1/2}}e^{-\pi w^2}\,dw.$$
+  Contour integration along the rectangle with vertices $(\pm R,0),(\pm R,iz/\delta^{1/2})$, together
+  with the bound $$\left|\int_{\pm R}^{\pm R+iz/\delta^{1/2}}e^{-\pi w^2}\,dw\right|\leq
+  \frac{|z|}{\delta^{1/2}}\sup_{w\in[R,R+iz/\delta^{1/2}]}|e^{-\pi w^2}|=
+  \frac{|z|}{\delta^{1/2}}e^{-\pi R^2}\xrightarrow{R\to\infty}0$$
   yields
   $$\int_{Im(w)=-z/\delta^{1/2}}e^{-\pi w^2}\,dw=
   \int_{\R} e^{-\pi w^2}\,dw=1,$$ finishing the proof.
@@ -113,17 +115,17 @@ some constant $B$ independent of $\delta$.
 \begin{proof}
   % \leanok
   By choosing an orthonormal basis, wlog we may assume $V=\R^n$. Then these are all straight-forward calculations:
-  $$\int_{\R^n}e^{-\pi|x|^2/\delta}\,dx=\delta^{n/2}\int_{\R^n}e^{-\pi|x|^2}\,dx=1.$$
+  $$\int_{\R^n}e^{-\pi|x|^2/\delta}\,dx=\delta^{n/2}\int_{\R^n}e^{-\pi|x|^2}\,dx=\delta^{n/2}.$$
   $$\int_{|x|>\eta}\delta^{-n/2}e^{-\pi|x|^2/\delta}\,dx=\int_{|x|>\eta/\delta^{1/2}}e^{-\pi|x|^2}\xrightarrow{\delta\to0}0.$$
-  The first upper bound is trivial. For the second one, consider for $r,z>0$ the inequality
+  The first upper bound is trivial. For the second one, consider for $r,z\geq0$ the inequality
   $$\Gamma(r+1)=\int_0^\infty e^{-y}y^r\,dy\geq\int_z^\infty e^{-y}y^r\,dy\geq z^r\int_z^\infty e^{-y}\,dy=z^re^{-z}.$$
   Applied to $z=\pi|x|^2/\delta$ and $r=(n+1)/2$, this gives
-  $$|x|^{n+1}=\delta^{n+1/2}\frac{|x|^{n+1}}{\delta^{(n+1)/2}}\leq
+  $$|x|^{n+1}=\delta^{(n+1)/2}\frac{|x|^{n+1}}{\delta^{(n+1)/2}}\leq
   \underbrace{\frac{\Gamma((n+3)/2)}{\pi^{(n+1)/2}}}_{=:B}\delta^{(n+1)/2}e^{\pi|x|^2/\delta},$$
   which is equivalent to the second upper bound of the lemma.
 \end{proof}
 
-The following technical theorem is used in the proofs of both the inversion formula and Plancharel's theorem.
+The following technical theorem is used in the proofs of both the inversion formula and Plancherel's theorem.
 \begin{theorem}
 \label{thm:kernel-approximation}
 \uses{lem:weierstrass-kernel}
@@ -187,11 +189,18 @@ theorem \ref{thm:kernel-approximation}.
   only defined if $\mathcal Ff$ is integrable.
 \end{remark}
 
-\section{\texorpdfstring{Plancharel's Theorem and the Fourier Transform on $L^2$}
-                        {Plancharel's Theorem and the Fourier Transform on L2}}
+\begin{theorem}[Inversion formula, $L^1$-version]
+  \label{thm:fourier-inversion-L1}
+  \uses{thm:kernel-approximation, lem:fourier-multiplication}
+  \leanok
+  Let $f\in L^1(V,E)$. If $\widehat f\in L^1(V,E)$, then $\mathcal F^{-1}\mathcal Ff=f$.
+\end{theorem}
+
+\section{\texorpdfstring{Plancherel's Theorem and the Fourier Transform on $L^2$}
+                        {Plancherel's Theorem and the Fourier Transform on L2}}
 Again let $V$ be a finite-dimensional inner product space over $\R$ and let $E$ be a normed space over $\C$.
 %TODO: The proof needs convolutions of functions into E. Is there another proof? Or assume E has products?
-\begin{theorem}
+\begin{theorem}[Plancherel's Theorem]
   \label{thm:plancherel}
   \uses{thm:kernel-approximation, lem:fourier-multiplication, lem:fourier-gaussian, lem:fourier-prop}
   \lean{MeasureTheory.memℒp_fourierIntegral, MeasureTheory.snorm_fourierIntegral} % the full Lean name this corresponds to (can be a comma-separated list)
@@ -201,11 +210,14 @@ Again let $V$ be a finite-dimensional inner product space over $\R$ and let $E$ 
   \end{theorem}
     \begin{proof}
     % \leanok % uncomment if the lemma has been proven
+    %Let $(e_i)_{i\in I}$ be a normalized basis of E. This choice defines a conjugation on $E$: Let $E_\R$ be
+    %the $\R$-span of the $e_i$, then $E\cong E_\R\otimes_\R\C$ and we can conjugate on the second factor.
+    %We denote this conjugation by $e\mapsto\overline e$.
     Let $g(x)=\overline{f(-x)}$ and apply the multiplication formula \ref{lem:fourier-multiplication}
     to $f\ast g$ and $u_{0,\delta}$: $$\int_V\widehat{f\ast g}\cdot u_{0,\delta}(x)\,dx=\int_V(f\ast g)(x)K_\delta(-x)\,dx
     \overset{\delta\to0}\to(f\ast g)(0)=\int_Vf(x)\overline{f(x)}\,dx=\| f\|_2^2$$ by theorem \ref{thm:kernel-approximation}.
     On the other hand, by lemma \ref{lem:fourier-prop} the left hand side simplifies to
-    $$\int_V|\widehat f(x)|^2e^{-\delta\pi|x|^2}\xrightarrow{\delta\to0}\|\widehat f\|_2^2$$ by dominated convergence.
+    $$\int_V|\widehat f(x)|^2e^{-\delta\pi|x|^2}\,dx\xrightarrow{\delta\to0}\|\widehat f\|_2^2$$ by dominated convergence.
 
     Since $\check f(x)=\widehat f(-x)$, the corresponding statements for $\check f$ follow immediately from the ones for $\widehat f$.
 \end{proof}
@@ -225,10 +237,10 @@ such that $f_n\xrightarrow[L^2]{}f$. Such sequences exist:
   Since those are contained in $L^1(V,E)\cap L^2(V,E)$, the claim follows.
 \end{proof}
 
-Let $f\in L^2(V,E)$. Plancharel's theorem lets us now approximate a potential $\widehat f$:
+Let $f\in L^2(V,E)$. Plancherel's theorem lets us now approximate a potential $\widehat f$:
 \begin{lemma}
   \label{lem:fourier12-cauchy}
-  \uses{lem:L12-dense, thm:plancharel, lem:fourier-prop}
+  \uses{lem:L12-dense, thm:plancherel, lem:fourier-prop}
   \lean{}
   % \leanok
   Let $f\in L^2(V,E)$ and $(f_n)_n\subset L^1(V,E)\cap L^2(V,E)$ a sequence with $f_n\xrightarrow[L^2]{}f$. Then $(\widehat f_n)_n$ is a Cauchy sequence,
@@ -236,7 +248,7 @@ Let $f\in L^2(V,E)$. Plancharel's theorem lets us now approximate a potential $\
 \end{lemma}
 \begin{proof}
   % \leanok
-  $$\|\widehat f_n-\widehat f_m\|_2=\|\widehat{f_n-f_m}\|_2\overset{\text{Plancharel}}=\|f_n-f_m\|_2$$ goes to $0$ for $n,m$ large, as $(f_n)_n$ is
+  $$\|\widehat f_n-\widehat f_m\|_2=\|\widehat{f_n-f_m}\|_2\overset{\text{Plancherel}}=\|f_n-f_m\|_2$$ goes to $0$ for $n,m$ large, as $(f_n)_n$ is
   convergent, hence Cauchy. Since $L^2(V,E)$ is complete, $(\widehat f_n)_n$ converges.
 \end{proof}
 \begin{definition}
@@ -249,7 +261,7 @@ Let $f\in L^2(V,E)$. Plancharel's theorem lets us now approximate a potential $\
 \end{definition}
 \begin{lemma}
   \label{lem:fourier2-welldef}
-  \uses{def:fourier-L2, lem:fourier12-cauchy, thm:plancharel}
+  \uses{def:fourier-L2, lem:fourier12-cauchy, thm:plancherel}
   \lean{}
   % \leanok
   This is well-defined: By \ref{lem:fourier12-cauchy}, the limit exists. Further it does not depend
@@ -265,7 +277,7 @@ Let $f\in L^2(V,E)$. Plancharel's theorem lets us now approximate a potential $\
 
 \begin{definition}
   \label{def:invFourier-L2}
-  \uses{lem:fourier12-cauchy, thm:plancharel}
+  \uses{lem:fourier12-cauchy, thm:plancherel}
   \lean{}
   % \leanok
   Define analogously $\mathcal F^{-1}f:=\check f:=\lim_{n\to\infty}\check f_n$, if $f_n\xrightarrow[L^2]{}f\in L^2(V,E)$
@@ -274,10 +286,10 @@ Let $f\in L^2(V,E)$. Plancharel's theorem lets us now approximate a potential $\
 
 \begin{corollary}
   \label{thm:fourier2-properties}
-  \uses{def:fourier-L2, def:invFourier-L2, thm:plancharel, thm:fourier-inversion, lem:fourier-prop}
+  \uses{def:fourier-L2, def:invFourier-L2, thm:plancherel, thm:fourier-inversion, lem:fourier-prop}
   \lean{}
   % \leanok
-  Plancharel's Theorem, the inversion formula, and the properties of lemma \ref{lem:fourier-prop} hold
+  Plancherel's Theorem, the inversion formula, and the properties of lemma \ref{lem:fourier-prop} hold
   for the Fourier transform on $L^2(V,E)$ as well.
 \end{corollary}
 \begin{proof}
@@ -299,5 +311,5 @@ Let $f\in L^2(V,E)$. Plancharel's theorem lets us now approximate a potential $\
     % \uses{} % Put any results used in the proof but not in the statement here
     % \leanok % uncomment if the lemma has been proven
     This follows immediately from \ref{thm:fourier2-properties}: Linearity from the $L^2$-version of
-    \ref{lem:fourier-prop}, and continuity and well-definedness from the $L^2$-version of Plancharel's theorem.
+    \ref{lem:fourier-prop}, and continuity and well-definedness from the $L^2$-version of Plancherel's theorem.
 \end{proof}
