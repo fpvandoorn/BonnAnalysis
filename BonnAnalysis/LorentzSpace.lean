@@ -171,7 +171,7 @@ lemma integral_norm_le_integral_rearrangement {f : α → E} (hf : Measurable f)
 -- todo: Hardy-Littlewood rearrangement inequality for functions into `ℝ≥0∞`.
 
 /-- The Hardy-Littlewood rearrangement inequality, for functions into `𝕜` -/
-theorem integral_mul_le {f g : α → 𝕜} :
+theorem lintegral_norm_mul_le_lintegral_rearrangement_mul {f g : α → 𝕜} :
     ∫⁻ x, ‖f x * g x‖₊ ∂μ ≤
     ∫⁻ t, rearrangement f (.ofReal t) μ * rearrangement g (.ofReal t) μ := by
   sorry
