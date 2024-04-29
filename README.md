@@ -4,6 +4,7 @@ For the course at Bonn SuSe 24.
 * We will use a private channel on the [Lean Zulip](https://leanprover.zulipchat.com/) to coordinate.
 * [Blueprint](http://florisvandoorn.com/BonnAnalysis/blueprint/)
 * [Blueprint as pdf](http://florisvandoorn.com/BonnAnalysis/blueprint.pdf)
+* [Doc pages for this repository](http://florisvandoorn.com/BonnAnalysis/docs/)
 
 ## Installation
 
