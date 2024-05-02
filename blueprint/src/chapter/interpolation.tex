@@ -1,3 +1,365 @@
 \chapter{Interpolation}
 \label{chap:interpolation}
 % put text here
+
+\section{Rietz-Thorin's Interpolation Theorem}
+Rietz-Thorin's interpolation theorem is a powerful tool to study boundedness of linear operators between complex $L^p$ spaces.
+Informally, it states that if a linear map $T$ is bounded as an operator $L^{p_0}\to L^{q_0}$ and as an operator $L^{p_1} \to L^{q_1}$, then
+it must also be a bounded operator $L^p \to L^q$ whenever $\left(\frac{1}{p}, \frac{1}{q}\right)$ is a convex combination of $\left(\frac{1}{p_0}, \frac{1}{q_0}\right)$ and $\left(\frac{1}{p_1}, \frac{1}{q_1}\right)$.\\
+Since simple functions are contained in all the $L^p$ spaces, and bounded linear operators are continuous, an equivalent formulation may be: given a bounded linear operator from simple functions to functions that are integrable on all sets of finite measure, if we know it can be extended to bounded linear
+operators $L^{p_0} \to L^{q_0}$ and $L^{p_1} \to L^{q_1}$, then it can also be extended $L^p \to L^q$ with $p$ and $q$ as above.\\\\
+Before we start, let us recall the maximum modulus principle from complex analysis.
+There are various statements of this in Lean, see \href{https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Complex/AbsMax.html}{the dedicated Matlib page}.
+
+\begin{theorem}
+    \label{thm:maximum_modulus}
+    \lean{Analysis.Complex.norm_eqOn_closure_of_isPreconnected_of_isMaxOn}
+    \leanok
+    Let $U$ be a connected open set in a complex normed space $E$. Let $f:E\to F$ be a function that
+    complex differentiable on $U$ and continuous on $\bar{U}$.\\
+    If $|f(z)|$ takes its maximum on a point $u\in U$, then it must be constant on $\bar{U}$.
+\end{theorem}
+\begin{proof}
+    \leanok
+    Already formalized in Mathlib, along with several variants.
+\end{proof}
+
+
+\begin{lemma}
+    \label{lem:threelines}
+    \uses{}
+    \lean{DiffContOnCl.norm_le_pow_mul_pow}
+    %\leanok
+    Let $S$ be the strip $S:=\{z \in \C \ | \ 0 < \mathrm{Re} \, z < 1 \}$. Let $f: \overline{S} \to \C$
+    be a function that is holomorphic on $S$ and continuous and bounded on $\overline{S}$.\\
+    Assume $M_0, M_1$ are positive real numbers such that for all values of $y$ in $\R$, we have
+    \[| \phi(iy) | \leq M_0 \ \qquad | \phi(1+iy) | \leq M_1 \]
+    i.e., the absolute values of the function on the lines $\{\mathrm{Re} \, z = 0\}$ and $\{\mathrm{Re} \, z = 1\}$ are bounded by $M_0$ and $M_1$ respectively.\\
+    Then, for all $0 \leq t \leq 1$ and for all real values of $y$, we have
+    \[  | \phi(t + iy) | \leq M_0^{1-t} M_1^t\]
+\end{lemma}
+\begin{proof}
+    % \uses{} % Put any results used in the proof but not in the statement here
+    % \leanok % uncomment if the lemma has been proven
+    ~\\
+    If $|\phi|$ is constant, everything holds trivially by setting $M_0$ and $M_1$ to be the value of $|\phi|$ at a point. Assume $|\phi|$ non-constant.\\
+    \begin{itemize}
+        \item{ \textbf{Case 1}: assume $M_0=M_1=1$, and $\sup_{0 \leq x \leq 1} | \phi(x+iy) | \to 0$ when $|y| \to 0$.\\
+        Let $M$ be the supremum of $|\phi(z)|$ on $\bar{S}$. Since the function is non-constant, we have $M>0$.\\
+        Let $\{z_n\}$ be a sequence of points in $S$ such that $|\phi(z_n)|$ converges to $M$.\\
+        Since we assumed the absolute value of $\phi$ goes to zero as $|y|$ goes to infinity, all points where $|\phi(z)|>M-\epsilon$ must be in some rectangle around zero, i.e. the sequence ${z_n}$ must be bounded.\\
+        Hence, there must be a converging subsequence of ${z_n}$ to a point $z^* \in \bar{S}$.\\
+        By maximum modulus principle, $z^*$ must be on the boundary $\delta S$, so it must have real part $0$ or $1$.
+        Hence, by assumption, $|\phi(z^*)|\leq 1$, and by construction $|\phi(z)|\leq 1$ for all $z \in \bar{S}$, which is what we wanted to show.
+        }
+        \item{ \textbf{Case 2}: only assume $M_0 = M_1 = 1$.\\
+        For $\epsilon>0$, define
+        \[ \phi_{\epsilon} (z) = \phi(z) e^{\epsilon (z^2 - 1)} \]
+        If the real part of $z$ is $0$, then $z=iy$ and
+        \[ | \phi_{\epsilon} (z) | = |\phi(z) e^{\epsilon (-y^2-1)}| \leq |\phi(z)| \cdot 1 \leq 1\]
+        If the real part of $z$ is $1$, then $z=1+iy$ and
+        \[ | \phi_{\epsilon} (z) | = |\phi(z) e^{\epsilon (1 -y^2 + 2iy -1)}| = |\phi(z) e^{\epsilon (-y^2 + 2iy)}| = |\phi(z) e^{\epsilon (-y^2)}| \leq |\phi(z)| \cdot 1 \leq 1 \]
+        Moreover,
+        \[ | \phi_{\epsilon} (x+iy)| \leq |\phi(x+iy)| \cdot |e^{\epsilon(z^2-1)}| = |\phi(x+iy)| \cdot |e^{\epsilon(x^2-1-y^2+2ixy)}| = |\phi(x+iy)| \cdot |e^{\epsilon(x^2-1-y^2)}| \]
+        Hence, for $0\leq x \leq 1$ and $|y| \to \infty$, we have that both factors go to zero.\\
+        Thus $\phi_{\epsilon}$ satisfies the hypotheses of case 1, so $|\phi_{\epsilon}| \leq 1$ on the whole strip.\\
+        Now, we have pointwise that
+        \[\lim_{\epsilon \to 0} \phi_{\epsilon}(z) = \lim_{\epsilon \to 0} \phi(z) e^{\epsilon(z^2-1)} = \phi(z)\]
+        Hence, for $\epsilon \to 0$, we have $|\phi_{\epsilon}(z)| \to |\phi(z)|$.
+        Thus,
+        \[ |\phi(z)| = \lim_{\epsilon \to 0} |\phi_{\epsilon}(z)| \leq 1 \]
+        which is what we wanted to show.
+        }
+        \item{ \textbf{General case}\\
+        If $M_0$ and $M_1$ are any two positive real numbers, define
+        \[ \tilde{\phi} (z) = M_0 ^{z-1} M_1^{-z} \phi(z) \]
+        Recall that, for $a\in \R\setminus\{0\}$, we have
+        \[ |a^{b+ic}| = |a^b| \]
+        Hence, if the real part of $z$ is $0$, we have
+        \[ |\tilde{\phi} (z)| \leq |M_0^{-1}| \cdot |M_1^0| \cdot |\phi(z)| \leq \frac{1}{M_0} \cdot M_0 = 1 \]
+        And if the real part of $z$ is $1$, we have
+        \[ |\tilde{\phi} (z)| \leq |M_0^0| \cdot |M_1^{-1}| \cdot |\phi(z)| \leq \frac{1}{M_1} \cdot M_1 = 1 \]
+        From the previous case, we obtain that for arbitrary $z$ in the strip
+        \[ |\tilde{\phi} (z)| \leq 1 \]
+        Now, write $z= t + iy$ and unroll the definition of $\tilde{\phi}$ to obtain
+        \[ |M_0^{t-1+y} M_1^{-t-iy} \phi(z)| \leq 1 \]
+        The left-hand side is equal to
+        \[ M_0^{t-1} M_1^{-t} |\phi(z)| \]
+        So we obtain
+        \[|\phi(z)| \leq M_0^{1-t} M_1^t\]
+        which is exactly what we wanted.
+        }
+    \end{itemize}
+\end{proof}
+
+
+\begin{lemma}
+    \label{lem:lp_of_sup_norm}
+    \uses{}
+    \lean{}
+    %\leanok
+    Let $p$ and $q$ be conjugate exponents and let $g$ be integrable on all sets of finite measure. If
+    \[ \sup_{||f||_{L^p} \leq 1, \ f \text{ simple}} \left| \int fg \right| = M < \infty \]
+    then $g$ is in $L^q$ and $||g||_{L^q} = M$.
+    \end{lemma}
+      \begin{proof}
+      % \uses{} % Put any results used in the proof but not in the statement here
+      % \leanok % uncomment if the lemma has been proven
+      Details to be filled later.
+      \end{proof}
+
+      \begin{comment}
+      (Note: This is used by Stein-Shakarchi to prove the dual of $L^p$ is $L^q$, so it may be already formalized by the time
+      we get to this point?)\\\\
+      Approximate $g$ by simple functions from below, i.e. consider a sequence $\{g_n\}_{n\in \bbn}$ of simple functions
+      such that for each $x$ we have $|g_n (x)| \leq |g(x)|$ and the $g_n$ converge to $g$ pointwise.\\
+      If $p>1$ (thus $q<\infty$), consider
+      \[ f_n(x) = |g_n(x)|^{q-1} \mathrm{sign}(g(x)) \cdot \frac{1}{||g_n||^{q-1}_{L^q}} \]
+      Observe that $||f_n||_{L^p}=1$. For this, first note that $p(q-1)=q$ since
+      \[\frac{1}{p} = 1- \frac{1}{q}=\frac{q-1}{q} \ \Rightarrow \ q = p(q-1)  \]
+      and then write
+      \[||f_n||^p_{L^p} = \int \left|\frac{1}{||g_n||_{L^q}^{q-1}} \cdot |g_n(x)|^{q-1} \mathrm{sign} g(x) \right|^p = \frac{1}{||g_n||_{L^q}^{p(q-1)}} \int  |g_n(x)|^{p(q-1)} = \frac{1}{||g_n||_{L^q}^q} ||g_n||_{L^q}^q = 1  \]
+      So by assumption
+      \[ \left|\int f_n g\right| \leq M \]
+      And by direct computation
+      \[ \int f_n g = \int \]
+
+      HOLE HERE
+      Then, we conclude by Fatou's Lemma
+
+      If $p=1$, since the measure is $\sigma$-finite, write $X$ as an increasing union of subsets $\{E_n\}$ and take
+      \[ f_n (x) = \frac{1}{\mu(E_n)} \mathrm{sign}(g(x)) \chi_{E_n} (x) \]
+      Then $||f_n(x)||_{L^1} = \frac{1}{\mu(E_n)} \cdot \mu(E_n) = 1$.
+
+
+      Now, it is easy to show for both cases that $||g||\geq M$ by H\"older's inequality: since $M$ is the supremum of the absolute value of $\int fg$ for our possible $f$,
+      fix an $\epsilon>0$ and choose an $f$ such that
+      \[\left| \int fg \right| \geq M-\epsilon \]
+      so that
+      \[ M- \epsilon \leq ||fg||_{L^1} \leq ||f||_{L^p} ||g||_{L^q} \leq ||g||_{L^q} \]
+      Since $\epsilon$ is arbitrarily small, this gives
+      \[ ||g||_{L^q} \geq M \]
+
+      \end{comment}
+
+As a last step towards proving the theorem, let us recall a consequence of Hölder's inequality, which will only really be substantial in a corner case of our proof.
+\begin{lemma}
+  \label{lem:hoelder'}
+  \uses{}
+  \lean{}
+  %\leanok
+  Let $(X, \mu)$ be a measure space and $0<p_0<p<p_1\leq \infty$. Assume there is a $t$ such that we can write
+  \[ \frac{1}{p} = \frac{1-t}{p_0} + \frac{t}{p_1} \]
+  Let $f$ be a function in $L^{p_0}(X) \cap L^{p_1}(X)$. Then, $f$ is in $L^p(X)$ and
+  \[ ||f||_{L^p} \leq ||f||^{1-t}_{L^{p_0}} ||f||^t_{L^{p_1}} \]
+  \end{lemma}
+    \begin{proof}
+    %\uses{} % Put any results used in the proof but not in the statement here
+    % \leanok % uncomment if the lemma has been proven
+    ``Exercise''/ To be filled later/ Possibly already in Mathlib
+  \end{proof}
+
+
+
+
+\begin{theorem}
+    \label{thm:riesz_interpolation}
+    \uses{}
+    \lean{}
+    %\leanok
+    Let $(X, \mu)$ and $(Y, \nu)$ be measure spaces and consider all $L^p$ spaces to be complex valued.\\
+    Suppose $T$ is a linear map $L^{p_0}(X) + L^{p_1}(X) \to L^{q_0}(Y) + L^{q_1}(Y)$ that restricts to
+    bounded operators $L^{p_0} \to L^{q_0}$ and $L^{p_1} \to L^{q_1}$. Let $M_0, M_1$ be the respective bounds, i.e.,
+    \[ \begin{cases} ||Tf||_{L^{q_0}} \leq M_0 ||f||_{L^{p_0}} \\ ||Tf||_{L^{q_1}} \leq M_1 ||f||_{L^{p_1}}  \end{cases}\]
+    Then, for any pair $(p, q)$ such that there is a $t$ in $[0,1]$ for which
+    \[\frac{1}{p} = \frac{1-t}{p_0} + \frac{t}{p_1} \qquad \frac{1}{q} = \frac{1-t}{q_0} + \frac{t}{q_1} \]
+    we have that the operator is bounded $L^p \to L^q$, and in particular
+    \[ ||Tf||_{L^q} \leq M_0^{1-t} M_1^t ||f||_{L^p} \]
+    \end{theorem}
+      \begin{proof}
+      \uses{lem:lpnorm_sup, lem:threelines} % Put any results used in the proof but not in the statement here
+      % \leanok % uncomment if the lemma has been proven
+      For a valid choice of $p,q$, note that we both need to show $Tf$ is in $L^q$ and a bound on the
+      $L^q$ norm of $Tf$.
+      Let $q'$ be the conjugate exponent of $q$. By Lemma \ref{lem:lp_of_sup_norm} for $Tf$, we need a bound of the form
+      \[ \sup_{||g||_{L^{q'}} \leq 1, \ \ g \text{ simple}} \left| \int T(f) g \right| \leq M ||f||_{L^p} \]
+      \begin{itemize}
+        \item{\textbf{Case 1}: assume $p<\infty$ and $q>1$, and let $q', q_0^1, q_1'$ be the conjugate exponents of $q, q_0, q_1$ respectively.
+        \begin{itemize}
+            \item{\textbf{Subcase a:} assume $f=\sum_i a_i \chi_{E_i}$ is a simple function (finite sum with $E_i$ disjoint of finite measure).\\
+            Let $g=\sum_j b_j \chi_{F_j}$ be a simple function.
+            By writing $f$ as $||f||_{L^p} \cdot \frac{f}{||f||_{L^p}}$ and using linearity of $T$ and integrals, it suffices to prove the above inequality when $||f||_{L^p}=1$.\\
+            We want to apply the three lines lemma to an appropriate function. Define
+            \[ \gamma(z) = p \left(\frac{1-z}{p_0} + \frac{z}{p_1} \right) \qquad f_z = |f|^{\gamma(z)} \cdot \frac{f}{|f|} \]
+            \[ \delta(z) = q' \left(\frac{1-z}{q'_0} + \frac{z}{q'_1} \right) \qquad g_z = |g|^{\delta(z)} \cdot \frac{g}{|g|} \]
+            Observe that for $t$ as in the statement of the theorem, we have by definition that $\gamma(t)=1$, hence $f_t=f$.\\
+            Moreover, if $\mathrm{Re}(z)=0$, we have that $\mathrm{Re} (\gamma(z)) = \frac{p}{p_0}$, and hence
+            \[ ||f_z||_{L^{p_0}} = \left(\int |f_z|^{p_0}\right)^{\frac{1}{p_0}} = \left(\int | |f|^{\gamma(z)} |^{p_0}\right)^{\frac{1}{p_0}} = \left(\int |f| ^{\frac{p}{p_0} \cdot p_0}\right)^{\frac{1}{p_0}} = \left(||f||_{L^p}^p\right)^{\frac{1}{p_0}} = 1^{\frac{1}{p_0}} = 1  \]
+            If $\mathrm{Re}(z)=1$, we have $\mathrm{Re} (\gamma(z)) = \frac{p}{p_1}$, and the exact same computation replacing $p_0$ with $p_1$ now shows that $||f_z||_{L^{p_1}}=1$.\\
+            Similarly, one shows that
+            \[ g_t=g \qquad ||g_z||_{L^{q'_0}} = 1 \text{ if } \mathrm{Re}(z)=0 \qquad ||g_z||_{L^{q'_1}} = 1 \text{ if } \mathrm{Re}(z)=1 \]
+            Now, we want to apply the three lines lemma to the function
+            \[\phi(z) := \int (Tf_z) g_z \]
+            Since $f$ and $g$ are simple and given by the expressions above, we can explicitly write $f_z$ and $g_z$ as
+            \[f_z=\sum_i |a_i|^{\gamma(z)} \frac{a_i}{|a_i|} \chi_{E_i} \qquad g_z=\sum_j |b_j|^{\delta(z)} \frac{b_j}{|b_j|} \chi_{F_j} \]
+            (here, we use that the $E_i$ (respectively $F_j$) are disjoint, so for every point in the domain there is at most one of the $E_i$ covering it).\\
+            So, expanding everything by linearity of $T$ and integrals, we obtain
+            \[ \phi(z) = \sum_{i,j} |a_i|^{\gamma(z)} \frac{a_i}{|a_i|} |b_j|^{\delta(z)} \frac{b_j}{|b_j|} \int T(\chi_{E_i}) \chi_{F_j} \]
+            This only depends on $z$ holomorphically in terms of the exponents of the $|a_i|$ and $|b_j|$, so it is a holomorphic function on the strip $S$ in the three lines lemma and it is continuous on $S$.\\
+            It it also bounded on $\bar{S}$. In fact, we wrote $\phi$ as a finite sum, so we only need to show each summand is bounded.
+            Since the real part of $z$ is between $0$ and $1$, the terms $|a_i|^{\gamma(z)}$ and $|b_j|^{\delta(z)}$ have bounded norms.
+            Finally, recall that H\"older's inequality states that $||fg||_1 \leq ||f||_p ||g||_1$ for conjugate exponents $p,q$.
+            Hence,
+            \[ \left| \int T(\chi_{E_i}) \chi_{F_j} \right| \leq ||T(\chi_{E_i}) \chi_{F_j}||_{L^1} \leq ||T(\chi_{E_i})||_{L^{p_0}} \cdot ||\chi_{F_j}||_{p'_0} \leq M_0 \mu(E_i) \mu(F_j) \]
+            which is bounded. Moreover, if $\mathrm{Re}(z)=0$, since $||f_z||_{L^{p_0}}=||g_z||_{L^{q'_0}}=1$, we have
+            \[ | \phi(z) | \leq \int |(Tf_z) g_z| \leq ||Tf_z||_{L^{q_0}} \cdot ||g_z||_{L^{q'_0}} \leq M_0 \cdot ||g_z||_{L^{q'_0}} \leq M_0 \]
+            Similarly, if $\mathrm{Re}(z)=1$, we obtain
+            \[ | \phi(z) | \leq \int |(Tf_z) g_z| \leq ||Tf_z||_{L^{q_1}} \cdot ||g_z||_{L^{q'_1}} \leq M_1 \cdot ||g_z||_{L^{q'_1}} \leq M_1 \]
+            Thus, applying the three lines lemma to $\phi(z)$ yields that
+            \[ |\phi(t+yi)| \leq M_0^{1-t} M_1^t \]
+            In particular, this holds for $y=0$, but now
+            \[ \phi(t) = \int (Tf_t) g_t = \int (Tf) g \]
+            So we have
+            \[ \left| \int (Tf) g \right| \leq M_0^{1-t} M_1^t \]
+            which is exactly what we wanted to show.
+            }
+            \item{\textbf{Subcase b:} Now, let $f$ be any function in $L^p$. By density of simple functions, approximate $f$ by a sequence ${f_n}$ of simple functions with $||f_n - f||_{L^p} \to 0$.\\
+            By the previous case, we have $||Tf_n||_{L^q} \leq M ||f_n||_{L^p}$. In particular, the sequence $\{Tf_n\}$ is Cauchy in $L^q$, since
+            \[ ||Tf_m - Tf_n||_{L^q} = ||T(f_m-f_n)||_{L^q} \leq M ||f_m - f_n||_{L^p} \]
+            and the original sequence is Cauchy. By completeness, the $\{Tf_n\}$ converge in $L^q$, in particular the $L^q$ norm of the limit is the limit of the $L^q$ norms, which is less than $M ||f||_{L^p}$.
+            Hence, it suffices to show that the sequence $\{Tf_n\}$ converges almost everywhere to $Tf$.\\
+            Write $f= f^U + f^L$ with
+            \[ f^U := \begin{cases} f(x) & \text{if } |f(x)|\geq 1 \\ 0 & \text{otherwhise} \end{cases} \qquad f^L := \begin{cases} f(x) & \text{if } |f(x)|< 1 \\ 0 & \text{otherwhise} \end{cases}  \]
+            and similarly $f_n = f_n^U + f_n^L$.\\
+            Modulo reordering them, assume $p_0 \leq p_1$, so we have $p_0 \leq p \leq p_1$. Since $f\in L^p$, $f^U$ must be in $L^{p_0}$ and $f^L$ in $L^{p_1}$.
+            Similarly, since $f_n \to f$ in $L^p$, we have $f_n^U \to f^U$ in $L^{p_0}$ and $f_n^L \to f^L$ in $L^{p_1}$.\\
+            By the assumptions of boundedness of $L$
+            \[ Tf_n^U \to Tf^U \ \text{ in } L^{q_0} \qquad Tf_n^L \to Tf^L \ \text{ in } L^{q_1} \]
+            Modulo extracting subsequences, we can assume that the convergence is almost everywhere, so that almost everywhere
+            \[ Tf_n (x) = Tf_n^U (x) + Tf_n^L(x) \to Tf^U (x) + Tf(x) = Tf (x)\]
+            which is what we wanted to show.
+            }
+        \end{itemize}
+        }
+        \item{\textbf{Case 2:} $p=\infty$ or $q=1$.\\
+        If $p=\infty$, we must also have $p_0=p_1=\infty$, thus we have
+        \[ ||Tf||_{L^{q_0}} \leq M_0 ||f||_{L^{\infty}} \qquad ||Tf||_{L^{q_1}} \leq M_1 ||f||_{L^{\infty}} \]
+        Applying Lemma \ref{hoelder'} with $Tf, q, q_0, q_1$, we obtain
+        \[||Tf||_{L^q} \leq ||Tf||_{L^{q_0}}^{1-t} ||Tf||_{L^{q_1}}^{t} \leq  M_0^{1-t} M_1^t ||f||_{L^{\infty}} \]
+        which is what we wanted.\\\\
+        If $p<\infty$ and $q=1$, then (since they must be at least $1$ by definition of $L^p$ spaces) we have that $q_0$ and $q_1$ must also both be $1$ (for example, since $\frac{1}{q}$ is a convex combination of the other two reciprocals, the largest one must be $1$, and from that rearranging terms shows the other one is $1$).
+        In this case, take $g_z=g$ for all $z$ and repeat the proof above (note:isn't this what already happens if we do not consider this case separately?).
+        }
+
+      \end{itemize}
+
+
+  \end{proof}
+
+  \section{Applications of Rietz-Thorin's Interpolation Theorem}
+
+  \subsection{Hausdorff-Young inequalities}
+
+  \begin{lemma}
+    \label{lem:hausdorff_young}
+    \uses{}
+    \lean{}
+    %\leanok
+    Let $X=[0,2\pi]$ with normalized Lebesgue measure $\frac{d\theta}{2\pi}$ and let $Y=\bbz$ with counting measure.\\
+    Consider the operator $T: f \mapsto \{a_n\}_{n\in \bbz}$ where
+    \[ a_n = \frac{1}{2\pi} \int_0^{2\pi} f(\theta) e^{-in\theta} d\theta \]
+    For $1\leq p\leq 2$ and $\frac{1}{p}+\frac{1}{q}=1$, we have
+    \[ ||Tf||_{L^q} \leq ||f||_{L^p} \]
+
+    \end{lemma}
+      \begin{proof}
+      \uses{thm:riesz_interpolation} % Put any results used in the proof but not in the statement here
+      % \leanok % uncomment if the lemma has been proven
+      Observe that we may simply regard $T$ as an operator $L^1([0, 2\pi]) \to L^{\infty}(\bbz)$ since $L^2([0, 2\pi]) \subseteq L^1([0, 2\pi])$ (compact domain, bound with maximum), and $L^2(\bbz) \subseteq L^{\infty}(\bbz)$.\\
+      Note that the claim corresponds (unless $q$ is infinity) to the inequality
+      \[ \left(\sum_{n \in \bbz} |a_n|^q \right)^{1/q} \leq \left(\frac{1}{2\pi} \int_0^{2\pi} |f(\theta)|^p d\theta\right)^{1/p}\]
+      For $p_0=2$ (thus $q_0=2$), this is Parseval's identity (see tsum\_sq\_fourierCoeff).\\
+      For $p_1=1$ (thus $q_1=\infty$), we can check it directly. Since
+      \[ a_n = \frac{1}{2\pi} \int_0^{2\pi} f(\theta) e^{-in\theta} d\theta \]
+      we have
+      \[ |a_n| \leq \frac{1}{2\pi} \int_0^{2\pi} |f(\theta) e^{-in\theta}| d\theta \leq \frac{1}{2\pi} \int_0^{2\pi} |f(\theta)| d\theta = ||f||_{L^1}  \]
+      So
+      \[ ||Tf||_{\infty} = \sup_n |a_n| \leq ||f||_{L^1}\]
+      Applying Rietz-Thorin's theorem, we obtain that the claim holds whenever we can find a $t\in [0,1]$ such that
+      \[\frac{1}{p} = \frac{1-t}{p_0} + \frac{t}{p_1} \qquad \frac{1}{q} = \frac{1-t}{q_0} + \frac{t}{q_1} \]
+      Substituting $p_0=2$, $p_1=1$, $q_0=2$, $q_1=\infty$,
+      \[\frac{1}{p} = \frac{1-t}{2} + t \qquad \frac{1}{q} = \frac{1-t}{2} \]
+      Now
+      \[ \frac{1}{p} = \frac{1+t}{2} \ \Rightarrow \ p = \frac{2}{1+t} \]
+      which for $t\in [0,1]$ ranges from $1$ to $2$.\\
+      Moreover, we have
+      \[ \frac{1}{p} + \frac{1}{q} = \frac{1+t}{2} + \frac{1-t}{2} = 1 \]
+      i.e., $p$ and $q$ are conjugate exponents.\\
+      This completes the proof.
+    \end{proof}
+
+Now, we want to obtain a ``dual" inequality to the previous one. For this, we consider an operator $T':L^2(\bbz) \to L^2([0, 2\pi])$ in the opposite direction compared to the previous lemma
+\[ T' (\{a_n\}_{n\in \bbz}) := \sum_{n=-\infty}^{\infty} a_n e^{in\theta} \]
+The operator is defined on any $L^p(\bbz)$ for $p\leq 2$, since $L^p(\bbz) \subseteq L^2(\bbz)$.
+Note that the target expression is indeed in $L^2([0, 2\pi])$ again.
+
+\begin{lemma}
+    \label{lem:hausdorff_young_dual}
+    \uses{}
+    \lean{}
+    %\leanok
+    For $1\leq p \leq 2$ and $q$ conjugate exponent to $p$, we have
+    \[ ||T' \{a_n\}||_{L^q} \leq ||\{a_n\}||_{L^p} \]
+
+    \end{lemma}
+      \begin{proof}
+      \uses{thm:riesz_interpolation} % Put any results used in the proof but not in the statement here
+      % \leanok % uncomment if the lemma has been proven
+      This is similar to the previous corollary. Parseval's identity gives the case $p_0=q_0=2$.\\
+      For the case $p_1=1$, $q_1=\infty$, again
+      \[ \left| \sum_{n\in \bbz} a_n e^{in\theta} \right| \leq \sum_{n\in \bbz} \left| a_n e^{in\theta} \right| = \sum_{n\in \bbz} |a_n| = ||\{a_n\}||_{L^1} \]
+      i.e.
+      \[ ||T'\{a_n\}||_{\infty} = \sup_{\theta \in [0, 2\pi]}  \left| \sum_{n\in \bbz} a_n e^{in\theta} \right| \leq ||\{a_n\}||_{L^1}  \]
+      As before, applying Rietz-Thorin's interpolation theorem concludes the proof.
+    \end{proof}
+
+As a remark, if $f= T'\{a_n\}$, then the $\{a_n\}$ are the Fourier coefficients of $f$, yielding (when $p\neq 1$) the inequality
+\[ \left( \frac{1}{2\pi} \int_0^{2\pi} |f(\theta)|^q d\theta \right)^{1/q} \leq \left( \sum_{n\in \bbz} |a_n|^p \right)^{1/p} \]
+
+\subsection{Extending the Fourier transform}
+The Rietz-Thorin interpolation theorem also allows us to extend the Fourier transform defined in the previous chapter to a bigger domain.\\
+Let $V$ be a finite dimensional real inner product space and $E$ be a normed complex space.\\
+As in Definition \ref{def:fourier_transform} define the Fourier transform on simple functions $f$ via the expression
+\[ \mathcal{F} (f)(w) = \int e^{-2\pi i \langle v, w \rangle } f(v) \]
+We have shown $\mathcal{F}$ extends to a bounded linear operator $L^1 \to L^{\infty}$, and to a bounded linear operator $L^2 \to L^2$ (see Theorem \ref{thm:fourier-is-l2-linear}).\\
+By Rietz-Thorin interpolation theorem, it can be uniquely extended to bounded linear operators $L^p \to L^q$
+whenever $1\leq p \leq 2$ and $q$ is conjugate to $p$.
+
+\begin{comment} This subsection is to be potentially added later
+\subsection{Young's Inequality for Convolutions}
+Here, we work with $X=Y=\R^d$ with standard scalar product and the usual Lebesgue measure.\\
+
+\begin{lemma}
+    \label{lem:young_convolution}
+    \uses{}
+    \lean{}
+    %\leanok
+    For any $f\in L^p$ and $g \in L^r$, their convolution
+    \[ (f * g) (x) = \int_{\R^d} f(x-y) g(y) dy \]
+    is well-defined (i.e. the right-hand side is integrable for almost every $x$) and, if $\frac{1}{q} = \frac{1}{p} + \frac{1}{r} - 1$, we have
+    \[ || f * g ||_{L^q} \leq ||f||_{L^p} ||g||_{L^r}\]
+
+    \end{lemma}
+      \begin{proof}
+      \uses{thm:riesz_interpolation} % Put any results used in the proof but not in the statement here
+      % \leanok % uncomment if the lemma has been proven
+      \begin{itemize}
+        \item{\textbf{Case 1:} assume $f$ and $g$ are simple functions. Fix $g$ and consider the operator $Tf = f * g$, which is linear by linearity of integrals.
+        Let $M:= ||g||_{L^r}$. If $r'$ is the conjugate exponent to $r$, then by H\"older's inequality
+        \[||T(f)||_{L^{\infty}} \]
+        }
+        TO BE COMPLETED
+      \end{itemize}
+    \end{proof}
+
+\end{comment}
