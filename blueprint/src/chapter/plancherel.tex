@@ -9,7 +9,7 @@ $E,F$ be normed spaces over $\C$ and let $L:V\times W\to \R$, $M:E\times F\to\C$
 be bilinear maps.
 \begin{definition}
   \label{def:fourier-transform}
-  \uses{}
+  % \uses{}
   \lean{VectorFourier.fourierIntegral, Fourier.fourierIntegral, Real.fourierIntegral,
         Real.fourierIntegralInv}
   \leanok
@@ -100,11 +100,11 @@ $$\widehat{u_{x,\delta}}(z)=\delta^{-n/2}e^{-\pi|x-y|^2/\delta}=:K_\delta(x-z).$
 
 \begin{lemma}
 \label{lem:weierstrass-kernel}
-\uses{}
-\lean{}
+% \uses{}
+% \lean{}
 % \leanok
 Let $K_\delta(v)=\delta^{-n/2}e^{-\pi|v|^2/\delta}$
-as in Lemma \ref{lem:fourier-gaussian}. This is a
+as in \Cref{lem:fourier-gaussian}. This is a
 \emph{good kernel}, called the \emph{Weierstrass kernel}, satisfying
 $$\int_{V}K_\delta(x)\,dx= 1\quad\text{and}\quad
 \int_{|x|>\eta}K_\delta(x)\,dx\xrightarrow{\delta\to0}0\quad\text{for all }\eta>0.$$
@@ -131,8 +131,8 @@ The following technical theorem is used in the proofs of both the inversion form
 \uses{lem:weierstrass-kernel}
 \lean{}
 % \leanok
-Let $f:V\to E$ be integrable. Let $K_\delta$ be the Weierstrass kernel from \ref{lem:weierstrass-kernel},
-or indeed any family of functions satisfying the conditions of lemma \ref{lem:weierstrass-kernel}. Then
+Let $f:V\to E$ be integrable. Let $K_\delta$ be the Weierstrass kernel from \Cref{lem:weierstrass-kernel},
+or indeed any family of functions satisfying the conditions of \Cref{lem:weierstrass-kernel}. Then
 $$(K_\delta\ast f)(x):=\int_V K_\delta(y)f(x-y)\,d\mu(y)\xrightarrow{\delta\to0}f(x)$$ in the $L^1$-norm.
 If $f$ is continuous, the convergence also holds pointwise.
 \end{theorem}
@@ -144,7 +144,7 @@ Take $L^1$-norms and use Fubini's theorem to conclude
 $$\|\Delta_\delta\|_1\leq\int_{\R^n}\|f(x-y)-f(x)\|_1K_\delta(y)\,dy.$$ For $\varepsilon>0$ find $\eta>0$
 small enough so that $\|f(x-y)-f(x)\|_1<\varepsilon$ when $|y|\eta$. Thus
 $$\|\Delta_\delta\|_1\leq\varepsilon+\int_{|y|>\eta}\|f(x-y)-f(x)\|K_\delta(y)\,dy\leq\varepsilon+2\|f\|_1\int_{\|y\|>\eta}K_\delta(y)\,dy.$$
-By one of the properties in lemma \ref{lem:weierstrass-kernel}, we can choose $\delta$ small enough so that the second integral
+By one of the properties in \Cref{lem:weierstrass-kernel}, we can choose $\delta$ small enough so that the second integral
 is less than $\varepsilon$, which finishes the proof in this case.
 
 Now assume that $f$ is continuous.
@@ -156,7 +156,7 @@ Let $d=\delta^{1/2}$ and shorten $g_\delta(x,y)=|f(x-y)-f(x)|K_\delta(y)$.Then
  Now $$\int_{0<|y|<d}g_\delta(x,y)\,dy\overset{(\ast)}\leq d^{-n}\int_{0<|y|<d}|f(x-y)-f(x)|\,dy=\varphi(d)$$ and
  $$\int_{2^kd<|y|<2^{k+1}d}g\,dy\overset{(\ast)}\leq
  \frac{Bd}{(2^kd)^{n+1}}\int_{2^kd<|y|<2^{k+1}d}|f(x-y)-f(x)|\,dy\leq2^{n-k}B\varphi(2^{k+1}d),$$
- where for the inequalities labeled $(\ast)$ we used the upper bounds from lemma \ref{lem:weierstrass-kernel}.
+ where for the inequalities labeled $(\ast)$ we used the upper bounds from \Cref{lem:weierstrass-kernel}.
  Together, we find
  $$|\Delta_\delta(x)|\leq\varphi(d)+C\sum_{k\in\mathbb N}2^{-k}\varphi(2^{k+1}d)$$ for
  $C=\frac{2^n\Gamma((n+3)/2)}{\pi^{(n+1)/2}}$. Say $\varphi$ is bounded by $M\in\R$ and let $\varepsilon>0$.
@@ -180,8 +180,8 @@ Let $d=\delta^{1/2}$ and shorten $g_\delta(x,y)=|f(x-y)-f(x)|K_\delta(y)$.Then
 \end{theorem}
 \begin{proof}
 \leanok
-Apply the multiplication formula \ref{lem:fourier-multiplication} to $u_{x,\delta}$ and $f$, and conclude with
-theorem \ref{thm:kernel-approximation}.
+Apply the multiplication formula \Cref{lem:fourier-multiplication} to $u_{x,\delta}$ and $f$, and conclude with
+\Cref{thm:kernel-approximation}.
 \end{proof}
 
 \begin{remark}
@@ -215,10 +215,10 @@ Again let $V$ be a finite-dimensional inner product space over $\R$ and let $E$ 
     %Let $(e_i)_{i\in I}$ be a normalized basis of E. This choice defines a conjugation on $E$: Let $E_\R$ be
     %the $\R$-span of the $e_i$, then $E\cong E_\R\otimes_\R\C$ and we can conjugate on the second factor.
     %We denote this conjugation by $e\mapsto\overline e$.
-    Let $g(x)=\overline{f(-x)}$ and apply the multiplication formula \ref{lem:fourier-multiplication}
+    Let $g(x)=\overline{f(-x)}$ and apply the multiplication formula \Cref{lem:fourier-multiplication}
     to $f\ast g$ and $u_{0,\delta}$: $$\int_V\widehat{f\ast g}\cdot u_{0,\delta}(x)\,dx=\int_V(f\ast g)(x)K_\delta(-x)\,dx
-    \overset{\delta\to0}\to(f\ast g)(0)=\int_Vf(x)\overline{f(x)}\,dx=\| f\|_2^2$$ by theorem \ref{thm:kernel-approximation}.
-    On the other hand, by lemma \ref{lem:fourier-prop} the left hand side simplifies to
+    \overset{\delta\to0}\to(f\ast g)(0)=\int_Vf(x)\overline{f(x)}\,dx=\| f\|_2^2$$ by \Cref{thm:kernel-approximation}.
+    On the other hand, by \Cref{lem:fourier-prop} the left hand side simplifies to
     $$\int_V|\widehat f(x)|^2e^{-\delta\pi|x|^2}\,dx\xrightarrow{\delta\to0}\|\widehat f\|_2^2$$ by dominated convergence.
 
     Since $\check f(x)=\widehat f(-x)$, the corresponding statements for $\check f$ follow immediately from the ones for $\widehat f$.
@@ -228,7 +228,7 @@ We now want to extend the Fourier transform to $L^2(V,E)$. For this, take a sequ
 such that $f_n\xrightarrow[L^2]{}f$. Such sequences exist:
 \begin{lemma}
   \label{lem:L12-dense}
-  \uses{MeasureTheory.Memℒp.exists_hasCompactSupport_snorm_sub_le}
+  %\uses{MeasureTheory.Memℒp.exists_hasCompactSupport_snorm_sub_le}
   \lean{}
   % \leanok
   $L^1(V,E)\cap L^2(V,E)$ is dense in $L^2(V,E)$.
@@ -266,7 +266,7 @@ Let $f\in L^2(V,E)$. Plancherel's theorem lets us now approximate a potential $\
   \uses{def:fourier-L2, lem:fourier12-cauchy, thm:plancherel}
   \lean{}
   % \leanok
-  This is well-defined: By \ref{lem:fourier12-cauchy}, the limit exists. Further it does not depend
+  This is well-defined: By \Cref{lem:fourier12-cauchy}, the limit exists. Further it does not depend
   on the choice of sequence $(f_n)_n$. If $f\in L^1(V,E)\cap L^2(V,E)$, this definition agrees with
   the Fourier transform on $L^1(V,E)$.
 \end{lemma}
@@ -291,7 +291,7 @@ Let $f\in L^2(V,E)$. Plancherel's theorem lets us now approximate a potential $\
   \uses{def:fourier-L2, def:invFourier-L2, thm:plancherel, thm:fourier-inversion, lem:fourier-prop}
   \lean{}
   % \leanok
-  Plancherel's Theorem, the inversion formula, and the properties of lemma \ref{lem:fourier-prop} hold
+  Plancherel's Theorem, the inversion formula, and the properties of \Cref{lem:fourier-prop} hold
   for the Fourier transform on $L^2(V,E)$ as well.
 \end{corollary}
 \begin{proof}
@@ -312,6 +312,6 @@ Let $f\in L^2(V,E)$. Plancherel's theorem lets us now approximate a potential $\
   \begin{proof}
     % \uses{} % Put any results used in the proof but not in the statement here
     % \leanok % uncomment if the lemma has been proven
-    This follows immediately from \ref{thm:fourier2-properties}: Linearity from the $L^2$-version of
-    \ref{lem:fourier-prop}, and continuity and well-definedness from the $L^2$-version of Plancherel's theorem.
+    This follows immediately from \Cref{thm:fourier2-properties}: Linearity from the $L^2$-version of
+    \Cref{lem:fourier-prop}, and continuity and well-definedness from the $L^2$-version of Plancherel's theorem.
 \end{proof}
