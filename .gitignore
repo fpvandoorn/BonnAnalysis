@@ -9,3 +9,6 @@
 *.fls
 *.log
 *.synctex.gz
+# Lean blueprint
+/blueprint/lean_decls
+/blueprint/src/web.bbl
