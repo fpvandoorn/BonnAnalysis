@@ -229,7 +229,7 @@ As a last step towards proving the theorem, let us recall a consequence of Höld
             and the original sequence is Cauchy. By completeness, the $\{Tf_n\}$ converge in $L^q$, in particular the $L^q$ norm of the limit is the limit of the $L^q$ norms, which is less than $M ||f||_{L^p}$.
             Hence, it suffices to show that the sequence $\{Tf_n\}$ converges almost everywhere to $Tf$.\\
             Write $f= f^U + f^L$ with
-            \[ f^U := \begin{cases} f(x) & \text{if } |f(x)|\geq 1 \\ 0 & \text{otherwhise} \end{cases} \qquad f^L := \begin{cases} f(x) & \text{if } |f(x)|< 1 \\ 0 & \text{otherwhise} \end{cases}  \]
+            \[ f^U := \begin{cases} f(x) & \text{if } |f(x)|\geq 1 \\ 0 & \text{otherwise} \end{cases} \qquad f^L := \begin{cases} f(x) & \text{if } |f(x)|< 1 \\ 0 & \text{otherwise} \end{cases}  \]
             and similarly $f_n = f_n^U + f_n^L$.\\
             Modulo reordering them, assume $p_0 \leq p_1$, so we have $p_0 \leq p \leq p_1$. Since $f\in L^p$, $f^U$ must be in $L^{p_0}$ and $f^L$ in $L^{p_1}$.
             Similarly, since $f_n \to f$ in $L^p$, we have $f_n^U \to f^U$ in $L^{p_0}$ and $f_n^L \to f^L$ in $L^{p_1}$.\\
@@ -248,7 +248,7 @@ As a last step towards proving the theorem, let us recall a consequence of Höld
         \[||Tf||_{L^q} \leq ||Tf||_{L^{q_0}}^{1-t} ||Tf||_{L^{q_1}}^{t} \leq  M_0^{1-t} M_1^t ||f||_{L^{\infty}} \]
         which is what we wanted.\\\\
         If $p<\infty$ and $q=1$, then (since they must be at least $1$ by definition of $L^p$ spaces) we have that $q_0$ and $q_1$ must also both be $1$ (for example, since $\frac{1}{q}$ is a convex combination of the other two reciprocals, the largest one must be $1$, and from that rearranging terms shows the other one is $1$).
-        In this case, take $g_z=g$ for all $z$ and repeat the proof above (note:ixsn't this what already happens if we do not consider this case separately?).
+        In this case, take $g_z=g$ for all $z$ and repeat the proof above (note:isn't this what already happens if we do not consider this case separately?).
         }
 
       \end{itemize}
