@@ -13,7 +13,7 @@ open Real NNReal ENNReal NormedSpace MeasureTheory
 
 section
 
-variable {α 𝕜 E E₁ E₂ E₃ : Type*} {m : MeasurableSpace α} {p q : ℝ≥0∞}
+variable {α 𝕜 E E₁ E₂ E₃ : Type*} {m : MeasurableSpace α} {p p' q q' : ℝ≥0∞}
   {μ : Measure α} [NontriviallyNormedField 𝕜]
   [NormedAddCommGroup E] [NormedSpace 𝕜 E] [FiniteDimensional 𝕜 E]
   [NormedAddCommGroup E₁] [NormedSpace 𝕜 E₁] [FiniteDimensional 𝕜 E₁]
@@ -30,110 +30,115 @@ namespace ENNReal
 /-- Two numbers `p, q : ℝ≥0∞` are conjugate if `p⁻¹ + q⁻¹ = 1`.
 This does allow for the case where one of them is `∞` and the other one is `1`,
 in contrast to `NNReal.IsConjExponent`. -/
+@[mk_iff]
 structure IsConjExponent (p q : ℝ≥0∞) : Prop where
   inv_add_inv_conj : p⁻¹ + q⁻¹ = 1
 
 namespace IsConjExponent
 
-lemma symm (hpq : p.IsConjExponent q) : q.IsConjExponent p := ⟨by
-    rw [add_comm]
-    exact hpq.inv_add_inv_conj⟩
+lemma symm (hpq : p.IsConjExponent q) : q.IsConjExponent p := by
+    rw [isConjExponent_iff, add_comm, hpq.inv_add_inv_conj]
 
 lemma one_le_left (hpq : p.IsConjExponent q) : 1 ≤ p := by
-  rw [← ENNReal.inv_le_one, ← hpq.inv_add_inv_conj]
-  simp only [self_le_add_right]
+  simp_rw [← ENNReal.inv_le_one, ← hpq.inv_add_inv_conj, self_le_add_right]
 
 lemma one_le_right (hpq : p.IsConjExponent q) : 1 ≤ q := hpq.symm.one_le_left
 
-lemma one_infty : (1 : ℝ≥0∞).IsConjExponent ∞ := ⟨by simp⟩
+lemma left_ne_zero (hpq : p.IsConjExponent q) : p ≠ 0 :=
+  zero_lt_one.trans_le hpq.one_le_left |>.ne'
 
-lemma infty_one : (∞ : ℝ≥0∞).IsConjExponent 1 := ⟨by simp⟩
+lemma right_ne_zero (hpq : p.IsConjExponent q) : q ≠ 0 :=
+  hpq.symm.left_ne_zero
 
-lemma one_infty' {hp : p = 1} {hq : q = ∞}: p.IsConjExponent q := ⟨by simp [hp, hq]⟩
+lemma left_inv_ne_top (hpq : p.IsConjExponent q) : p⁻¹ ≠ ∞ := by
+  simp_rw [inv_ne_top]
+  exact hpq.left_ne_zero
 
-lemma infty_one' {hp : p = ∞} {hq : q = 1}: p.IsConjExponent q := ⟨by simp [hp, hq]⟩
+lemma right_inv_ne_top (hpq : p.IsConjExponent q) : q⁻¹ ≠ ∞ := hpq.symm.left_inv_ne_top
 
-lemma left_one_iff_right_infty (hpq : p.IsConjExponent q) : p = 1 ↔ q = ∞ := by
-  have := hpq.inv_add_inv_conj
-  constructor
-  intro hp
-  rw [← add_zero (1 : ℝ≥0∞), hp, inv_one, AddLECancellable.inj (ENNReal.cancel_of_ne ENNReal.one_ne_top)] at this
-  rwa [← ENNReal.inv_eq_zero]
-  intro hq
-  simp [hq] at this
-  assumption
+lemma left_eq (hpq : p.IsConjExponent q) : p = (1 - q⁻¹)⁻¹ := by
+  simp_rw [← inv_eq_iff_eq_inv]
+  exact (ENNReal.cancel_of_ne hpq.right_inv_ne_top).eq_tsub_of_add_eq hpq.inv_add_inv_conj
 
-lemma left_infty_iff_right_one (hpq : p.IsConjExponent q) : p = ∞ ↔ q = 1 := (left_one_iff_right_infty hpq.symm).symm
+lemma right_eq (hpq : p.IsConjExponent q) : q = (1 - p⁻¹)⁻¹ := hpq.symm.left_eq
 
-lemma one_lt_left_iff_right_ne_infty (hpq : p.IsConjExponent q) : 1 < p ↔ q ≠ ∞ := by
-  rw [← not_iff_not, not_lt, ne_eq, not_not, (left_one_iff_right_infty hpq).symm]
-  constructor
-  intro hp
-  apply LE.le.antisymm hp (one_le_left hpq)
-  apply le_of_eq
+lemma inj_right (hpq : p.IsConjExponent q) (hpq' : p.IsConjExponent q') : q = q' := by
+  rw [hpq.right_eq, hpq'.right_eq]
 
-lemma left_ne_infty_iff_one_lt_right (hpq : p.IsConjExponent q) : p ≠ ∞ ↔ 1 < q := (one_lt_left_iff_right_ne_infty hpq.symm).symm
+lemma inj_left (hpq : p.IsConjExponent q) (hpq' : p'.IsConjExponent q) : p = p' :=
+  hpq.symm.inj_right hpq'.symm
 
-/- maybe useful: formulate an induction principle. To show something when `p.IsConjExponent q` then it's sufficient to show it in the following cases:
-* you have `p q : ℝ≥0` with `p.IsConjExponent q`
-* `p = 1` and `q = ∞`
-* `p = ∞` and `q = 1` -/
+lemma left_eq_left_iff_right_eq_right (hpq : p.IsConjExponent q) (hpq' : p'.IsConjExponent q') :
+    p = p' ↔ q = q' := by
+  constructor <;> rintro rfl <;> [apply inj_right; apply inj_left] <;> assumption
 
-#check ENNReal
+lemma one_top : (1 : ℝ≥0∞).IsConjExponent ∞ := ⟨by simp⟩
 
-lemma coe_is_conj_exponent {p q : ℝ≥0} (hpq : p.IsConjExponent q): (p : ℝ≥0∞).IsConjExponent q where
-  inv_add_inv_conj :=  by
-   rw [← coe_inv, ← coe_inv, ← coe_add, hpq.inv_add_inv_conj, coe_one]
-   apply NNReal.IsConjExponent.ne_zero hpq.symm
-   apply NNReal.IsConjExponent.ne_zero hpq
+lemma top_one : (∞ : ℝ≥0∞).IsConjExponent 1 := ⟨by simp⟩
 
-lemma toNNReal_is_conj_exponent {p q : ℝ≥0∞} (hp : 1 < p) (hq : 1 < q) (hpq : p.IsConjExponent q): (p.toNNReal).IsConjExponent (q.toNNReal) where
-  one_lt := by
-    rwa [← ENNReal.coe_lt_coe, ENNReal.coe_toNNReal ((left_ne_infty_iff_one_lt_right hpq).mpr hq)]
+lemma left_eq_one_iff (hpq : p.IsConjExponent q) : p = 1 ↔ q = ∞ :=
+  hpq.left_eq_left_iff_right_eq_right .one_top
+
+lemma left_eq_top_iff (hpq : p.IsConjExponent q) : p = ∞ ↔ q = 1 :=
+  (left_eq_one_iff hpq.symm).symm
+
+lemma one_lt_left_iff (hpq : p.IsConjExponent q) : 1 < p ↔ q ≠ ∞ := by
+  rw [← not_iff_not, not_lt, ne_eq, not_not, hpq.one_le_left.le_iff_eq, hpq.left_eq_one_iff]
+
+lemma left_ne_top_iff (hpq : p.IsConjExponent q) : p ≠ ∞ ↔ 1 < q :=
+  (one_lt_left_iff hpq.symm).symm
+
+lemma _root_.NNReal.IsConjExponent.coe_ennreal {p q : ℝ≥0} (hpq : p.IsConjExponent q) :
+    (p : ℝ≥0∞).IsConjExponent q where
   inv_add_inv_conj := by
-    rw [← ENNReal.coe_inj, coe_add, coe_inv, coe_inv]
-    convert hpq.inv_add_inv_conj
-    rw [ENNReal.coe_toNNReal ((left_ne_infty_iff_one_lt_right hpq).mpr hq)]
-    rw [ENNReal.coe_toNNReal ((one_lt_left_iff_right_ne_infty hpq).mp hp)]
-    exact (ENNReal.toNNReal_ne_zero).mpr ⟨(zero_lt_one.trans hq).ne', ((one_lt_left_iff_right_ne_infty hpq).mp hp)⟩
-    exact (ENNReal.toNNReal_ne_zero).mpr ⟨(zero_lt_one.trans hp).ne', ((left_ne_infty_iff_one_lt_right hpq).mpr hq)⟩
+    have := hpq.symm.ne_zero
+    have := hpq.ne_zero
+    rw_mod_cast [hpq.inv_add_inv_conj]
+
+lemma toNNReal {p q : ℝ≥0∞} (hp : p ≠ ∞) (hq : q ≠ ∞) (hpq : p.IsConjExponent q) :
+    p.toNNReal.IsConjExponent q.toNNReal where
+  one_lt := by
+    rwa [← coe_lt_coe, coe_toNNReal hp, coe_one, hpq.one_lt_left_iff]
+  inv_add_inv_conj := by
+    rw [← coe_inj, coe_add, coe_inv, coe_inv, coe_one, coe_toNNReal hp, coe_toNNReal hq,
+      hpq.inv_add_inv_conj]
+    · exact (toNNReal_ne_zero).mpr ⟨hpq.right_ne_zero, hq⟩
+    · exact (toNNReal_ne_zero).mpr ⟨hpq.left_ne_zero, hp⟩
 
 lemma induction
-  (f : (p: ENNReal) → (q :ENNReal) → (p.IsConjExponent q) → Prop)
-  (h₁ : ∀  p q : ℝ≥0, (h : p.IsConjExponent q) → f p q (coe_is_conj_exponent h))
-  (h₂ : f 1 ∞ one_infty)
-  (h₃ : f ∞ 1 infty_one) :
-  ∀ p q : ℝ≥0∞, (h : p.IsConjExponent q) → f p q h := by
-  intro p q h
+    (P : (p q : ℝ≥0∞) → (p.IsConjExponent q) → Prop)
+    (nnreal : ∀ ⦃p q : ℝ≥0⦄, (h : p.IsConjExponent q) → P p q h.coe_ennreal)
+    (one : P 1 ∞ one_top) (infty : P ∞ 1 top_one) {p q : ℝ≥0∞} (h : p.IsConjExponent q) :
+    P p q h := by
   by_cases hq : q = ∞
-  have hp : p = 1 := (left_one_iff_right_infty h).mpr hq
-  simp_rw [hp, hq]
-  exact h₂
+  · simp_rw [h.left_eq_one_iff.mpr hq, hq, one]
   by_cases hp : p = ∞
-  have hq₂ : q = 1 := (left_infty_iff_right_one h).mp hp
-  simp_rw [hp, hq₂]
-  exact h₃
-  have := h₁ p.toNNReal q.toNNReal <| toNNReal_is_conj_exponent ((one_lt_left_iff_right_ne_infty h).mpr hq) ((left_ne_infty_iff_one_lt_right h).mp hp) h
+  · simp_rw [hp, h.left_eq_top_iff.mp hp, infty]
+  have := nnreal <| h.toNNReal hp hq
   simp_rw [ENNReal.coe_toNNReal hp, ENNReal.coe_toNNReal hq] at this
   exact this
 
-/- add various other needed lemmas below (maybe look at `NNReal.IsConjExponent` for guidance) -/
+lemma induction_symm
+    (P : (p q : ℝ≥0∞) → (p.IsConjExponent q) → Prop)
+    (nnreal : ∀ ⦃p q : ℝ≥0⦄, (h : p.IsConjExponent q) → p ≤ q → P p q h.coe_ennreal)
+    (one : P 1 ∞ one_top)
+    (symm : ∀ ⦃p q : ℝ≥0∞⦄, (h : p.IsConjExponent q) → P p q h → P q p h.symm)
+    {p q : ℝ≥0∞} (h : p.IsConjExponent q) : P p q h := by
+  induction h using IsConjExponent.induction
+  case nnreal p q h =>
+    rcases le_total p q with hpq|hqp
+    · exact nnreal h hpq
+    · exact symm h.coe_ennreal.symm (nnreal h.symm hqp)
+  case one => exact one
+  case infty => exact symm .one_top one
 
 /- Versions of Hölder's inequality.
 Note that the hard case already exists as `ENNReal.lintegral_mul_le_Lp_mul_Lq`. -/
-#check ENNReal.lintegral_mul_le_Lp_mul_Lq
-#check ContinuousLinearMap.le_opNorm
 
-lemma bilin_le_opNorm  {L : E₁ →L[𝕜] E₂ →L[𝕜] E₃} {f : α → E₁} {g : α → E₂} (a : α) : ‖L (f a) (g a)‖ ≤ ‖L‖ * ‖f a‖ * ‖g a‖ := by
-  apply LE.le.trans (ContinuousLinearMap.le_opNorm (L (f a)) (g a))
-  apply mul_le_mul_of_nonneg_right (ContinuousLinearMap.le_opNorm L (f a)) (norm_nonneg (g a))
+lemma _root_.ContinuousLinearMap.le_opNNNorm₂ (L : E₁ →L[𝕜] E₂ →L[𝕜] E₃) (x : E₁) (y : E₂) :
+    ‖L x y‖₊ ≤ ‖L‖₊ * ‖x‖₊ * ‖y‖₊ := L.le_opNorm₂ x y
 
-lemma bilin_le_opNorm_nnreal {L : E₁ →L[𝕜] E₂ →L[𝕜] E₃} {f : α → E₁} {g : α → E₂} (a : α) : ‖L (f a) (g a)‖₊ ≤ ‖L‖₊ * (‖f a‖₊ * ‖g a‖₊) := by
-  rw [← mul_assoc, ← NNReal.coe_le_coe]
-  simp only [coe_nnnorm, NNReal.coe_mul]
-  apply bilin_le_opNorm
-
-lemma lintegral_mul_le_one_infty (μ : Measure α) {f : α → E₁} {g : α → E₂}
+lemma lintegral_mul_le_one_top (μ : Measure α) {f : α → E₁} {g : α → E₂}
     (hf : AEMeasurable f μ) : ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ ≤ snorm f 1 μ * snorm g ⊤ μ := by
     calc ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ ≤ ∫⁻ (a : α), ‖f a‖₊ * snormEssSup g μ ∂μ := MeasureTheory.lintegral_mono_ae (h := by
         rw [Filter.eventually_iff, ← Filter.exists_mem_subset_iff]
@@ -141,65 +146,42 @@ lemma lintegral_mul_le_one_infty (μ : Measure α) {f : α → E₁} {g : α →
         rw [← Filter.eventually_iff]
         exact ⟨ae_le_snormEssSup, by simp; intro _ ha; apply ENNReal.mul_left_mono ha⟩)
     _ = snorm f 1 μ * snorm g ⊤ μ := by
-      rw [lintegral_mul_const'']
+      rw [lintegral_mul_const'' _ hf.ennnorm]
       simp [snorm, snorm']
-      exact Measurable.comp_aemeasurable' measurable_coe_nnreal_ennreal (Measurable.comp_aemeasurable' measurable_nnnorm hf)
 
 theorem lintegral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : α → E₁} {g : α → E₂}
     (hf : AEMeasurable f μ) (hg : AEMeasurable g μ) :
     ∫⁻ a, ‖L (f a) (g a)‖₊ ∂μ ≤ ‖L‖₊ * snorm f p μ * snorm g q μ := by
-  induction p, q, hpq using IsConjExponent.induction
-  case h₁ p q hpq =>
-    calc ∫⁻ a, ‖L (f a) (g a)‖₊ ∂μ ≤ ∫⁻ a, ‖L‖₊ * (‖f a‖₊ * ‖g a‖₊) ∂μ :=
-      lintegral_mono_nnreal bilin_le_opNorm_nnreal
+  calc ∫⁻ a, ‖L (f a) (g a)‖₊ ∂μ ≤ ∫⁻ a, ‖L‖₊ * (‖f a‖₊ * ‖g a‖₊) ∂μ := by
+        simp_rw [← mul_assoc]; exact lintegral_mono_nnreal fun a ↦ L.le_opNNNorm₂ (f a) (g a)
     _ = ‖L‖₊ * ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ := lintegral_const_mul' _ _ coe_ne_top
-    _ = ‖L‖₊ * ∫⁻ a, ((fun a ↦ ‖f a‖₊) * (fun a ↦ ‖g a‖₊)) a ∂μ := by
-      apply congrArg (HMul.hMul _)
-      apply lintegral_congr
-      simp only [Pi.mul_apply, coe_mul, implies_true]
-    _ ≤ ‖L‖₊ * snorm f p μ * snorm g q μ := by
-      rw [mul_assoc]
-      by_cases hL : ‖L‖₊ = 0
-      simp [hL]
-      apply (ENNReal.mul_le_mul_left _ coe_ne_top).mpr
-      simp only [coe_mul, snorm, coe_eq_zero, coe_ne_top, ↓reduceIte, coe_toReal, mul_ite, mul_zero, ite_mul, zero_mul, NNReal.IsConjExponent.ne_zero hpq, NNReal.IsConjExponent.ne_zero hpq.symm, snorm']
-      apply ENNReal.lintegral_mul_le_Lp_mul_Lq
-      apply NNReal.isConjExponent_coe.mpr hpq
-      . apply Measurable.comp_aemeasurable' measurable_coe_nnreal_ennreal (Measurable.comp_aemeasurable' measurable_nnnorm hf)
-      . apply Measurable.comp_aemeasurable' measurable_coe_nnreal_ennreal (Measurable.comp_aemeasurable' measurable_nnnorm hg)
-      simpa [ne_eq, coe_zero]
-  case h₂ =>
-    calc ∫⁻ a, ‖L (f a) (g a)‖₊ ∂μ ≤ ∫⁻ a, ‖L‖₊ * (‖f a‖₊ * ‖g a‖₊) ∂μ :=
-      lintegral_mono_nnreal bilin_le_opNorm_nnreal
-    _ = ‖L‖₊ * ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ := lintegral_const_mul' _ _ coe_ne_top
-    _ ≤ ‖L‖₊ * snorm f 1 μ * snorm g ⊤ μ := by
-      rw [mul_assoc]
-      apply ENNReal.mul_left_mono
-      apply lintegral_mul_le_one_infty
-      exact hf
-  case h₃ =>
-    calc ∫⁻ a, ‖L (f a) (g a)‖₊ ∂μ ≤ ∫⁻ a, ‖L‖₊ * (‖f a‖₊ * ‖g a‖₊) ∂μ :=
-      lintegral_mono_nnreal bilin_le_opNorm_nnreal
-    _ = ‖L‖₊ * ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ := lintegral_const_mul' _ _ coe_ne_top
-    _ = ‖L‖₊ * ∫⁻ a, ‖g a‖₊ * ‖f a‖₊ ∂μ := by simp_rw [mul_comm]
-    _ ≤ ‖L‖₊ * snorm f ⊤ μ * snorm g 1 μ := by
-      rw [mul_assoc, mul_comm (snorm f ⊤ μ)]
-      apply ENNReal.mul_left_mono
-      apply lintegral_mul_le_one_infty
-      exact hg
+    _ ≤ ‖L‖₊ * (snorm f p μ * snorm g q μ) := ?_
+    _ = ‖L‖₊ * snorm f p μ * snorm g q μ := by rw [mul_assoc]
+  gcongr
+  induction hpq using IsConjExponent.induction
+  case nnreal p q hpq =>
+    calc
+      ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ = ∫⁻ a, ((‖f ·‖₊) * (‖g ·‖₊)) a ∂μ := by
+        apply lintegral_congr
+        simp only [Pi.mul_apply, coe_mul, implies_true]
+      _ ≤ snorm f p μ * snorm g q μ := by
+        simp only [coe_mul, snorm, coe_eq_zero, coe_ne_top, ↓reduceIte, coe_toReal, mul_ite, mul_zero, ite_mul, zero_mul, hpq.ne_zero, hpq.symm.ne_zero, snorm']
+        apply ENNReal.lintegral_mul_le_Lp_mul_Lq _ (NNReal.isConjExponent_coe.mpr hpq)
+        . apply hf.ennnorm
+        . apply hg.ennnorm
+  case one => exact lintegral_mul_le_one_top _ hf
+  case infty =>
+    calc
+      ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ = ∫⁻ a, ‖g a‖₊ * ‖f a‖₊ ∂μ := by simp_rw [mul_comm]
+    _ ≤ snorm f ⊤ μ * snorm g 1 μ := by rw [mul_comm]; exact lintegral_mul_le_one_top _ hg
 
--- (hpq : p.IsConjExponent q) is missing
 theorem integrable_bilin (hpq : p.IsConjExponent q) (μ : Measure α) {f : α → E₁} {g : α → E₂}
     (hf : Memℒp f p μ) (hg : Memℒp g q μ) :
     Integrable (fun a ↦ L (f a) (g a)) μ := by
-      dsimp [Integrable]
-      constructor
-      . apply ContinuousLinearMap.aestronglyMeasurable_comp₂
-        apply (MeasureTheory.Memℒp.aestronglyMeasurable hf)
-        apply (MeasureTheory.Memℒp.aestronglyMeasurable hg)
-      . dsimp [HasFiniteIntegral]
-        apply lt_of_le_of_lt <| lintegral_mul_le L hpq μ (MeasureTheory.AEStronglyMeasurable.aemeasurable (MeasureTheory.Memℒp.aestronglyMeasurable hf)) (MeasureTheory.AEStronglyMeasurable.aemeasurable (MeasureTheory.Memℒp.aestronglyMeasurable hg))
-        apply ENNReal.mul_lt_top (ENNReal.mul_ne_top coe_ne_top (MeasureTheory.Memℒp.snorm_ne_top hf)) (MeasureTheory.Memℒp.snorm_ne_top hg)
+  use L.aestronglyMeasurable_comp₂ hf.aestronglyMeasurable hg.aestronglyMeasurable
+  apply lintegral_mul_le L hpq μ hf.aestronglyMeasurable.aemeasurable
+    hg.aestronglyMeasurable.aemeasurable |>.trans_lt
+  exact ENNReal.mul_lt_top (ENNReal.mul_ne_top coe_ne_top hf.snorm_ne_top) hg.snorm_ne_top
 
 end IsConjExponent
 end ENNReal
