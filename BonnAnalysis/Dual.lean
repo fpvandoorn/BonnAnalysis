@@ -2,6 +2,7 @@ import Mathlib.MeasureTheory.Integral.MeanInequalities
 import Mathlib.MeasureTheory.Function.L1Space
 import Mathlib.Analysis.NormedSpace.Dual
 import Mathlib.Analysis.NormedSpace.LinearIsometry
+import Mathlib.MeasureTheory.Integral.Bochner
 
 /-! We show that the dual space of `L^p` for `1 ≤ p < ∞`.
 
@@ -9,6 +10,8 @@ See [Stein-Shakarchi, Functional Analysis, section 1.4] -/
 noncomputable section
 
 open Real NNReal ENNReal NormedSpace MeasureTheory
+
+section
 
 variable {α 𝕜 E E₁ E₂ E₃ : Type*} {m : MeasurableSpace α} {p q : ℝ≥0∞}
   {μ : Measure α} [NontriviallyNormedField 𝕜]
@@ -201,29 +204,115 @@ theorem integrable_bilin (hpq : p.IsConjExponent q) (μ : Measure α) {f : α �
 end IsConjExponent
 end ENNReal
 
+end
+
+section
+
 namespace MeasureTheory
 namespace Lp
--- note: we may need to restrict to `𝕜 = ℝ`
+
+variable {α E E₁ E₂ E₃ : Type*} {m : MeasurableSpace α} {p q : ℝ≥0∞}
+  {μ : Measure α}
+  [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E]
+  [NormedAddCommGroup E₁] [NormedSpace ℝ E₁] [FiniteDimensional ℝ E₁]
+  [NormedAddCommGroup E₂] [NormedSpace ℝ E₂] [FiniteDimensional ℝ E₂]
+  [NormedAddCommGroup E₃] [NormedSpace ℝ  E₃] [FiniteDimensional ℝ  E₃]
+  [MeasurableSpace E] [BorelSpace E]
+  [MeasurableSpace E₁] [BorelSpace E₁]
+  [MeasurableSpace E₂] [BorelSpace E₂]
+  [MeasurableSpace E₃] [BorelSpace E₃]
+  (L : E₁ →L[ℝ] E₂ →L[ℝ] E₃)
+
 variable
   [hpq : Fact (p.IsConjExponent q)] [h'p : Fact (p < ∞)]
   [hp : Fact (1 ≤ p)] [hq : Fact (1 ≤ q)] -- note: these are superfluous, but it's tricky to make them instances.
 
-/- The map sending `g` to `f ↦ ∫ x, L (f x) (g x) ∂μ` induces a map on `L^p` into
-`Lp E₂ p μ →L[𝕜] E₃`. Generally we will take `E₃ = 𝕜`. -/
+
+/- The map sending `g` to `f ↦ ∫ x, L (g x) (f x) ∂μ` induces a map on `L^q` into
+`Lp E₂ p μ →L[ℝ] E₃`. Generally we will take `E₃ = ℝ`. -/
 variable (p μ) in
-def toDual (g : Lp E₁ q μ) : Lp E₂ p μ →L[𝕜] E₃ :=
-  sorry
+def toDual (g : Lp E₁ q μ) : Lp E₂ p μ →L[ℝ] E₃ := by{
+  let F : Lp E₂ p μ → E₃ := fun f ↦ ∫ x, L (g x) (f x) ∂μ
+  have : IsBoundedLinearMap ℝ F := by{
+    exact {
+      map_add := by{
+        intro f₁ f₂
+        simp[F]
+        rw[← integral_add]
+        · apply integral_congr_ae
+          filter_upwards [coeFn_add f₁ f₂] with a ha
+          norm_cast
+          rw[ha]
+          simp
+        · exact ENNReal.IsConjExponent.integrable_bilin L hpq.out.symm μ (Lp.memℒp g) (Lp.memℒp f₁)
+        · exact ENNReal.IsConjExponent.integrable_bilin L hpq.out.symm μ (Lp.memℒp g) (Lp.memℒp f₂)
+        }
+
+      map_smul := by{
+        intro m f
+        simp[F]
+        rw[← integral_smul]
+        apply integral_congr_ae
+        filter_upwards [coeFn_smul m f] with a ha
+        rw[ha]
+        simp
+        }
+
+      bound := by{
+        use (snorm (↑↑g) q μ).toReal
+        constructor
+        · sorry
+        · intro f
+          simp[F]
+          -- Bound norm of integral with integral of norm and apply Hölder inequality
+          sorry
+      }
+    }
+  }
+  apply IsBoundedLinearMap.toContinuousLinearMap this
+}
+
 
 /- The map sending `g` to `f ↦ ∫ x, L (f x) (g x) ∂μ` is a linear isometry. -/
 variable (p q μ) in
-def toDualₗᵢ : Lp E₁ q μ →ₗᵢ[𝕜] Lp E₂ p μ →L[𝕜] E₃ :=
-  sorry
+def toDualₗᵢ : Lp E₁ q μ →ₗᵢ[ℝ] Lp E₂ p μ →L[ℝ] E₃ where
+  toFun := toDual _ _ L
+  map_add':= by{
+    intro g₁ g₂
+    simp[toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap]
+    ext f
+    simp
+    rw[← integral_add]
+    · apply integral_congr_ae
+      filter_upwards [coeFn_add g₁ g₂] with a ha
+      norm_cast
+      rw[ha]
+      simp
+    · exact ENNReal.IsConjExponent.integrable_bilin L hpq.out.symm μ (Lp.memℒp g₁) (Lp.memℒp f)
+    · exact ENNReal.IsConjExponent.integrable_bilin L hpq.out.symm μ (Lp.memℒp g₂) (Lp.memℒp f)
+  }
+  map_smul':= by{
+    intro m g
+    simp[toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap]
+    ext f
+    simp
+    rw[← integral_smul]
+    apply integral_congr_ae
+    filter_upwards [coeFn_smul m g] with a ha
+    rw[ha]
+    simp
+  }
+  norm_map' := by {
+    sorry
+  }
 
 /- The map sending `g` to `f ↦ ∫ x, L (f x) (g x) ∂μ` is a linear isometric equivalence.  -/
 variable (p q μ) in
-def dualIsometry (L : E₁ ≃L[𝕜] Dual 𝕜 E₂) :
-    Dual 𝕜 (Lp E₂ p μ) ≃ₗᵢ[𝕜] Lp E q μ :=
+def dualIsometry (L : E₁ →L[ℝ] Dual ℝ E₂) :
+    Dual ℝ (Lp E₂ p μ) ≃ₗᵢ[ℝ] Lp E q μ :=
   sorry
 
 end Lp
 end MeasureTheory
+
+end
