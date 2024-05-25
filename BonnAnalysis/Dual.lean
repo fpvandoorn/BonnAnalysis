@@ -1,8 +1,11 @@
 import Mathlib.MeasureTheory.Integral.MeanInequalities
 import Mathlib.MeasureTheory.Function.L1Space
+import Mathlib.MeasureTheory.Function.LpSpace
+import Mathlib.Analysis.SpecialFunctions.Pow.Continuity
 import Mathlib.Analysis.NormedSpace.Dual
 import Mathlib.Analysis.NormedSpace.LinearIsometry
 import Mathlib.MeasureTheory.Integral.Bochner
+import Mathlib.Data.Real.Sign
 
 /-! We show that the dual space of `L^p` for `1 ≤ p < ∞`.
 
@@ -10,7 +13,6 @@ See [Stein-Shakarchi, Functional Analysis, section 1.4] -/
 noncomputable section
 
 open Real NNReal ENNReal NormedSpace MeasureTheory
-
 section
 
 variable {α 𝕜 E E₁ E₂ E₃ : Type*} {m : MeasurableSpace α} {p p' q q' : ℝ≥0∞}
@@ -189,7 +191,6 @@ end ENNReal
 end
 
 section
-
 namespace MeasureTheory
 namespace Lp
 
@@ -209,12 +210,410 @@ variable
   [hpq : Fact (p.IsConjExponent q)] [h'p : Fact (p < ∞)]
   [hp : Fact (1 ≤ p)] [hq : Fact (1 ≤ q)] -- note: these are superfluous, but it's tricky to make them instances.
 
+lemma hp₀ : p ≠ 0 := by have := by calc 0 < 1 := by norm_num
+                                        _ ≤ p := hp.out
+                        apply ne_zero_of_lt this
+lemma hpᵢ : p ≠ ∞ := by apply lt_top_iff_ne_top.mp h'p.out
+lemma hq₀ : q ≠ 0 := by have := by calc 0 < 1 := by norm_num
+                                        _ ≤ q := hq.out
+                        apply ne_zero_of_lt this
+lemma hq₀' : ¬ q = 0 := hq₀
+
+lemma is_conj_exponent : p + q = p*q := by
+  by_cases hqᵢ : q = ∞
+
+  . rw[hqᵢ]
+    simp; symm
+    apply ENNReal.mul_top
+    exact hp₀
+
+  . calc _ = p*1 + q             := by simp
+         _ = p*1 + 1*q           := by simp
+         _ = p*1 + (p*p⁻¹)*q     := by rw[ENNReal.mul_inv_cancel]; exact hp₀; exact hpᵢ
+         _ = p*1 + p*(p⁻¹*q)     := by rw[mul_assoc]
+         _ = p * (1 + p⁻¹*q)     := by rw[mul_add]
+         _ = p * (1 + q*p⁻¹)     := by rw[mul_comm q]
+         _ = p * (q*q⁻¹ + q*p⁻¹) := by rw[ENNReal.mul_inv_cancel]; exact hq₀; exact hqᵢ
+         _ = p * (q*(q⁻¹ + p⁻¹)) := by rw[mul_add q]
+         _ = p * q * (q⁻¹ + p⁻¹) := by rw[mul_assoc]
+         _ = p * q * (p⁻¹ + q⁻¹) := by rw[add_comm]
+         _ = p * q * 1           := by rw[hpq.out.inv_add_inv_conj]
+         _ = p * q               := by rw[mul_one]
+
+lemma is_conj_exponent' (hqᵢ : q ≠ ∞) : p.toReal + q.toReal = p.toReal*q.toReal := by
+  rw[←toReal_add hpᵢ hqᵢ]
+  rw[←toReal_mul]
+  congr
+  exact is_conj_exponent
+
+open ENNReal.IsConjExponent
+open ContinuousLinearMap
+open Memℒp
+
+section BasicFunctions
+
+def step' : ℝ → ℝ := Set.piecewise {x | x ≤ 0} 0 1
+theorem measurable_step' : Measurable step' := by
+  apply Measurable.piecewise
+  . apply measurableSet_le
+    . apply measurable_id
+    . apply measurable_const
+  . apply measurable_const
+  . apply measurable_const
+
+lemma sign_eq_step : Real.sign = fun x => step' x - step' (-x) := by
+  ext x
+  simp only [Real.sign, step']
+  by_cases h₁ : x < 0
+  . have h₂ : x ≤ 0 := by linarith
+    have h₃ : ¬ 0 ≤ x := by linarith
+    simp [h₁, h₂, h₃]
+  . by_cases h₂ : 0 < x
+    . have h₃ : 0 ≤ x := by linarith
+      have h₄ : ¬ x ≤ 0 := by linarith
+      simp[h₁, h₂, h₃, h₄]
+    . have h₃ : x = 0 := by linarith
+      simp[h₁, h₂, h₃]
+
+theorem measurable_sign : Measurable (Real.sign : ℝ → ℝ) := by
+  rw[sign_eq_step]
+  apply Measurable.add
+  . apply measurable_step'
+  . apply Measurable.neg
+    apply Measurable.comp'
+    . apply measurable_step'
+    . apply Measurable.neg
+      apply measurable_id
+
+@[simp]
+theorem abs_of_sign (x) : |Real.sign x| = if x = 0 then 0 else 1 := by
+  dsimp[_root_.abs, Real.sign]
+  by_cases h₁ : x < 0
+  . have h₂ : x ≠ 0 := by linarith
+    simp[h₁, h₂]
+  . by_cases h₂ : x = 0
+    . simp[h₁, h₂]
+    . have h₃ : 0 < x := by apply lt_of_le_of_ne; simp at h₁; exact h₁; symm; exact h₂
+      simp[h₁, h₂, h₃]
+
+@[simp]
+theorem nnnorm_of_sign (x) : ‖Real.sign x‖₊ = if x = 0 then 0 else 1 := by
+  dsimp[_root_.abs, Real.sign]
+  by_cases h₁ : x < 0
+  . have h₂ : x ≠ 0 := by linarith
+    simp[h₁, h₂]
+  . by_cases h₂ : x = 0
+    . simp[h₁, h₂]
+    . have h₃ : 0 < x := by apply lt_of_le_of_ne; simp at h₁; exact h₁; symm; exact h₂
+      simp[h₁, h₂, h₃]
+
+def rpow' (y : ℝ) (x : ℝ≥0) : ℝ≥0 := NNReal.rpow x y
+
+theorem rpow'_eq_rpow (x : ℝ≥0) (y : ℝ) : rpow' y x = x^y := rfl
+
+theorem measurable_rpow'_const (c : ℝ) : Measurable (rpow' c) := by
+  apply Measurable.pow (f := fun x => x) (g := fun _ => c)
+  . apply measurable_id
+  . apply measurable_const
+
+@[simp]
+theorem rpow_eq_one_iff (x : ℝ≥0∞) (y : ℝ) (hy : y > 0) : x^y = (1 : ℝ≥0∞) ↔ x = 1 := by
+  constructor; swap; intro h; rw[h]; apply ENNReal.one_rpow
+  intro h
+  rw[←ENNReal.one_rpow y] at h
+  apply le_antisymm <;> {apply (ENNReal.rpow_le_rpow_iff hy).mp; rw[h]}
+
+@[simp]
+theorem rpow_div_eq_one_iff (x : ℝ≥0∞) (y : ℝ) (hy : y > 0) : x^(1/y) = (1 : ℝ≥0∞) ↔ x = 1 := by
+  have : 1/y > 0 := by simp[hy]
+  rw[rpow_eq_one_iff x (1/y) this]
+
+lemma toNNReal_of_norm_eq_nnnorm (x : ℝ) : ‖x‖.toNNReal = ‖x‖₊ := by
+  calc _ = ‖‖x‖‖₊ := by apply toNNReal_eq_nnnorm_of_nonneg; apply norm_nonneg
+       _ = _ := by simp
+
+end BasicFunctions
+
+
+theorem integral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : Lp E₁ p μ} {g : Lp E₂ q μ}
+    : ∫ a, ‖L (f a) (g a)‖ ∂μ ≤ ‖L‖ * ‖f‖ * ‖g‖ := by
+
+    have : AEStronglyMeasurable (fun x => L (f x) (g x)) μ :=
+                          by apply L.aestronglyMeasurable_comp₂
+                             apply (Lp.memℒp f).aestronglyMeasurable
+                             apply (Lp.memℒp g).aestronglyMeasurable
+    rw[integral_norm_eq_lintegral_nnnorm this]
+
+    have : (‖L‖₊ * (snorm f p μ) * (snorm g q μ)).toReal = ‖L‖ * ‖f‖ * ‖g‖ := by
+              calc _ = ‖L‖₊.toReal * (snorm f p μ).toReal * (snorm g q μ).toReal := by simp
+                   _ = ‖L‖ * ‖f‖ * ‖g‖                                           := by congr
+    rw[←this]
+
+    have : ∫⁻ (a : α), ↑‖(L (f a)) (g a)‖₊ ∂μ
+              ≤ ↑‖L‖₊ * snorm (f) p μ * snorm (g) q μ := by apply lintegral_mul_le L hpq μ
+                                                            . apply aestronglyMeasurable_iff_aemeasurable.mp
+                                                              apply (Lp.memℒp f).aestronglyMeasurable
+                                                            . apply aestronglyMeasurable_iff_aemeasurable.mp
+                                                              apply (Lp.memℒp g).aestronglyMeasurable
+    gcongr
+    apply mul_ne_top; apply mul_ne_top
+    . simp[this]
+    . apply snorm_ne_top f
+    . apply snorm_ne_top g
+
+variable (μ) in
+theorem snorm_eq_sup_abs'' (hμ : SigmaFinite μ) (g : Lp ℝ ∞ μ) :
+              ‖g‖ = sSup ((fun f => ‖∫ x, (f x) * (g x) ∂μ‖) '' {(f : Lp ℝ 1 μ) | ‖f‖ ≤ 1}) := by
+  -- we need μ to be σ-finite
+  sorry
+
+def to_conjᵢ (g : Lp ℝ q μ) : α → ℝ :=
+    fun x => Real.sign (g x) * (rpow' (q.toReal-1) ‖g x‖₊) * ‖g‖₊^(1- q.toReal)
+
+theorem conjᵢ_aestrongly_measurable (g : Lp ℝ q μ) : AEStronglyMeasurable (to_conjᵢ g) μ := by
+  apply (aestronglyMeasurable_iff_aemeasurable (μ := μ)).mpr
+  apply AEMeasurable.mul
+  . apply AEMeasurable.mul
+    . apply Measurable.comp_aemeasurable'
+      . apply measurable_sign
+      . apply aestronglyMeasurable_iff_aemeasurable.mp
+        exact (Lp.memℒp g).aestronglyMeasurable
+    . apply Measurable.comp_aemeasurable'
+      . apply measurable_coe_nnreal_real
+      . apply Measurable.comp_aemeasurable'
+        . apply measurable_rpow'_const
+        . apply Measurable.comp_aemeasurable'
+          . apply measurable_nnnorm
+          . apply aestronglyMeasurable_iff_aemeasurable.mp
+            exact g.val.aestronglyMeasurable
+  . apply aemeasurable_const
+
+-- theorem abs_conjᵢ (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (x) : |to_conjᵢ g x| = |g x|^(q.toReal-1) * ‖g‖^(1- q.toReal) := by
+--   dsimp [to_conjᵢ, rpow']
+--   rw[abs_mul, abs_mul]
+
+--   have : |‖g‖^(1 - q.toReal)| = ‖g‖^(1 - q.toReal) := by apply abs_eq_self.mpr
+--                                                          apply rpow_nonneg
+--                                                          apply norm_nonneg
+--   rw[this]
+--   congr
+--   have : |(|g x|^((q.toReal - 1)))| = |g x|^((q.toReal - 1)) := by simp
+--                                                                    apply rpow_nonneg
+--                                                                    apply abs_nonneg
+--   rw[this]
+
+--   by_cases h : g x = 0
+--   . simp[h]; symm
+--     apply (rpow_eq_zero_iff_of_nonneg ?_).mpr; swap; trivial
+--     constructor; trivial
+--     apply sub_ne_zero_of_ne
+--     contrapose! hq₁
+--     apply (toReal_eq_one_iff q).mp hq₁
+
+--   . conv_rhs => rw[←one_mul (|g x|^((q.toReal - 1)))]
+--     congr
+--     rw[abs_of_sign]
+--     simp[h]
+
+theorem nnnorm_conjᵢ (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (x)
+    : ‖to_conjᵢ g x‖₊ = ‖g x‖₊^(q.toReal-1) * ‖g‖₊^(1- q.toReal) := by
+  sorry
+
+theorem nnnorm_conjᵢ' (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (x)
+    : ofNNReal ‖to_conjᵢ g x‖₊ = ofNNReal (‖g x‖₊^(q.toReal-1) * ‖g‖₊^(1- q.toReal)) := by
+  congr
+  exact nnnorm_conjᵢ g hq₁ x
+
+-- theorem pow_abs_conjᵢ (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (hqᵢ : q ≠ ∞) (x) : |to_conjᵢ g x|^p.toReal = |g x|^q.toReal * ‖g‖^(-q.toReal) := by
+
+--   rw[abs_conjᵢ g hq₁ x, Real.mul_rpow,
+--      ←(Real.rpow_mul ?_ _ _), _root_.sub_mul, one_mul,
+--      ←(Real.rpow_mul ?_ _ _), _root_.sub_mul, one_mul]
+
+--   have : q.toReal*p.toReal - p.toReal = q.toReal := by
+--     calc _ = q.toReal*p.toReal - p.toReal - q.toReal + q.toReal       := by simp
+--          _ = q.toReal*p.toReal - (p.toReal + q.toReal) + q.toReal     := by rw[←sub_add_eq_sub_sub]
+--          _ = p.toReal*q.toReal - (p.toReal + q.toReal) + q.toReal     := by rw[mul_comm]
+--          _ = (p.toReal + q.toReal) - (p.toReal + q.toReal) + q.toReal := by rw[is_conj_exponent' hqᵢ]
+--          _ = 0 + q.toReal                                             := by simp
+--          _ = _                                                        := by simp
+--   rw[this]
+--   have : p.toReal - q.toReal*p.toReal = -q.toReal := by
+--     calc _ = -(q.toReal*p.toReal - p.toReal) := by rw[neg_sub]
+--          _ = _  := by rw[this]
+--   rw[this]
+
+--   apply norm_nonneg
+--   apply abs_nonneg
+--   apply rpow_nonneg
+--   apply abs_nonneg
+--   apply rpow_nonneg
+--   apply norm_nonneg
+
+theorem pow_nnnorm_conjᵢ (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (hqᵢ : q ≠ ∞) (x)
+    : (‖to_conjᵢ g x‖₊ : ℝ≥0∞) ^ p.toReal = (‖g x‖₊ : ℝ≥0∞) ^ q.toReal * ‖g‖₊ ^ (-q.toReal) := by
+  sorry
+
+def to_conj₁ (g : Lp ℝ 1 μ) : α → ℝ := fun x => Real.sign (g x)
+
+theorem conj₁_aestrongly_measurable (g : Lp ℝ 1 μ) : AEStronglyMeasurable (to_conj₁ g) μ := by
+  apply (aestronglyMeasurable_iff_aemeasurable (μ := μ)).mpr
+  apply Measurable.comp_aemeasurable' (f := g)
+  . apply measurable_sign
+  . apply aestronglyMeasurable_iff_aemeasurable.mp
+    exact (Lp.memℒp g).aestronglyMeasurable
+
+-- def to_conj (g : Lp ℝ q μ) : α → ℝ := if q = 1 then to_conj₁ g else to_conjᵢ g
+
+theorem abs_conj₁ (g : Lp ℝ 1 μ) (x) : |to_conj₁ g x| = if g x = 0 then 0 else 1 := by
+  apply abs_of_sign
+
+variable (p) in
+theorem conjᵢ_snorm' (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (hqᵢ : q ≠ ∞) :
+  (snorm' (to_conjᵢ g) p.toReal μ).toReal = ‖g‖^(q.toReal/p.toReal) := by
+
+  dsimp only [snorm']
+  #check pow_nnnorm_conjᵢ (p := p) g hq₁ hqᵢ
+
+  conv =>
+    lhs
+    pattern ↑‖to_conjᵢ g a‖₊ ^ p.toReal
+    rw[pow_nnnorm_conjᵢ (p := p) g hq₁ hqᵢ a]
+
+  sorry
+
+variable (p q μ) in
+theorem snorm_eq_sup_abs' (g : Lp ℝ q μ) (hqᵢ : q ≠ ∞) :
+              ‖g‖ = sSup ((fun f => ‖∫ x, (f x) * (g x) ∂μ‖) '' {(f : Lp ℝ p μ) | ‖f‖ ≤ 1}) := by
+  -- basic facts about p and q
+  have hpq := hpq.out
+
+  have hp := hp.out
+  have h'p := h'p.out
+  have hpᵢ : p ≠ ∞ := by apply lt_top_iff_ne_top.mp h'p
+  have hp₀ : p ≠ 0 := by have := by calc 0 < 1   := by norm_num
+                                         _ ≤ p   := hp
+                         apply ne_zero_of_lt this
+  have hq := hq.out
+  -- let h'q := h'q.out
+  -- let hqᵢ : q ≠ ∞ := by apply lt_top_iff_ne_top.mp h'q
+  have hq₀ : q ≠ 0 := by have := by calc 0 < 1   := by norm_num
+                                         _ ≤ q   := hq
+                         apply ne_zero_of_lt this
+
+  -- construction of the function f₀'
+  let F := (fun f : Lp ℝ p μ => ‖∫ x, (f x) * (g x) ∂μ‖)
+  let S := {f : Lp ℝ p μ | ‖f‖ ≤ 1}
+
+  #check integral_congr_ae
+
+  apply le_antisymm; swap
+  . apply Real.sSup_le; swap; apply norm_nonneg
+    intro x hx
+    rcases hx with ⟨f, hf, rfl⟩
+    simp at hf; dsimp only
+
+    calc _ ≤ ∫ x, ‖f x * g x‖ ∂μ             := by apply norm_integral_le_integral_norm
+         _ = ∫ x, ‖(mul ℝ ℝ) (f x) (g x)‖ ∂μ := by simp
+         _ ≤ ‖(mul ℝ ℝ)‖ * ‖f‖ * ‖g‖         := by apply integral_mul_le; exact hpq
+         _ = ‖f‖ * ‖g‖                       := by simp
+         _ ≤ 1 * ‖g‖                         := by gcongr
+         _ = ‖g‖                             := by simp
+
+  --
+  . let h₁ := fun (y : ℝ) => y^(q.toReal-1)
+    have h₁_cont : Continuous h₁ := by dsimp only [h₁]
+                                       apply Continuous.rpow_const
+                                       apply continuous_id
+                                       intro _; right; simp;
+                                       rw[←ENNReal.one_toReal]
+                                       gcongr
+                                       exact hqᵢ
+
+    let h₂ := fun (y : ℝ) => h₁ (abs y)
+    have h₂_cont : Continuous h₂ := by apply Continuous.comp';
+                                       apply h₁_cont;
+                                       apply Continuous.abs;
+                                       apply continuous_id
+
+    let h := fun (y : ℝ) => (Real.sign y) * (h₂ y) * ‖g‖^(q.toReal-1)
+    let f₀ := fun (x : α) => h (g x)
+
+    have h_meas : Measurable h := by apply Measurable.mul; swap
+                                     . apply measurable_const
+                                     . apply Measurable.mul
+                                       . apply measurable_sign
+                                       . apply Continuous.measurable; apply h₂_cont
+
+    have hf₀_meas : AEStronglyMeasurable f₀ μ := by apply aestronglyMeasurable_iff_aemeasurable.mpr
+                                                    dsimp[f₀]
+                                                    apply Measurable.comp_aemeasurable' (f := g) (g := h)
+                                                    . exact h_meas
+                                                    . apply aestronglyMeasurable_iff_aemeasurable.mp
+                                                      exact (Lp.memℒp g).aestronglyMeasurable
+
+    #check integral_norm_eq_lintegral_nnnorm hf₀_meas
+    #check (rpow_left_inj _ _ _).mp
+
+    have hf_snorm : snorm f₀ p μ = 1 := by simp[snorm, hp₀, hpᵢ]
+                                           dsimp only [snorm']
+                                            -- should be easy
+                                           sorry
+
+    have hf_memℒp : Memℒp f₀ p μ := by constructor
+                                       . exact hf₀_meas
+                                       . simp[hf_snorm]
+
+    let f₀' := by apply toLp f₀
+                  . constructor
+                    . exact hf₀_meas
+                    . apply lt_of_le_of_lt
+                      . show snorm f₀ p μ ≤ 1
+                        simp only [hf_snorm, le_refl]
+                      . simp only [one_lt_top]
+
+    have hf₀'_norm : ‖f₀'‖ = 1 := by sorry
+    have hf₀'_int : ∫ x, (f₀' x) * (g x) ∂μ = ‖g‖ := by sorry
+
+    . apply le_csSup
+      . use ‖g‖
+        intro x hx
+        rcases hx with ⟨f, hf, rfl⟩
+        simp at hf
+
+        calc _ ≤ ∫ x, ‖f x * g x‖ ∂μ             := by apply norm_integral_le_integral_norm
+            _ = ∫ x, ‖(mul ℝ ℝ) (f x) (g x)‖ ∂μ := by simp
+            _ ≤ ‖(mul ℝ ℝ)‖ * ‖f‖ * ‖g‖         := by apply integral_mul_le; exact hpq
+            _ = ‖f‖ * ‖g‖                       := by simp
+            _ ≤ 1 * ‖g‖                         := by gcongr
+            _ = ‖g‖                             := by simp
+        -- this is duplicate code
+
+      . use f₀'
+        constructor
+        . simp only [Set.mem_setOf_eq]; rw[hf₀'_norm]
+        . dsimp only; rw[hf₀'_int]; simp only [norm_norm]
+
+variable (p q μ) in
+theorem snorm_eq_sup_abs (hμ : SigmaFinite μ) (g : Lp ℝ q μ):
+              ‖g‖ = sSup ((fun f => ‖∫ x, (f x) * (g x) ∂μ‖) '' {(f : Lp ℝ p μ) | ‖f‖ ≤ 1}) := by
+
+  by_cases hqᵢ : q ≠ ⊤; swap
+  . simp at hqᵢ
+    let hp₁ : p = 1 := by sorry -- should be easy because p and q are conjugate
+    subst hqᵢ; subst hp₁
+
+    apply snorm_eq_sup_abs'' μ hμ g
+
+  . apply snorm_eq_sup_abs' p q μ g hqᵢ
 
 /- The map sending `g` to `f ↦ ∫ x, L (g x) (f x) ∂μ` induces a map on `L^q` into
 `Lp E₂ p μ →L[ℝ] E₃`. Generally we will take `E₃ = ℝ`. -/
 variable (p μ) in
 def toDual (g : Lp E₁ q μ) : Lp E₂ p μ →L[ℝ] E₃ := by{
+
   let F : Lp E₂ p μ → E₃ := fun f ↦ ∫ x, L (g x) (f x) ∂μ
+
   have : IsBoundedLinearMap ℝ F := by{
     exact {
       map_add := by{
@@ -241,23 +640,98 @@ def toDual (g : Lp E₁ q μ) : Lp E₂ p μ →L[ℝ] E₃ := by{
         }
 
       bound := by{
-        use (snorm (↑↑g) q μ).toReal
-        constructor
-        · sorry
-        · intro f
-          simp[F]
-          -- Bound norm of integral with integral of norm and apply Hölder inequality
-          sorry
+        suffices henough : ∃ M, ∀ (x : ↥(Lp E₂ p μ)), ‖F x‖ ≤ M * ‖x‖ from ?_
+        . let ⟨M, hM⟩ := henough; clear henough
+
+          by_cases hM_le_zero : M ≤ 0
+          . use 1; constructor; linarith; intro f
+            calc ‖F f‖ ≤ M * ‖f‖ := hM f
+                 _     ≤ 1 * ‖f‖ := by apply mul_le_mul_of_nonneg_right; linarith
+                                       apply norm_nonneg
+          . simp at hM_le_zero; use M
+
+        simp only [F]
+        use ‖L‖ * ‖g‖
+        intro f
+        calc ‖∫ (x : α), (L (g x)) (f x) ∂μ‖ ≤ ∫ (x : α), ‖L (g x) (f x)‖ ∂μ := by apply norm_integral_le_integral_norm
+             _ ≤ ‖L‖ * ‖g‖ * ‖f‖ := ?_
+
+        apply integral_mul_le L hpq.out.symm
       }
     }
   }
+
   apply IsBoundedLinearMap.toContinuousLinearMap this
 }
 
+/- The map sending `g` to `f ↦ ∫ x, (f x) * (g x) ∂μ` is a linear isometry. -/
+variable (L' : ℝ →L[ℝ] ℝ →L[ℝ] ℝ) (L'mul : ∀ x y, L' x y = x * y) (L'norm_one : ‖L'‖ = 1) in
+def toDualₗᵢ' : Lp ℝ q μ →ₗᵢ[ℝ] Lp ℝ p μ →L[ℝ] ℝ where
+  toFun := toDual _ _ L'
+  map_add':= by{
+    intro g₁ g₂
+    simp[toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap]
+    ext f
+    simp
+    rw[← integral_add]
+    · apply integral_congr_ae
+      filter_upwards [coeFn_add g₁ g₂] with a ha
+      norm_cast
+      rw[ha]
+      simp
+    · exact ENNReal.IsConjExponent.integrable_bilin L' hpq.out.symm μ (Lp.memℒp g₁) (Lp.memℒp f)
+    · exact ENNReal.IsConjExponent.integrable_bilin L' hpq.out.symm μ (Lp.memℒp g₂) (Lp.memℒp f)
+  }
+  map_smul':= by{
+    intro m g
+    simp[toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap]
+    ext f
+    simp
+    rw[← integral_mul_left] -- mul vs smul
+    apply integral_congr_ae
+    filter_upwards [coeFn_smul m g] with a ha
+    rw[ha]
+    simp[L'mul]; ring
+  }
+  norm_map' := by {
+    intro g
+    conv_lhs => simp[Norm.norm]
+    apply ContinuousLinearMap.opNorm_eq_of_bounds
+    . simp
+    . intro f
+      calc ‖(toDual p μ L' g) f‖ ≤ ∫ x, ‖L' (g x) (f x)‖ ∂μ := by apply norm_integral_le_integral_norm
+           _ ≤ ‖L'‖ * ‖g‖ * ‖f‖ := by apply integral_mul_le L' hpq.out.symm
+           _ = ‖g‖ * ‖f‖ := by simp[L'norm_one]
+           _ = _ := by aesop
+    . intro N Nnneg
+      intro hbound
+
+
+      let f := fun (x : α) => (Real.sign (g x))
+
+      #check snorm'_lim_eq_lintegral_liminf
+      sorry
+      -- f = g ^ q-1 have := hbound
+
+    -- apply le_antisymm
+    -- . apply ContinuousLinearMap.opNorm_le_bound; apply norm_nonneg
+    --   intro f
+    --   simp
+    --   calc ‖(toDual p μ L' g) f‖ = ‖∫ x, L' (g x) (f x) ∂μ‖ := by congr
+    --        _ ≤ ∫ x, ‖L' (g x) (f x)‖ ∂μ := by apply norm_integral_le_integral_norm
+    --        _ ≤ ‖L'‖ * ‖g‖ * ‖f‖ := by apply integral_mul_le; exact hpq.out.symm
+    --        _ = ‖g‖ * ‖f‖ := by simp[L'norm_one]
+
+    -- . simp[Norm.norm, ContinuousLinearMap.opNorm]
+    --   -- apply UniformSpace.le_sInf (α := ℝ)
+    --   -- #check (@sInf ℝ).le
+    --   sorry
+  }
 
 /- The map sending `g` to `f ↦ ∫ x, L (f x) (g x) ∂μ` is a linear isometry. -/
 variable (p q μ) in
 def toDualₗᵢ : Lp E₁ q μ →ₗᵢ[ℝ] Lp E₂ p μ →L[ℝ] E₃ where
+
   toFun := toDual _ _ L
   map_add':= by{
     intro g₁ g₂
