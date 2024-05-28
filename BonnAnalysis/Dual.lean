@@ -6,6 +6,7 @@ import Mathlib.Analysis.NormedSpace.Dual
 import Mathlib.Analysis.NormedSpace.LinearIsometry
 import Mathlib.MeasureTheory.Integral.Bochner
 import Mathlib.Data.Real.Sign
+import Mathlib.Tactic.FunProp.Measurable
 
 /-! We show that the dual space of `L^p` for `1 ≤ p < ∞`.
 
@@ -107,18 +108,24 @@ lemma toNNReal {p q : ℝ≥0∞} (hp : p ≠ ∞) (hq : q ≠ ∞) (hpq : p.IsC
     · exact (toNNReal_ne_zero).mpr ⟨hpq.right_ne_zero, hq⟩
     · exact (toNNReal_ne_zero).mpr ⟨hpq.left_ne_zero, hp⟩
 
+lemma mul_eq_add (hpq : p.IsConjExponent q) : p * q = p + q := by
+  induction p using recTopCoe
+  . simp [hpq.right_ne_zero]
+  induction q using recTopCoe
+  . simp [hpq.left_ne_zero]
+  norm_cast
+  exact hpq.toNNReal coe_ne_top coe_ne_top |>.mul_eq_add
+
 lemma induction
     (P : (p q : ℝ≥0∞) → (p.IsConjExponent q) → Prop)
     (nnreal : ∀ ⦃p q : ℝ≥0⦄, (h : p.IsConjExponent q) → P p q h.coe_ennreal)
     (one : P 1 ∞ one_top) (infty : P ∞ 1 top_one) {p q : ℝ≥0∞} (h : p.IsConjExponent q) :
     P p q h := by
-  by_cases hq : q = ∞
-  · simp_rw [h.left_eq_one_iff.mpr hq, hq, one]
-  by_cases hp : p = ∞
-  · simp_rw [hp, h.left_eq_top_iff.mp hp, infty]
-  have := nnreal <| h.toNNReal hp hq
-  simp_rw [ENNReal.coe_toNNReal hp, ENNReal.coe_toNNReal hq] at this
-  exact this
+  induction p using recTopCoe
+  . simp_rw [h.left_eq_top_iff.mp rfl, infty]
+  induction q using recTopCoe
+  . simp_rw [h.left_eq_one_iff.mpr rfl, one]
+  exact nnreal <| h.toNNReal coe_ne_top coe_ne_top
 
 lemma induction_symm
     (P : (p q : ℝ≥0∞) → (p.IsConjExponent q) → Prop)
@@ -219,26 +226,7 @@ lemma hq₀ : q ≠ 0 := by have := by calc 0 < 1 := by norm_num
                         apply ne_zero_of_lt this
 lemma hq₀' : ¬ q = 0 := hq₀
 
-lemma is_conj_exponent : p + q = p*q := by
-  by_cases hqᵢ : q = ∞
-
-  . rw[hqᵢ]
-    simp; symm
-    apply ENNReal.mul_top
-    exact hp₀
-
-  . calc _ = p*1 + q             := by simp
-         _ = p*1 + 1*q           := by simp
-         _ = p*1 + (p*p⁻¹)*q     := by rw[ENNReal.mul_inv_cancel]; exact hp₀; exact hpᵢ
-         _ = p*1 + p*(p⁻¹*q)     := by rw[mul_assoc]
-         _ = p * (1 + p⁻¹*q)     := by rw[mul_add]
-         _ = p * (1 + q*p⁻¹)     := by rw[mul_comm q]
-         _ = p * (q*q⁻¹ + q*p⁻¹) := by rw[ENNReal.mul_inv_cancel]; exact hq₀; exact hqᵢ
-         _ = p * (q*(q⁻¹ + p⁻¹)) := by rw[mul_add q]
-         _ = p * q * (q⁻¹ + p⁻¹) := by rw[mul_assoc]
-         _ = p * q * (p⁻¹ + q⁻¹) := by rw[add_comm]
-         _ = p * q * 1           := by rw[hpq.out.inv_add_inv_conj]
-         _ = p * q               := by rw[mul_one]
+lemma is_conj_exponent : p + q = p*q := hpq.out.mul_eq_add.symm
 
 lemma is_conj_exponent' (hqᵢ : q ≠ ∞) : p.toReal + q.toReal = p.toReal*q.toReal := by
   rw[←toReal_add hpᵢ hqᵢ]
@@ -253,6 +241,8 @@ open Memℒp
 section BasicFunctions
 
 def step' : ℝ → ℝ := Set.piecewise {x | x ≤ 0} 0 1
+
+@[fun_prop]
 theorem measurable_step' : Measurable step' := by
   apply Measurable.piecewise
   . apply measurableSet_le
@@ -277,13 +267,7 @@ lemma sign_eq_step : Real.sign = fun x => step' x - step' (-x) := by
 
 theorem measurable_sign : Measurable (Real.sign : ℝ → ℝ) := by
   rw[sign_eq_step]
-  apply Measurable.add
-  . apply measurable_step'
-  . apply Measurable.neg
-    apply Measurable.comp'
-    . apply measurable_step'
-    . apply Measurable.neg
-      apply measurable_id
+  fun_prop
 
 @[simp]
 theorem abs_of_sign (x) : |Real.sign x| = if x = 0 then 0 else 1 := by
@@ -295,17 +279,11 @@ theorem abs_of_sign (x) : |Real.sign x| = if x = 0 then 0 else 1 := by
     . simp[h₁, h₂]
     . have h₃ : 0 < x := by apply lt_of_le_of_ne; simp at h₁; exact h₁; symm; exact h₂
       simp[h₁, h₂, h₃]
-
 @[simp]
 theorem nnnorm_of_sign (x) : ‖Real.sign x‖₊ = if x = 0 then 0 else 1 := by
-  dsimp[_root_.abs, Real.sign]
-  by_cases h₁ : x < 0
-  . have h₂ : x ≠ 0 := by linarith
-    simp[h₁, h₂]
-  . by_cases h₂ : x = 0
-    . simp[h₁, h₂]
-    . have h₃ : 0 < x := by apply lt_of_le_of_ne; simp at h₁; exact h₁; symm; exact h₂
-      simp[h₁, h₂, h₃]
+  ext
+  rw [coe_nnnorm, norm_eq_abs, abs_of_sign, apply_ite toReal]
+  rfl
 
 def rpow' (y : ℝ) (x : ℝ≥0) : ℝ≥0 := NNReal.rpow x y
 
@@ -372,20 +350,19 @@ def to_conjᵢ (g : Lp ℝ q μ) : α → ℝ :=
 
 theorem conjᵢ_aestrongly_measurable (g : Lp ℝ q μ) : AEStronglyMeasurable (to_conjᵢ g) μ := by
   apply (aestronglyMeasurable_iff_aemeasurable (μ := μ)).mpr
+  unfold to_conjᵢ
   apply AEMeasurable.mul
   . apply AEMeasurable.mul
     . apply Measurable.comp_aemeasurable'
       . apply measurable_sign
-      . apply aestronglyMeasurable_iff_aemeasurable.mp
-        exact (Lp.memℒp g).aestronglyMeasurable
+      . exact (Lp.memℒp g).aestronglyMeasurable.aemeasurable
     . apply Measurable.comp_aemeasurable'
       . apply measurable_coe_nnreal_real
       . apply Measurable.comp_aemeasurable'
         . apply measurable_rpow'_const
         . apply Measurable.comp_aemeasurable'
           . apply measurable_nnnorm
-          . apply aestronglyMeasurable_iff_aemeasurable.mp
-            exact g.val.aestronglyMeasurable
+          . exact (Lp.memℒp g).aestronglyMeasurable.aemeasurable
   . apply aemeasurable_const
 
 -- theorem abs_conjᵢ (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (x) : |to_conjᵢ g x| = |g x|^(q.toReal-1) * ‖g‖^(1- q.toReal) := by
