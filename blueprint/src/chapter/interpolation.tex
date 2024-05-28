@@ -108,39 +108,37 @@ There are various statements of this in Lean, see \href{https://leanprover-commu
       Details to be filled later.
       \end{proof}
 
-      % \begin{comment}
-      % (Note: This is used by Stein-Shakarchi to prove the dual of $L^p$ is $L^q$, so it may be already formalized by the time
-      % we get to this point?)\\\\
-      % Approximate $g$ by simple functions from below, i.e. consider a sequence $\{g_n\}_{n\in \bbn}$ of simple functions
-      % such that for each $x$ we have $|g_n (x)| \leq |g(x)|$ and the $g_n$ converge to $g$ pointwise.\\
-      % If $p>1$ (thus $q<\infty$), consider
-      % \[ f_n(x) = |g_n(x)|^{q-1} \mathrm{sign}(g(x)) \cdot \frac{1}{||g_n||^{q-1}_{L^q}} \]
-      % Observe that $||f_n||_{L^p}=1$. For this, first note that $p(q-1)=q$ since
-      % \[\frac{1}{p} = 1- \frac{1}{q}=\frac{q-1}{q} \ \Rightarrow \ q = p(q-1)  \]
-      % and then write
-      % \[||f_n||^p_{L^p} = \int \left|\frac{1}{||g_n||_{L^q}^{q-1}} \cdot |g_n(x)|^{q-1} \mathrm{sign} g(x) \right|^p = \frac{1}{||g_n||_{L^q}^{p(q-1)}} \int  |g_n(x)|^{p(q-1)} = \frac{1}{||g_n||_{L^q}^q} ||g_n||_{L^q}^q = 1  \]
-      % So by assumption
-      % \[ \left|\int f_n g\right| \leq M \]
-      % And by direct computation
-      % \[ \int f_n g = \int \]
+\begin{comment}
+      (Note: This is used by Stein-Shakarchi to prove the dual of $L^p$ is $L^q$, so it may be already formalized by the time
+      we get to this point?)\\\\
+      Approximate $g$ by simple functions from below, i.e. consider a sequence $\{g_n\}_{n\in \bbn}$ of simple functions
+      such that for each $x$ we have $|g_n (x)| \leq |g(x)|$ and the $g_n$ converge to $g$ pointwise.\\
+      If $p>1$ (thus $q<\infty$), consider
+      \[ f_n(x) = |g_n(x)|^{q-1} \mathrm{sign}(g(x)) \cdot \frac{1}{||g_n||^{q-1}_{L^q}} \]
+      Observe that $||f_n||_{L^p}=1$. For this, first note that $p(q-1)=q$ since
+      \[\frac{1}{p} = 1- \frac{1}{q}=\frac{q-1}{q} \ \Rightarrow \ q = p(q-1)  \]
+      and then write
+      \[||f_n||^p_{L^p} = \int \left|\frac{1}{||g_n||_{L^q}^{q-1}} \cdot |g_n(x)|^{q-1} \mathrm{sign} g(x) \right|^p = \frac{1}{||g_n||_{L^q}^{p(q-1)}} \int  |g_n(x)|^{p(q-1)} = \frac{1}{||g_n||_{L^q}^q} ||g_n||_{L^q}^q = 1  \]
+      So by assumption
+      \[ \left|\int f_n g\right| \leq M \]
+      And by direct computation
+      \[ \int f_n g = \int \]
 
-      % HOLE HERE
-      % Then, we conclude by Fatou's Lemma
+      HOLE HERE
+      Then, we conclude by Fatou's Lemma
 
-      % If $p=1$, since the measure is $\sigma$-finite, write $X$ as an increasing union of subsets $\{E_n\}$ and take
-      % \[ f_n (x) = \frac{1}{\mu(E_n)} \mathrm{sign}(g(x)) \chi_{E_n} (x) \]
-      % Then $||f_n(x)||_{L^1} = \frac{1}{\mu(E_n)} \cdot \mu(E_n) = 1$.
+      If $p=1$, since the measure is $\sigma$-finite, write $X$ as an increasing union of subsets $\{E_n\}$ and take
+      \[ f_n (x) = \frac{1}{\mu(E_n)} \mathrm{sign}(g(x)) \chi_{E_n} (x) \]
+      Then $||f_n(x)||_{L^1} = \frac{1}{\mu(E_n)} \cdot \mu(E_n) = 1$.
 
-
-      % Now, it is easy to show for both cases that $||g||\geq M$ by H\"older's inequality: since $M$ is the supremum of the absolute value of $\int fg$ for our possible $f$,
-      % fix an $\epsilon>0$ and choose an $f$ such that
-      % \[\left| \int fg \right| \geq M-\epsilon \]
-      % so that
-      % \[ M- \epsilon \leq ||fg||_{L^1} \leq ||f||_{L^p} ||g||_{L^q} \leq ||g||_{L^q} \]
-      % Since $\epsilon$ is arbitrarily small, this gives
-      % \[ ||g||_{L^q} \geq M \]
-
-      % \end{comment}
+      Now, it is easy to show for both cases that $||g||\geq M$ by H\"older's inequality: since $M$ is the supremum of the absolute value of $\int fg$ for our possible $f$,
+      fix an $\epsilon>0$ and choose an $f$ such that
+      \[\left| \int fg \right| \geq M-\epsilon \]
+      so that
+      \[ M- \epsilon \leq ||fg||_{L^1} \leq ||f||_{L^p} ||g||_{L^q} \leq ||g||_{L^q} \]
+      Since $\epsilon$ is arbitrarily small, this gives
+      \[ ||g||_{L^q} \geq M \]
+\end{comment}
 
 As a last step towards proving the theorem, let us recall a consequence of Hölder's inequality, which will only really be substantial in a corner case of our proof.
 \begin{lemma}
@@ -335,31 +333,30 @@ We have shown $\mathcal{F}$ extends to a bounded linear operator $L^1 \to L^{\in
 By Rietz-Thorin interpolation theorem, it can be uniquely extended to bounded linear operators $L^p \to L^q$
 whenever $1\leq p \leq 2$ and $q$ is conjugate to $p$.
 
-% \begin{comment} This subsection is to be potentially added later
-% \subsection{Young's Inequality for Convolutions}
-% Here, we work with $X=Y=\R^d$ with standard scalar product and the usual Lebesgue measure.\\
+\begin{comment} This subsection is to be potentially added later
+\subsection{Young's Inequality for Convolutions}
+Here, we work with $X=Y=\R^d$ with standard scalar product and the usual Lebesgue measure.\\
 
-% \begin{lemma}
-%     \label{lem:young_convolution}
-%     \uses{}
-%     \lean{}
-%     %\leanok
-%     For any $f\in L^p$ and $g \in L^r$, their convolution
-%     \[ (f * g) (x) = \int_{\R^d} f(x-y) g(y) dy \]
-%     is well-defined (i.e. the right-hand side is integrable for almost every $x$) and, if $\frac{1}{q} = \frac{1}{p} + \frac{1}{r} - 1$, we have
-%     \[ || f * g ||_{L^q} \leq ||f||_{L^p} ||g||_{L^r}\]
+\begin{lemma}
+    \label{lem:young_convolution}
+    \uses{}
+    \lean{}
+    %\leanok
+    For any $f\in L^p$ and $g \in L^r$, their convolution
+    \[ (f * g) (x) = \int_{\R^d} f(x-y) g(y) dy \]
+    is well-defined (i.e. the right-hand side is integrable for almost every $x$) and, if $\frac{1}{q} = \frac{1}{p} + \frac{1}{r} - 1$, we have
+    \[ || f * g ||_{L^q} \leq ||f||_{L^p} ||g||_{L^r}\]
 
-%     \end{lemma}
-%       \begin{proof}
-%       \uses{thm:riesz_interpolation} % Put any results used in the proof but not in the statement here
-%       % \leanok % uncomment if the lemma has been proven
-%       \begin{itemize}
-%         \item{\textbf{Case 1:} assume $f$ and $g$ are simple functions. Fix $g$ and consider the operator $Tf = f * g$, which is linear by linearity of integrals.
-%         Let $M:= ||g||_{L^r}$. If $r'$ is the conjugate exponent to $r$, then by H\"older's inequality
-%         \[||T(f)||_{L^{\infty}} \]
-%         }
-%         TO BE COMPLETED
-%       \end{itemize}
-%     \end{proof}
-
-% \end{comment}
+    \end{lemma}
+      \begin{proof}
+      \uses{thm:riesz_interpolation} % Put any results used in the proof but not in the statement here
+      % \leanok % uncomment if the lemma has been proven
+      \begin{itemize}
+        \item{\textbf{Case 1:} assume $f$ and $g$ are simple functions. Fix $g$ and consider the operator $Tf = f * g$, which is linear by linearity of integrals.
+        Let $M:= ||g||_{L^r}$. If $r'$ is the conjugate exponent to $r$, then by H\"older's inequality
+        \[||T(f)||_{L^{\infty}} \]
+        }
+        TO BE COMPLETED
+      \end{itemize}
+    \end{proof}
+\end{comment}
