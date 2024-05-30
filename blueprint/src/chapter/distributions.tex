@@ -24,7 +24,7 @@
 %\renewcommand{\d}{\ \mathrm{d} }
 %%\newtheorem*{ex}{Example}
 %\newtheorem*{claim}{Claim}
-	
+	\chapter{Distributions}
 	Laurent Schwartz introduced the notion of distributions two talk about generalized solutions to differential equations. For his work he got the fields medal. 
 	\section{Space of Distributions}
 	\begin{definition}
@@ -122,7 +122,7 @@
 	\end{lemma}
 	\begin{proof}
 		Consider $S_\varepsilon \in D$ defined by
-		\[S_\varepsilon^\phi(y) = \varepsilon^d \sum_{n \in \bZ^d} \phi(n \varepsilon,y)\]
+		\[S_\varepsilon^\phi(y) = \varepsilon^d \sum_{n \in \Z^d} \phi(n \varepsilon,y)\]
 		which is a finite sum as $\phi$ has compact support.
 		Then for all $\phi \in C_c^\infty(\Omega \times \Omega)$ one has a limit in $\cD$
 		\[
@@ -131,8 +131,8 @@
 		Hence by continuity of $F$
 		\begin{align*}
 			F(\int_\Omega \phi(x,\_) \dm x) &= F(\lim_{\varepsilon \to 0} S^\phi_\varepsilon)     \\
-			&= \lim_{\varepsilon \to 0} F(S^\phi_\varepsilon)     \\
-			&= \lim_{\varepsilon \to 0} \varepsilon^d \sum_{n \in \bZ^d} F(\phi(n \varepsilon,\_))     \\
+			&= \lim_{\varepsilon \to 0} F(S^{\phi}_\varepsilon)     \\
+			&= \lim_{\varepsilon \to 0} \varepsilon^d \sum_{n \in \Z^d} F(\phi(n \varepsilon,\_))     \\
 			&= \lim_{\varepsilon \to 0} S^{F \circ \phi}_\varepsilon \\
 			&= \int_\Omega F(\phi(x,\_)) \dm x
 		\end{align*}
@@ -197,9 +197,9 @@
 		For a multiindex $\alpha$ and a distribution $F$ define the distribution
 		\[\partial^\alpha F (\phi) = (-1)^{|\alpha|}(F \partial^\alpha \phi)\]    
 	\end{definition}
-	\begin{rmk}
+	\begin{remark}
 		let $f \in L^1_{loc}(\Omega)$. If there exists some $f' \in L^1_{loc}(\Omega)$, such that $\Lambda f' = \partial^\alpha \Lambda  f$ as distributions, then we call $f'$ the {\bf weak derivative} of $f$ with respect to $\alpha$.
-	\end{rmk}
+	\end{remark}
 	\begin{proposition}
 		For $F \in D', \phi \in D $ , We have 
 		\[\partial^\alpha (F * \phi) = (\partial^\alpha F) * \phi = F * \partial^\alpha \phi\]
@@ -230,7 +230,7 @@
 		We have a continuous inclusions $\cD \subset \cS$, hence $\cS' \subset \cD'(\R^d)$. \\
 		Moreover, this inclusion is dense. Hence beeing tempered is a propositionerty of distributions. %and can be checked by asking that for any $\phi \in \cS$ and any sequence $\phi_n \in \cD \subset \cS$ converging to $\phi$ in $\cS$, the limit $\lim_{n \to \infty} F(\phi_n)$ exists.
 	\end{lemma}
-	\begin{lemma}{\label{slowlyInc}}
+	\begin{lemma}{\label{lemma:slowlyInc}}
 		Let $f \in L^1_{loc}(\R^d)$ such that there exists $N \ge 0$ with
 		\[
 		\int_{|x| < R} |f(x)| \dm x = O(R^N) , \text{ as } R \to \infty
@@ -340,13 +340,13 @@
 		c_\lambda = \frac{\Gamma((d + \lambda)/2)}{\Gamma(\lambda / 2)} \pi^{-d/2-\lambda}
 		\]
 	\end{theorem}
-	Set $\lambda:=-d+2$. Hence we can find an appropositioniate constant $C_d$ such that $F(x) = C_d |x|^{-d +2}$ is a fundamental solution, because $\hat {F}(\xi) = 1 / (-4\pi^2|\xi|^2)$. So writing out $\widehat{\Delta F} = 1$. \\
+	Set $\lambda:=-d+2$. Hence we can find an appropriate constant $C_d$ such that $F(x) = C_d |x|^{-d +2}$ is a fundamental solution, because $\hat {F}(\xi) = 1 / (-4\pi^2|\xi|^2)$. So writing out $\widehat{\Delta F} = 1$. \\
 	
 	\begin{proposition}
 		If $d = 2$, the function $F := 1/(2\pi) \log |x| \in L^1_{loc}$ is a fundamental solution of $\Delta$    
 	\end{proposition}
 	\begin{proof} Sketch.
-		One can actually compute $\hat F = -1 / (4\pi^2) \left [\frac{1}{|x|^2} \right] - c' \delta$ for some constant $c'$, where  $\left [\frac{1}{|x|^2} \right]$ is a distribution, that replaces the (non locally integrable) function $1  / |x|^2$ in an appropositioniate way:
+		One can actually compute $\hat F = -1 / (4\pi^2) \left [\frac{1}{|x|^2} \right] - c' \delta$ for some constant $c'$, where  $\left [\frac{1}{|x|^2} \right]$ is a distribution, that replaces the (non locally integrable) function $1  / |x|^2$ in an appropiate way:
 		\[
 		\left [\frac{1}{|x|^2} \right] = \int_{|x| \le 1} \frac{\phi(x) - \phi(0)}{|x|^2} \dm x + \int_{|x| > 1} \frac{\phi(x)}{|x|^2} \dm x 
 		\]
@@ -373,17 +373,17 @@
 	for some initial value $f \in \cS$. \\
 	We have 
 	\[
-	(\frac{\partial}{\partial t} \hat \cH_t)(\xi) = \widehat{\frac{\partial}{\partial t} \cH_t}(\xi) = \widehat{\Delta_x \cH_t}(\xi) = -4\pi^2 |\xi|^2 \hat \cH_t (\xi)
+	(\frac{\partial}{\partial t} \hat {\cH_t})(\xi) = \widehat{\frac{\partial}{\partial t} \cH_t}(\xi) = \widehat{\Delta_x \cH_t}(\xi) = -4\pi^2 |\xi|^2 \hat {\cH_t} (\xi)
 	\]
 	and this is obviously solved by $\cH_t = e^{-4\pi^2 |\xi|^2 t}$. We may call this the heat kernel
 	\[
 	\hat{\cH_t}(\xi) = e^{-4\pi^2 |\xi|^2 t}
 	\]
-	Note that for $t = 0$, we have $\hat \cH_0 = 1$, hence $\cH_0  = \delta$, so $u(x,t) = (\cH * f)(x)$ solves the equation $L(u) = 0$ and $u(x,t) \to f(x)$ in $\cS$ as $t \to 0$. 
-	\begin{rmk}{\label{rmk:approxId}}
+	Note that for $t = 0$, we have $\hat{\cH_0} = 1$, hence $\cH_0  = \delta$, so $u(x,t) = (\cH * f)(x)$ solves the equation $L(u) = 0$ and $u(x,t) \to f(x)$ in $\cS$ as $t \to 0$. 
+	\begin{remark}{\label{remark:approxId}}
 		$\cH_t \to \delta$ in $\cS'$ as $t \to 0$ and $\int_{\R^d} \cH_t(x) \dm x = 1$ for all $t$
-	\end{rmk}
-	No define 
+	\end{remark}
+	Now define 
 	\[
 	F(x,t) := \begin{cases}
 		\cH_t(x) & , \ if  \ t > 0 , \\
@@ -394,7 +394,7 @@
 	\[
 	\int_{|t|\le R} \int_{\R^d} F(x,t) \dm x \dm t \le R
 	\]
-	so $F$ defines a tempered distribution by \ref{slowlyInc}.
+	so $F$ defines a tempered distribution by \ref{lemma:slowlyInc}.
 	\begin{theorem}
 		$F$ is a fundamental solution of $L =  \frac{\partial}{\partial t} - \Delta_x$.
 	\end{theorem}
@@ -408,9 +408,10 @@
 			&= -  \int_{\R^d} \left(\int_{t \ge \varepsilon} \cH_t \frac{\partial}{\partial t} + (\Delta_x \cH_t) \phi \dm t \right) \dm x \\
 			&= - \int_{\R^d} \left(\int_{t \ge \varepsilon} \cH_t \frac{\partial}{\partial t} + ( \frac{\partial}{\partial t} \cH_t) \phi \dm t \right ) \dm x \\
 			&= \int_{\R^d} \cH_\varepsilon(x) \phi(x,\varepsilon) \dm x && \mid |\phi(x,\varepsilon) - \phi(x,0)| \le O(\varepsilon) \text{ uniformly in } x \\
-			&= \int_{\R^d} \cH_\varepsilon(x) (\phi(x,0) + O(\varepsilon)) \dm x && \ref{rmk:approxId}\\
-			&\underset{\varepsilon \to 0}{\to} \phi(0,0)
+			&= \int_{\R^d} \cH_\varepsilon(x) (\phi(x,0) + O(\varepsilon)) \dm x && \ref{remark:approxId}\\
+			&\to \phi(0,0)
 		\end{align*}
+	where in the last line we let $\varepsilon \to 0$
 	\end{proof}
 	
 \end{document}
