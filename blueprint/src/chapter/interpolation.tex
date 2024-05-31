@@ -242,7 +242,7 @@ As a last step towards proving the theorem, let us recall a consequence of Höld
         \item{\textbf{Case 2:} $p=\infty$ or $q=1$.\\
         If $p=\infty$, we must also have $p_0=p_1=\infty$, thus we have
         \[ ||Tf||_{L^{q_0}} \leq M_0 ||f||_{L^{\infty}} \qquad ||Tf||_{L^{q_1}} \leq M_1 ||f||_{L^{\infty}} \]
-        Applying Lemma \ref{hoelder'} with $Tf, q, q_0, q_1$, we obtain
+        Applying Lemma \ref{lem:hoelder'} with $Tf, q, q_0, q_1$, we obtain
         \[||Tf||_{L^q} \leq ||Tf||_{L^{q_0}}^{1-t} ||Tf||_{L^{q_1}}^{t} \leq  M_0^{1-t} M_1^t ||f||_{L^{\infty}} \]
         which is what we wanted.\\\\
         If $p<\infty$ and $q=1$, then (since they must be at least $1$ by definition of $L^p$ spaces) we have that $q_0$ and $q_1$ must also both be $1$ (for example, since $\frac{1}{q}$ is a convex combination of the other two reciprocals, the largest one must be $1$, and from that rearranging terms shows the other one is $1$).
@@ -327,7 +327,7 @@ As a remark, if $f= T'\{a_n\}$, then the $\{a_n\}$ are the Fourier coefficients 
 \subsection{Extending the Fourier transform}
 The Rietz-Thorin interpolation theorem also allows us to extend the Fourier transform defined in the previous chapter to a bigger domain.\\
 Let $V$ be a finite dimensional real inner product space and $E$ be a normed complex space.\\
-As in Definition \ref{def:fourier_transform} define the Fourier transform on simple functions $f$ via the expression
+As in Definition \ref{def:fourier-transform} define the Fourier transform on simple functions $f$ via the expression
 \[ \mathcal{F} (f)(w) = \int e^{-2\pi i \langle v, w \rangle } f(v) \]
 We have shown $\mathcal{F}$ extends to a bounded linear operator $L^1 \to L^{\infty}$, and to a bounded linear operator $L^2 \to L^2$ (see Theorem \ref{thm:fourier-is-l2-linear}).\\
 By Rietz-Thorin interpolation theorem, it can be uniquely extended to bounded linear operators $L^p \to L^q$
