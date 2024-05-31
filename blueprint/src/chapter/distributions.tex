@@ -24,394 +24,395 @@
 %\renewcommand{\d}{\ \mathrm{d} }
 %%\newtheorem*{ex}{Example}
 %\newtheorem*{claim}{Claim}
-	\chapter{Distributions}
-	Laurent Schwartz introduced the notion of distributions two talk about generalized solutions to differential equations. For his work he got the fields medal. 
-	\section{Space of Distributions}
-	\begin{definition}
-		
-		
-		$\cD(\Omega) = C_c^\infty(\Omega)$ is the set of test functions together with a topology determined by its converging sequences : $\phi_n \to \phi$ in $\cD(\Omega)$ if 
-		\begin{itemize}
-			\item there exists a compact subset $K \subset \Omega$ such that $\Supp(\phi_n) \subset K$. 
-			\item For all multiindices $\alpha$ we have $\partial_\alpha \phi_n \to \partial_\alpha \phi$ in uniformly.
-		\end{itemize}
-		Convention: if $x \in \R^d \setminus \Omega$, then $\phi(x) := 0$.\\
-		$\cD'(\Omega)$ is the topological dual space, i.e. the space of continuous linear functionals $D(\Omega) \to \C$ with the weak-*-convergence, i.e. pointwise convergence. 
-	\end{definition}
-	\begin{remark}
-		A notion of converging sequence on a set $X$ is 
-		\begin{itemize}
-			\item The constant function on $x$ converges to $x$
-			\item A sequence converges to $x$ iff any subsequence has a subsequence converging to $x$.
-		\end{itemize}
-		Note, that any subsequence of a converging sequence converges to the same limit. 
-		It induces a closure operator on $X$ (for $\overline{A \cup B} \subset \bar A \cup \bar B$ you use, that if a sequence in $A \cup B$ converges to $x$, then it has a subsequence (converging to $x$) lying in $A$ or in $B$). 
-	\end{remark}
-	% \begin{remark}
-	%     What do we really need from the space of test functions to build up our theory? It should be a subset of $C^\infty(\Omega)$ closed under convolution. 
-	% \end{remark}
-	\begin{example}
-		Every locally integrable function $f \in L^1_{loc}(\Omega)$ gives us a distribution $\Lambda f \in D'(\Omega)$ defined by
-		\[
-		\Lambda f (\phi) = \int_{\Omega} f(x) \phi(x) \dm x
-		\]
-		which is well-defined because $\phi$ has compact support.   
-	\end{example}
-	\begin{example}
-		Let $\mu$ be a Radon maesure on $\Omega$ (or more generally a signed Borel maesure which is finite on compact subsets of $\Omega$). Then it defines a distribution:
-		\[
-		T_\mu(\phi) = \int_{\Omega} \phi \dm \mu
-		\]
-	\end{example}
-	\begin{proof}
-		As Borelsets are $\mu$-maesurable, every continuous function is $\mu$-measurable. Let $K := \Supp \phi \subset \Omega $. Because $\mu(K) < \infty$ and $\max \phi(K) < \infty$ it follows that $\phi$ is $\mu$-integrable. Linearity follows from linearity of the integral. If $\phi_j \to \phi_*$ unifomrly, then $\Supp \phi_j  \subset K$ for all $j$ and $T_\mu \phi_j \to \Lambda_\mu \phi_*$.  
-	\end{proof}
-	We have the following important special case:
-	\begin{example}[Dirac-$\delta$]
-		We have $\delta \in D'(\Omega)$ given by
-		\[
-		\delta(\phi) := \phi(0)
-		\]
-	\end{example}
-	
-	\subsection{Convolution}
+
+\chapter{Distributions}
+Laurent Schwartz introduced the notion of distributions two talk about generalized solutions to differential equations. For his work he got the fields medal.
+
+\section{Space of Distributions}
+
+\begin{definition}
+	$\cD(\Omega) = C_c^\infty(\Omega)$ is the set of test functions together with a topology determined by its converging sequences : $\phi_n \to \phi$ in $\cD(\Omega)$ if
+	\begin{itemize}
+		\item there exists a compact subset $K \subset \Omega$ such that $\Supp(\phi_n) \subset K$.
+		\item For all multiindices $\alpha$ we have $\partial_\alpha \phi_n \to \partial_\alpha \phi$ in uniformly.
+	\end{itemize}
+	Convention: if $x \in \R^d \setminus \Omega$, then $\phi(x) := 0$.\\
+	$\cD'(\Omega)$ is the topological dual space, i.e. the space of continuous linear functionals $D(\Omega) \to \C$ with the weak-*-convergence, i.e. pointwise convergence.
+\end{definition}
+\begin{remark}
+	A notion of converging sequence on a set $X$ is
+	\begin{itemize}
+		\item The constant function on $x$ converges to $x$
+		\item A sequence converges to $x$ iff any subsequence has a subsequence converging to $x$.
+	\end{itemize}
+	Note, that any subsequence of a converging sequence converges to the same limit.
+	It induces a closure operator on $X$ (for $\overline{A \cup B} \subset \bar A \cup \bar B$ you use, that if a sequence in $A \cup B$ converges to $x$, then it has a subsequence (converging to $x$) lying in $A$ or in $B$).
+\end{remark}
+% \begin{remark}
+%     What do we really need from the space of test functions to build up our theory? It should be a subset of $C^\infty(\Omega)$ closed under convolution.
+% \end{remark}
+\begin{example}
+	Every locally integrable function $f \in L^1_{loc}(\Omega)$ gives us a distribution $\Lambda f \in D'(\Omega)$ defined by
+	\[
+	\Lambda f (\phi) = \int_{\Omega} f(x) \phi(x) \dm x
+	\]
+	which is well-defined because $\phi$ has compact support.
+\end{example}
+\begin{example}
+	Let $\mu$ be a Radon measure on $\Omega$ (or more generally a signed Borel measure which is finite on compact subsets of $\Omega$). Then it defines a distribution:
+	\[
+	T_\mu(\phi) = \int_{\Omega} \phi \dm \mu
+	\]
+\end{example}
+\begin{proof}
+	As Borel sets are $\mu$-measurable, every continuous function is $\mu$-measurable. Let $K := \Supp \phi \subset \Omega $. Because $\mu(K) < \infty$ and $\max \phi(K) < \infty$ it follows that $\phi$ is $\mu$-integrable. Linearity follows from linearity of the integral. If $\phi_j \to \phi_*$ unifomrly, then $\Supp \phi_j  \subset K$ for all $j$ and $T_\mu \phi_j \to \Lambda_\mu \phi_*$.
+\end{proof}
+We have the following important special case:
+\begin{example}[Dirac-$\delta$]
+	We have $\delta \in D'(\Omega)$ given by
+	\[
+	\delta(\phi) := \phi(0)
+	\]
+\end{example}
+
+\subsection{Convolution}
+\begin{notation}
+	For $\phi \in D$ define $\phi^R \in D$ as $\phi^R(x) = \phi(-x)$ and for $x \in \R^d$ we have the shift $\tau_x(\phi) \in D$ given by $\tau_x(\phi)(y) = \phi(y - x)$ .
+\end{notation}
+\begin{example}{\label{ex:conv}}
+	For $f \in L^1_{loc}(\Omega), g \in D(\Omega)$ we have
+	\[
+	(f * g)(x) = \Lambda f (\tau_x (\psi^R))
+	\]
+\end{example}
+\begin{proposition}
+
+	Let $F \in \cD'(\Omega) , \psi \in D$. The following two distributions coincide:
+	\begin{enumerate}
+		\item The distribution determined by the smooth function $x \mapsto F(\tau_x (\psi^R))$.
+		\item The distribution $\phi \mapsto F(\psi^R * \phi)$.
+	\end{enumerate}
+	We write this distribution as $F * \psi$.
+\end{proposition}
+
+\begin{proof}
+	$\zeta := \psi^R$
+	The function $x \mapsto F(\tau_x(\psi^R))$ is smooth :
+	\begin{itemize}
+		\item It is continuous: If $x_n \to x$, then $\tau_x (\zeta) - \tau_{x_n}(\zeta) \to 0 $ uniformly and the same holds for partial derivatives. Now $F$ is continuous hence $F(\tau_{\bullet}(\psi^R))$ is continuous and $F$ preserves the difference quotients, hence it will be also smooth.
+		\item The two distributions coincide:
+		% Recall
+		% \begin{align}
+		%     (\zeta * \phi)(y) = (\Lambda \tau_y \psi) (\phi)
+		% \end{align}
+		%    Hence
+		\begin{align*}
+			F(\psi^R * \phi)  &= F \left(\int(\tau_x \psi^R(\bullet) \phi(x) \dm x) \right) \\
+			&\overset{!}{=} \int F(\tau_x \psi^R(\bullet) \phi(x)) \dm x \\
+			&= \int F(\tau_x \psi^R) \phi(x) \dm x \\
+			&= \Lambda(F(\tau_{\bullet} \psi^R))(\phi)
+		\end{align*}
+		Where we are allowed to pull out the integral by \ref{lemma:distribCommInt}
+	\end{itemize}
+\end{proof}
+\begin{lemma}{\label{lemma:distribCommInt}}
+	Let $\phi \in C_c^{\infty}(\Omega \times \Omega)$. Then for any $F \in D'(\Omega)$ we have
+	\[
+	F \left(\int_\Omega \phi(x,\_) \dm x \right) = \int_\Omega F(\phi(x ,\_)) \dm x
+	\]
+\end{lemma}
+\begin{proof}
+	Consider $S_\varepsilon \in D$ defined by
+	\[S_\varepsilon^\phi(y) = \varepsilon^d \sum_{n \in \Z^d} \phi(n \varepsilon,y)\]
+	which is a finite sum as $\phi$ has compact support.
+	Then for all $\phi \in C_c^\infty(\Omega \times \Omega)$ one has a limit in $\cD$
+	\[
+	\int_\Omega \phi(x,\_) \dm x = \lim_{\varepsilon \to 0} S^\phi_\varepsilon
+	\]
+	Hence by continuity of $F$
+	\begin{align*}
+		F(\int_\Omega \phi(x,\_) \dm x) &= F(\lim_{\varepsilon \to 0} S^\phi_\varepsilon)     \\
+		&= \lim_{\varepsilon \to 0} F(S^{\phi}_\varepsilon)     \\
+		&= \lim_{\varepsilon \to 0} \varepsilon^d \sum_{n \in \Z^d} F(\phi(n \varepsilon,\_))     \\
+		&= \lim_{\varepsilon \to 0} S^{F \circ \phi}_\varepsilon \\
+		&= \int_\Omega F(\phi(x,\_)) \dm x
+	\end{align*}
+\end{proof}
+Using the first definition we learn the following two things
+\begin{example}
+	From the description \ref{ex:conv}: Writing $\Lambda f * g$ is unambiguous.
+\end{example}
+\begin{example}
+	We have $\delta_0 * f = \Lambda f$ for all $f \in D$.
+\end{example}
+\begin{lemma}{\label{lemma:cont}}
+	Convolution $F * \psi$ is continuous in both variables.
+\end{lemma}
+\begin{proof}
+	Continuity in the distribution variable is clear by pointwise convergence. \\
+	For the continuity in the test function variable one uses that convolution with a fixed test function is a continuous function $\cD \to \cD$ and distributions are continuous.
+\end{proof}
+\begin{proposition}{\label{proposition:deltaInClosure}}
+	There exists a sequence $\psi_n \in C_c^{\infty}(\Omega)$ such that $\Lambda \psi_n \to \delta_0$ in $D'(\Omega)$.
+\end{proposition}
+\begin{proof}
+	Fix some $\psi \in D$ with $\int \psi(x) \dm x = 1$. Define $\psi_n (x) := n^d \psi(nx)$. Then
+	\[
+	(\Lambda \psi_n - \delta_0) (\phi )  = \int n^d \psi (n x) \phi(x) \dm x - \phi(0) = \int \psi (x) \cdot (\phi(x / n) - \phi(0)) \dm x \to 0
+	\]
+	where we used that $\phi(x/n) - \phi(0) \to 0$ uniformly. \\
+\end{proof}
+The following is how we view $L^1_{loc}(\Omega) \subset D'(\Omega)$.
+\begin{corollary}
+	Let $f,g \in L^1_{loc}(\Omega)$ such that $\Lambda_f = \Lambda_g$. Then $f = g$ almost everywhere.
+\end{corollary}
+\begin{proof}
+	We have $0 = \Lambda(f-g)(\tau_{\bullet} \psi_n^R) = \psi_n * (f - g) \to \delta_0 * (f-g) = f-g$ in $L^1_{loc}$, hence $f = g$ almost everywhere.
+\end{proof}
+\begin{example}
+	$\delta$ is not a function! I.e. its not of the form $\Lambda f$ for some $f \in L^1_{loc}$
+\end{example}
+\begin{proof}
+	We have $\Delta|_{\Omega \setminus \{0\}}= \Lambda 0$ so if it would be a function, then it would be zero almost everywhere, hence 0. But this is a contradiction.
+\end{proof}
+\begin{corollary}
+	Then $C^\infty(\R^d)$ is dense in $\cD'(\R^d)$.
+\end{corollary}
+\begin{proof}
+	We know by \ref{proposition:deltaInClosure} that there exists $\Lambda \psi_n \to \delta_0$ in $\cD'$.
+	Let $F$ be a distribution on $\R^d$. Now setting $F_n := F * \psi_n^R$ , yields pointwise
+	\[
+	F_n(\phi) = F (\psi_n * \phi) \to F(\delta_0 * \phi) = F (\phi)
+	\]
+	by \ref{lemma:cont}
+	hence $F_n \to F$ in $\cD'$.  %Then there exists a sequence of smooth functions such that $\Lambda f_n \to F$.
+
+\end{proof}
+\subsection{Derivatives}
+For $\phi , \psi \in D$ we have
+\[
+\int_\Omega \partial^\alpha \phi \psi \dm x = (-1)^{|\alpha|} \int_\Omega \phi \partial^\alpha \psi \dm x
+\]
+This motivates the definition
+\begin{definition}
+	For a multiindex $\alpha$ and a distribution $F$ define the distribution
+	\[\partial^\alpha F (\phi) = (-1)^{|\alpha|}(F \partial^\alpha \phi)\]
+\end{definition}
+\begin{remark}
+	let $f \in L^1_{loc}(\Omega)$. If there exists some $f' \in L^1_{loc}(\Omega)$, such that $\Lambda f' = \partial^\alpha \Lambda  f$ as distributions, then we call $f'$ the {\bf weak derivative} of $f$ with respect to $\alpha$.
+\end{remark}
+\begin{proposition}
+	For $F \in D', \phi \in D $ , We have
+	\[\partial^\alpha (F * \phi) = (\partial^\alpha F) * \phi = F * \partial^\alpha \phi\]
+\end{proposition}
+\begin{proof}
+	First note, that holds in the case where $F$ is a test function, so that we have ordinary convolution.
+	Then check pointwise. After erasing the sign $(-1)^{|\alpha|}$
+	\[
+	F(\phi^R * \partial^\alpha \psi) = F(\partial^\alpha (\phi^R * \psi)) = F((\partial^\alpha \phi) * \psi)
+	\]
+
+\end{proof}
+\subsection{Support}
+The Support of a distribution $F$ is the complement of the largest open subset $U$, such that $F(\phi) = 0 \forall \phi \in D, \Supp(\phi) \subset U$.  This definition is unambiguous: If $F$ vanishes on each $U_i$ for some index set $I$ and $\phi \in D$ such that the compact set $\Supp \phi \subset U = \bigcup U_i$, we may assume that $I$ is finite and choose a partition of unity $\Supp \eta_i \subset U_i$ and $\sum \eta_i = 1$. Then $F(\phi) = \sum F(\phi \eta_i) = 0$.
+\subsection{Tempered Distributions}
+We no enlarge our test space to the schwartz space $\cS = \cS(\R^d)$ consisting of smooth functions that are rapidly decreasing at $\infty$ with all derivatives.
+\begin{definition}
+	Consider the increasing sequence of norms on $C^\infty(\Omega)$ defined by
+	\[
+	\|\phi\|_N = \sup \{ | x^\beta (\partial_x^\alpha \phi(x)) | \mid x \in \R^d , |\alpha|,\|\beta\|\le N\}
+	\]
+	\[
+	\cS = \{\phi \in C^\infty(\R^d) \mid \|\phi\|_N < \infty \forall N\}
+	\]
+	with the obvious notion of convergence.
+\end{definition}
+\begin{lemma}
+	We have a continuous inclusions $\cD \subset \cS$, hence $\cS' \subset \cD'(\R^d)$. \\
+	Moreover, this inclusion is dense. Hence being tempered is a property of distributions. %and can be checked by asking that for any $\phi \in \cS$ and any sequence $\phi_n \in \cD \subset \cS$ converging to $\phi$ in $\cS$, the limit $\lim_{n \to \infty} F(\phi_n)$ exists.
+\end{lemma}
+\begin{lemma}{\label{lemma:slowlyInc}}
+	Let $f \in L^1_{loc}(\R^d)$ such that there exists $N \ge 0$ with
+	\[
+	\int_{|x| < R} |f(x)| \dm x = O(R^N) , \text{ as } R \to \infty
+	\]
+	The distribution $\Lambda_f$ is tempered.
+\end{lemma}
+
+\begin{example}
+	This condition holds for functions in $L^p(\R^d)$ for $p \in [1,\infty]$
+\end{example}
+\begin{lemma}
+	If $F \in \cD'$ has compact support then it is tempered: Choose $\eta \in \cD$ such that $\eta|_U = 1$ on some neighborhood $U \supset \Supp(F)$. Then $F(\eta \phi) = F(\phi)$ for all $\phi \in \cD$ and $\phi \mapsto F (\eta \phi)$ defines a continuous functional on $\cS$. It does not depend on the choice of $\eta$, because given another such $\eta'$ and any $\phi \in \cS$ we have $\Supp((\eta - \eta') \cdot \phi) \cap \Supp(F) = \varnothing$.
+\end{lemma}
+Let $F$ denote a tempered distribution.
+\begin{lemma}
+
+	\begin{itemize}
+		\item All $\partial^\alpha F$ are tempered.
+		\item Let $\psi \in C^\infty$ be slowly increasing, i.e. for each $\alpha$ exists $N_\alpha$ such that $\partial_x^\alpha \psi(x) = O(|x|^{N_\alpha})$. Then $\psi F$, defined by $(\psi F)(\phi)(F(\psi \phi)$ is tempered.
+	\end{itemize}
+\end{lemma}
+\begin{example}
+	If $\psi \in \cS$, then $F(\tau_\bullet (\psi^R))$ is slowly increasing. The other formulation is still valid because $\cS$ is stable under $*$.
+\end{example}
+What is the point of the Schwartz space?
+\begin{definition}
+	The fourier transformation is a continuous bijection
+	\begin{align*}
+		\cS &\to \cS \\
+		\phi &\mapsto \hat \phi  = (\xi \mapsto \int_{\R^d} \phi(x) e^{-2\pi i x \xi} \dm x)
+	\end{align*}
+\end{definition}
+
+\begin{lemma}
+	We have
+	\[\Lambda_{\hat \psi}(\phi) = \int_{\R^d} \hat \psi (x) \phi(x) \dm x = \int_{\R^d} \psi(x) \hat \phi(x) \dm x = \Lambda_{\psi}(\hat \phi)\]
+\end{lemma}
+So its easy to define a compatible generalization to the tempered distributions:
+\begin{definition}
+	Define
+	\[
+	\hat F (\phi) = F (\hat \phi)
+	\]
+	and similarly for the inverse transform $f \mapsto \check{f}$.
+\end{definition}
+We automatically have the inversion theorem for distributions, because it holds for test functions.
+\begin{example}
+	If $1 \in S$ denotes the constant function at $1$, then
+	\[
+	\widehat {\delta} = \Lambda_1
+	\]
+	because
+	\[
+	\hat \delta (\phi) =\hat \phi(0) = \int 1 \phi(x) \dm x = \Lambda_1(\phi)
+	\]
+\end{example}
+
+\section{Fundamental solutions}
+In this chapter we may omit the $\Lambda$.
+Fix a partial differential operator $L$
+\[
+L = \sum_{|\alpha|\le m } a_\alpha \partial^\alpha \text { on } \R^d
+\]
+with $a_\alpha \in \C$.
+\begin{definition}
+	A fundamental solution of $L$ is a distribution $F$ such that $L(F) = \delta$
+\end{definition}
+The reason why this is interesting:
+\begin{lemma}
+	The operator
+	\[
+	f \mapsto T(f) := F * f
+	\]
+	defines an inverse to $L$
+\end{lemma}
+\begin{proof}
+	because
+	\[
+	\partial^\alpha (F * f) = (\partial^\alpha F) * f = F * (\partial^\alpha f)
+	\]
+	Summing over $\alpha$ gives
+	\[
+	L(F * f) = \delta * f  = F * L f
+	\]
+	Now recall $\delta * f = f$.
+\end{proof}
+\begin{definition}
+	The characteristic polynomial of $L$ is
+	\[P(\xi) = \sum_{|\alpha|\le m} a_\alpha (2 \pi i \xi)^\alpha\]
+\end{definition}
+It is defined it such a way, that $\widehat{L f} = P \cdot \hat f$.
+So our hope is
+\[F := \widecheck{1 / (P (\xi))} = \int \frac{1}{P(\xi)} e^{2 \pi i x \xi} \dm \xi\]
+The problem is, that the zeros of $P$ result in difficulties to define $F$, even as a distribution.
+\subsection{Laplacian}
+If $L = \Delta = \sum_{i=1}^d \frac{\partial^2}{\partial^2 x_i}$
+So $1 / P (\xi) = 1 / (-4 \pi^2 |\xi|^2) $ which lies in $L^1_{loc}$ for $d \ge 3$.
+To calculate our distribution the following is helpful
+\begin{theorem}
+	For $\lambda > -d$, Let $H_\lambda$ be the tempered distribution associated to $|x|^\lambda \in L^1_{loc}$. \\
+	If $-d  < \lambda < 0$  then
+	\[
+	\widehat {H_\lambda} = c_\lambda H_{-d-\lambda}
+	\]
+	with
+	\[
+	c_\lambda = \frac{\Gamma((d + \lambda)/2)}{\Gamma(\lambda / 2)} \pi^{-d/2-\lambda}
+	\]
+\end{theorem}
+Set $\lambda:=-d+2$. Hence we can find an appropriate constant $C_d$ such that $F(x) = C_d |x|^{-d +2}$ is a fundamental solution, because $\hat {F}(\xi) = 1 / (-4\pi^2|\xi|^2)$. So writing out $\widehat{\Delta F} = 1$. \\
+
+\begin{proposition}
+	If $d = 2$, the function $F := 1/(2\pi) \log |x| \in L^1_{loc}$ is a fundamental solution of $\Delta$
+\end{proposition}
+\begin{proof} Sketch.
+	One can actually compute $\hat F = -1 / (4\pi^2) \left [\frac{1}{|x|^2} \right] - c' \delta$ for some constant $c'$, where  $\left [\frac{1}{|x|^2} \right]$ is a distribution, that replaces the (non locally integrable) function $1  / |x|^2$ in an appropriate way:
+	\[
+	\left [\frac{1}{|x|^2} \right] = \int_{|x| \le 1} \frac{\phi(x) - \phi(0)}{|x|^2} \dm x + \int_{|x| > 1} \frac{\phi(x)}{|x|^2} \dm x
+	\]
+	Notice, that on the complement of zero, this distribution coincides with $1 / |x|^2$.
 	\begin{notation}
-		For $\phi \in D$ define $\phi^R \in D$ as $\phi^R(x) = \phi(-x)$ and for $x \in \R^d$ we have the shift $\tau_x(\phi) \in D$ given by $\tau_x(\phi)(y) = \phi(y - x)$ .
+		If $\phi \in C^\infty(\Omega)$ slowly increasing (i.e. all derivatives are bounded by polynomials), define $\phi F \in \cS'$ as $\phi F(\psi) = F(\phi \psi)$.
 	\end{notation}
-	\begin{example}{\label{ex:conv}}
-		For $f \in L^1_{loc}(\Omega), g \in D(\Omega)$ we have 
-		\[
-		(f * g)(x) = \Lambda f (\tau_x (\psi^R))
-		\]
-	\end{example}
-	\begin{proposition}
-		
-		Let $F \in \cD'(\Omega) , \psi \in D$. The following two distributions coincide:
-		\begin{enumerate}
-			\item The distribution determined by the smooth function $x \mapsto F(\tau_x (\psi^R))$. 
-			\item The distribution $\phi \mapsto F(\psi^R * \phi)$.
-		\end{enumerate}
-		We write this distribution as $F * \psi$. 
-	\end{proposition}
-	
-	\begin{proof}
-		$\zeta := \psi^R$
-		The function $x \mapsto F(\tau_x(\psi^R))$ is smooth : 
-		\begin{itemize}
-			\item It is continuous: If $x_n \to x$, then $\tau_x (\zeta) - \tau_{x_n}(\zeta) \to 0 $ uniformly and the same holds for partial derivatives. Now $F$ is continuous hence $F(\tau_{\bullet}(\psi^R))$ is continuous and $F$ preserves the difference quotients, hence it will be also smooth. 
-			\item The two distributions coincide:
-			% Recall 
-			% \begin{align}
-			%     (\zeta * \phi)(y) = (\Lambda \tau_y \psi) (\phi) 
-			% \end{align}
-			%    Hence 
-			\begin{align*}
-				F(\psi^R * \phi)  &= F \left(\int(\tau_x \psi^R(\bullet) \phi(x) \dm x) \right) \\
-				&\overset{!}{=} \int F(\tau_x \psi^R(\bullet) \phi(x)) \dm x \\
-				&= \int F(\tau_x \psi^R) \phi(x) \dm x \\
-				&= \Lambda(F(\tau_{\bullet} \psi^R))(\phi)
-			\end{align*}
-			Where we are allowed to pull out the integral by \ref{lemma:distribCommInt}
-		\end{itemize}
-	\end{proof}
-	\begin{lemma}{\label{lemma:distribCommInt}}
-		Let $\phi \in C_c^{\infty}(\Omega \times \Omega)$. Then for any $F \in D'(\Omega)$ we have
-		\[
-		F \left(\int_\Omega \phi(x,\_) \dm x \right) = \int_\Omega F(\phi(x ,\_)) \dm x
-		\]
-	\end{lemma}
-	\begin{proof}
-		Consider $S_\varepsilon \in D$ defined by
-		\[S_\varepsilon^\phi(y) = \varepsilon^d \sum_{n \in \Z^d} \phi(n \varepsilon,y)\]
-		which is a finite sum as $\phi$ has compact support.
-		Then for all $\phi \in C_c^\infty(\Omega \times \Omega)$ one has a limit in $\cD$
-		\[
-		\int_\Omega \phi(x,\_) \dm x = \lim_{\varepsilon \to 0} S^\phi_\varepsilon
-		\]
-		Hence by continuity of $F$
-		\begin{align*}
-			F(\int_\Omega \phi(x,\_) \dm x) &= F(\lim_{\varepsilon \to 0} S^\phi_\varepsilon)     \\
-			&= \lim_{\varepsilon \to 0} F(S^{\phi}_\varepsilon)     \\
-			&= \lim_{\varepsilon \to 0} \varepsilon^d \sum_{n \in \Z^d} F(\phi(n \varepsilon,\_))     \\
-			&= \lim_{\varepsilon \to 0} S^{F \circ \phi}_\varepsilon \\
-			&= \int_\Omega F(\phi(x,\_)) \dm x
-		\end{align*}
-	\end{proof}
-	Using the first definition we learn the following two things 
-	\begin{example}
-		From the description \ref{ex:conv}: Writing $\Lambda f * g$ is unambigious. 
-	\end{example}
-	\begin{example}
-		We have $\delta_0 * f = \Lambda f$ for all $f \in D$. 
-	\end{example}
-	\begin{lemma}{\label{lemma:cont}}
-		Convolution $F * \psi$ is continuous in both variables. 
-	\end{lemma}
-	\begin{proof}
-		Continuity in the distribution variable is clear by pointwise convergence. \\
-		For the continuity in the test function variable one uses that convolution with a fixed test function is a continuous function $\cD \to \cD$ and distributions are continuous.  
-	\end{proof}
-	\begin{proposition}{\label{proposition:deltaInClosure}}
-		There exists a sequence $\psi_n \in C_c^{\infty}(\Omega)$ such that $\Lambda \psi_n \to \delta_0$ in $D'(\Omega)$.    
-	\end{proposition}
-	\begin{proof}
-		Fix some $\psi \in D$ with $\int \psi(x) \dm x = 1$. Define $\psi_n (x) := n^d \psi(nx)$. Then 
-		\[
-		(\Lambda \psi_n - \delta_0) (\phi )  = \int n^d \psi (n x) \phi(x) \dm x - \phi(0) = \int \psi (x) \cdot (\phi(x / n) - \phi(0)) \dm x \to 0
-		\]
-		where we used that $\phi(x/n) - \phi(0) \to 0$ uniformly. \\
-	\end{proof}
-	The following is how we view $L^1_{loc}(\Omega) \subset D'(\Omega)$.
-	\begin{corollary}
-		Let $f,g \in L^1_{loc}(\Omega)$ such that $\Lambda_f = \Lambda_g$. Then $f = g$ almost everywhere. 
-	\end{corollary}
-	\begin{proof}
-		We have $0 = \Lambda(f-g)(\tau_{\bullet} \psi_n^R) = \psi_n * (f - g) \to \delta_0 * (f-g) = f-g$ in $L^1_{loc}$, hence $f = g$ almost everywhere.
-	\end{proof}
-	\begin{example}
-		$\delta$ is not a function! I.e. its not of the form $\Lambda f$ for some $f \in L^1_{loc}$
-	\end{example}
-	\begin{proof}
-		We have $\Delta|_{\Omega \setminus \{0\}}= \Lambda 0$ so if it would be a function, then it would be zero almost everywhere, hence 0. But this is a contradiction. 
-	\end{proof}
-	\begin{corollary}
-		Then $C^\infty(\R^d)$ is dense in $\cD'(\R^d)$. 
-	\end{corollary}
-	\begin{proof}
-		We know by \ref{proposition:deltaInClosure} that there exists $\Lambda \psi_n \to \delta_0$ in $\cD'$.
-		Let $F$ be a distribution on $\R^d$. Now setting $F_n := F * \psi_n^R$ , yields pointwise 
-		\[
-		F_n(\phi) = F (\psi_n * \phi) \to F(\delta_0 * \phi) = F (\phi)
-		\]
-		by \ref{lemma:cont}
-		hence $F_n \to F$ in $\cD'$.  %Then there exists a sequence of smooth functions such that $\Lambda f_n \to F$. 
-		
-	\end{proof}
-	\subsection{Derivatives}
-	For $\phi , \psi \in D$ we have
-	\[
-	\int_\Omega \partial^\alpha \phi \psi \dm x = (-1)^{|\alpha|} \int_\Omega \phi \partial^\alpha \psi \dm x
+	\begin{align*}
+		\widehat{ \Delta F} &= -4 \pi^2 |x|^2 \hat F\\
+		&=  |x|^2 \left [\frac{1}{|x|^2} \right] - 4\pi^2 c' \underbrace{|x|^2 \delta}_{=0} \\
+		&= 1
+	\end{align*}
+\end{proof}
+\subsection{Heat operator}
+$L = \frac{\partial}{\partial t} - \Delta_x$
+taken over $(x,t) \in \R^{d+1} = \R^d \times \R$
+i.e. we want to solve the homogeneous initial value problem
+\[
+\begin{cases}
+	L (u) = 0 & , t > 0 \\
+	u(x,0) = f(x) & , t = 0
+\end{cases}
+\]
+for some initial value $f \in \cS$. \\
+We have
+\[
+(\frac{\partial}{\partial t} \hat {\cH_t})(\xi) = \widehat{\frac{\partial}{\partial t} \cH_t}(\xi) = \widehat{\Delta_x \cH_t}(\xi) = -4\pi^2 |\xi|^2 \hat {\cH_t} (\xi)
+\]
+and this is obviously solved by $\cH_t = e^{-4\pi^2 |\xi|^2 t}$. We may call this the heat kernel
+\[
+\hat{\cH_t}(\xi) = e^{-4\pi^2 |\xi|^2 t}
+\]
+Note that for $t = 0$, we have $\hat{\cH_0} = 1$, hence $\cH_0  = \delta$, so $u(x,t) = (\cH * f)(x)$ solves the equation $L(u) = 0$ and $u(x,t) \to f(x)$ in $\cS$ as $t \to 0$.
+\begin{remark}{\label{remark:approxId}}
+	$\cH_t \to \delta$ in $\cS'$ as $t \to 0$ and $\int_{\R^d} \cH_t(x) \dm x = 1$ for all $t$
+\end{remark}
+Now define
+\[
+F(x,t) := \begin{cases}
+	\cH_t(x) & , \ if  \ t > 0 , \\
+	0 & , t \le 0
+\end{cases}
+\]
+$F$ is locally integrable on $\R^{d+1}$ and it actually holds
+\[
+\int_{|t|\le R} \int_{\R^d} F(x,t) \dm x \dm t \le R
+\]
+so $F$ defines a tempered distribution by \ref{lemma:slowlyInc}.
+\begin{theorem}
+	$F$ is a fundamental solution of $L =  \frac{\partial}{\partial t} - \Delta_x$.
+\end{theorem}
+\begin{proof}
+	Denote $L' = -  \frac{\partial}{\partial t} - \Delta_x$, then we have to see the last equation
+	\[LF (\phi) = F(L'(\phi)) = \lim_{\varepsilon \to 0} \int_{t \ge \varepsilon} \int_{\R^d} F(x,t) ( -\frac{\partial}{\partial t} - \Delta_x) \phi(x,t) \dm x \dm t \overset{!}{=} \delta(\phi)
 	\]
-	This motivates the definition
-	\begin{definition}
-		For a multiindex $\alpha$ and a distribution $F$ define the distribution
-		\[\partial^\alpha F (\phi) = (-1)^{|\alpha|}(F \partial^\alpha \phi)\]    
-	\end{definition}
-	\begin{remark}
-		let $f \in L^1_{loc}(\Omega)$. If there exists some $f' \in L^1_{loc}(\Omega)$, such that $\Lambda f' = \partial^\alpha \Lambda  f$ as distributions, then we call $f'$ the {\bf weak derivative} of $f$ with respect to $\alpha$.
-	\end{remark}
-	\begin{proposition}
-		For $F \in D', \phi \in D $ , We have 
-		\[\partial^\alpha (F * \phi) = (\partial^\alpha F) * \phi = F * \partial^\alpha \phi\]
-	\end{proposition}
-	\begin{proof}
-		First note, that holds in the case where $F$ is a test function, so that we have ordinary convolution. 
-		Then check pointwise. After erasing the sign $(-1)^{|\alpha|}$
-		\[
-		F(\phi^R * \partial^\alpha \psi) = F(\partial^\alpha (\phi^R * \psi)) = F((\partial^\alpha \phi) * \psi)
-		\]
-		
-	\end{proof}
-	\subsection{Support}
-	The Support of a distribution $F$ is the complement of the largest open subset $U$, such that $F(\phi) = 0 \forall \phi \in D, \Supp(\phi) \subset U$.  This definition is unambigious: If $F$ vanishes on each $U_i$ for some indexset $I$ and $\phi \in D$ such that the compact set $\Supp \phi \subset U = \bigcup U_i$, we may assume that $I$ is finite and choose a partition of unity $\Supp \eta_i \subset U_i$ and $\sum \eta_i = 1$. Then $F(\phi) = \sum F(\phi \eta_i) = 0$.
-	\subsection{Tempered Distributions}
-	We no enlarge our testspace to the schwartz space $\cS = \cS(\R^d)$ consisting of smooth functions that are rapidly decreasing at $\infty$ with all derivatives. 
-	\begin{definition}
-		Consider the increasing sequence of norms on $C^\infty(\Omega)$ defined by
-		\[
-		\|\phi\|_N = \sup \{ | x^\beta (\partial_x^\alpha \phi(x)) | \mid x \in \R^d , |\alpha|,\|\beta\|\le N\}
-		\]
-		\[
-		\cS = \{\phi \in C^\infty(\R^d) \mid \|\phi\|_N < \infty \forall N\}
-		\]
-		with the obvious notion of convergence.
-	\end{definition}
-	\begin{lemma}
-		We have a continuous inclusions $\cD \subset \cS$, hence $\cS' \subset \cD'(\R^d)$. \\
-		Moreover, this inclusion is dense. Hence beeing tempered is a propositionerty of distributions. %and can be checked by asking that for any $\phi \in \cS$ and any sequence $\phi_n \in \cD \subset \cS$ converging to $\phi$ in $\cS$, the limit $\lim_{n \to \infty} F(\phi_n)$ exists.
-	\end{lemma}
-	\begin{lemma}{\label{lemma:slowlyInc}}
-		Let $f \in L^1_{loc}(\R^d)$ such that there exists $N \ge 0$ with
-		\[
-		\int_{|x| < R} |f(x)| \dm x = O(R^N) , \text{ as } R \to \infty
-		\]
-		The distribution $\Lambda_f$ is tempered.    
-	\end{lemma}
-	
-	\begin{example}
-		This condition holds for functions in $L^p(\R^d)$ for $p \in [1,\infty]$
-	\end{example}
-	\begin{lemma}
-		If $F \in \cD'$ has compact support then it is tempered: Choose $\eta \in \cD$ such that $\eta|_U = 1$ on some neighborhood $U \supset \Supp(F)$. Then $F(\eta \phi) = F(\phi)$ for all $\phi \in \cD$ and $\phi \mapsto F (\eta \phi)$ defines a continuous functional on $\cS$. It does not depend on the choice of $\eta$, because given another such $\eta'$ and any $\phi \in \cS$ we have $\Supp((\eta - \eta') \cdot \phi) \cap \Supp(F) = \varnothing$. 
-	\end{lemma}
-	Let $F$ denote a tempered distribution.
-	\begin{lemma}
-		
-		\begin{itemize}
-			\item All $\partial^\alpha F$ are tempered.
-			\item Let $\psi \in C^\infty$ be slowly increasing, i.e. for each $\alpha$ exists $N_\alpha$ such that $\partial_x^\alpha \psi(x) = O(|x|^{N_\alpha})$. Then $\psi F$, defined by $(\psi F)(\phi)(F(\psi \phi)$ is tempered.
-		\end{itemize}
-	\end{lemma}
-	\begin{example}
-		If $\psi \in \cS$, then $F(\tau_\bullet (\psi^R))$ is slowly increasing. The other formulation is still valid because $\cS$ is stable under $*$.
-	\end{example}
-	What is the point of the Schwartz space?
-	\begin{definition}
-		The fourier transformation is a continuous bijection 
-		\begin{align*}
-			\cS &\to \cS \\
-			\phi &\mapsto \hat \phi  = (\xi \mapsto \int_{\R^d} \phi(x) e^{-2\pi i x \xi} \dm x)
-		\end{align*}
-	\end{definition}
-	
-	\begin{lemma}
-		We have 
-		\[\Lambda_{\hat \psi}(\phi) = \int_{\R^d} \hat \psi (x) \phi(x) \dm x = \int_{\R^d} \psi(x) \hat \phi(x) \dm x = \Lambda_{\psi}(\hat \phi)\]
-	\end{lemma}
-	So its easy to define a compatible generalization to the tempered distributions:
-	\begin{definition}
-		Define
-		\[
-		\hat F (\phi) = F (\hat \phi)
-		\]
-		and similarly for the inverse transform $f \mapsto \check{f}$.
-	\end{definition}
-	We automatically have the inversion theorem for distributions, because it holds for test functions. 
-	\begin{example}
-		If $1 \in S$ denotes the constant function at $1$, then
-		\[
-		\widehat {\delta} = \Lambda_1
-		\]
-		because 
-		\[
-		\hat \delta (\phi) =\hat \phi(0) = \int 1 \phi(x) \dm x = \Lambda_1(\phi)
-		\]
-	\end{example}
-	
-	\section{Fundamental solutions}
-	In this chapter we may omit the $\Lambda$.
-	Fix a partial differential operator $L$
-	\[
-	L = \sum_{|\alpha|\le m } a_\alpha \partial^\alpha \text { on } \R^d
-	\]
-	with $a_\alpha \in \C$. 
-	\begin{definition}
-		A fundamental solution of $L$ is a distribution $F$ such that $L(F) = \delta$
-	\end{definition}
-	The reason why this is interesting: 
-	\begin{lemma}
-		The operator 
-		\[
-		f \mapsto T(f) := F * f
-		\]
-		defines an inverse to $L$
-	\end{lemma}
-	\begin{proof}
-		because 
-		\[
-		\partial^\alpha (F * f) = (\partial^\alpha F) * f = F * (\partial^\alpha f)
-		\]
-		Summing over $\alpha$ gives
-		\[
-		L(F * f) = \delta * f  = F * L f
-		\]
-		Now recall $\delta * f = f$.
-	\end{proof}
-	\begin{definition}
-		The characteristic polynomial of $L$ is
-		\[P(\xi) = \sum_{|\alpha|\le m} a_\alpha (2 \pi i \xi)^\alpha\]
-	\end{definition}
-	It is defined it such a way, that $\widehat{L f} = P \cdot \hat f$. 
-	So our hope is 
-	\[F := \widecheck{1 / (P (\xi))} = \int \frac{1}{P(\xi)} e^{2 \pi i x \xi} \dm \xi\]
-	The problem is, that the zeros of $P$ result in difficulties to define $F$, even as a distribution.
-	\subsection{Laplacian}
-	If $L = \Delta = \sum_{i=1}^d \frac{\partial^2}{\partial^2 x_i}$
-	So $1 / P (\xi) = 1 / (-4 \pi^2 |\xi|^2) $ which lies in $L^1_{loc}$ for $d \ge 3$.
-	To calculate our distribution the following is helpful
-	\begin{theorem}
-		For $\lambda > -d$, Let $H_\lambda$ be the tempered distribution associated to $|x|^\lambda \in L^1_{loc}$. \\
-		If $-d  < \lambda < 0$  then
-		\[
-		\widehat {H_\lambda} = c_\lambda H_{-d-\lambda} 
-		\]
-		with 
-		\[
-		c_\lambda = \frac{\Gamma((d + \lambda)/2)}{\Gamma(\lambda / 2)} \pi^{-d/2-\lambda}
-		\]
-	\end{theorem}
-	Set $\lambda:=-d+2$. Hence we can find an appropriate constant $C_d$ such that $F(x) = C_d |x|^{-d +2}$ is a fundamental solution, because $\hat {F}(\xi) = 1 / (-4\pi^2|\xi|^2)$. So writing out $\widehat{\Delta F} = 1$. \\
-	
-	\begin{proposition}
-		If $d = 2$, the function $F := 1/(2\pi) \log |x| \in L^1_{loc}$ is a fundamental solution of $\Delta$    
-	\end{proposition}
-	\begin{proof} Sketch.
-		One can actually compute $\hat F = -1 / (4\pi^2) \left [\frac{1}{|x|^2} \right] - c' \delta$ for some constant $c'$, where  $\left [\frac{1}{|x|^2} \right]$ is a distribution, that replaces the (non locally integrable) function $1  / |x|^2$ in an appropiate way:
-		\[
-		\left [\frac{1}{|x|^2} \right] = \int_{|x| \le 1} \frac{\phi(x) - \phi(0)}{|x|^2} \dm x + \int_{|x| > 1} \frac{\phi(x)}{|x|^2} \dm x 
-		\]
-		Notice, that on the complement of zero, this distribution coincides with $1 / |x|^2$.
-		\begin{notation}
-			If $\phi \in C^\infty(\Omega)$ slowly increasing (i.e. all derivatives are bounded by polynomials), define $\phi F \in \cS'$ as $\phi F(\psi) = F(\phi \psi)$.
-		\end{notation}
-		\begin{align*}
-			\widehat{ \Delta F} &= -4 \pi^2 |x|^2 \hat F\\
-			&=  |x|^2 \left [\frac{1}{|x|^2} \right] - 4\pi^2 c' \underbrace{|x|^2 \delta}_{=0} \\
-			&= 1
-		\end{align*}
-	\end{proof}
-	\subsection{Heat operator}
-	$L = \frac{\partial}{\partial t} - \Delta_x$
-	taken over $(x,t) \in \R^{d+1} = \R^d \times \R$
-	i.e. we want to solve the homogeneous initial value problem
-	\[
-	\begin{cases}
-		L (u) = 0 & , t > 0 \\
-		u(x,0) = f(x) & , t = 0
-	\end{cases}
-	\]
-	for some initial value $f \in \cS$. \\
-	We have 
-	\[
-	(\frac{\partial}{\partial t} \hat {\cH_t})(\xi) = \widehat{\frac{\partial}{\partial t} \cH_t}(\xi) = \widehat{\Delta_x \cH_t}(\xi) = -4\pi^2 |\xi|^2 \hat {\cH_t} (\xi)
-	\]
-	and this is obviously solved by $\cH_t = e^{-4\pi^2 |\xi|^2 t}$. We may call this the heat kernel
-	\[
-	\hat{\cH_t}(\xi) = e^{-4\pi^2 |\xi|^2 t}
-	\]
-	Note that for $t = 0$, we have $\hat{\cH_0} = 1$, hence $\cH_0  = \delta$, so $u(x,t) = (\cH * f)(x)$ solves the equation $L(u) = 0$ and $u(x,t) \to f(x)$ in $\cS$ as $t \to 0$. 
-	\begin{remark}{\label{remark:approxId}}
-		$\cH_t \to \delta$ in $\cS'$ as $t \to 0$ and $\int_{\R^d} \cH_t(x) \dm x = 1$ for all $t$
-	\end{remark}
-	Now define 
-	\[
-	F(x,t) := \begin{cases}
-		\cH_t(x) & , \ if  \ t > 0 , \\
-		0 & , t \le 0 
-	\end{cases}
-	\]
-	$F$ is locally integrable on $\R^{d+1}$ and it actually holds 
-	\[
-	\int_{|t|\le R} \int_{\R^d} F(x,t) \dm x \dm t \le R
-	\]
-	so $F$ defines a tempered distribution by \ref{lemma:slowlyInc}.
-	\begin{theorem}
-		$F$ is a fundamental solution of $L =  \frac{\partial}{\partial t} - \Delta_x$.
-	\end{theorem}
-	\begin{proof}
-		Denote $L' = -  \frac{\partial}{\partial t} - \Delta_x$, then we have to see the last equation
-		\[LF (\phi) = F(L'(\phi)) = \lim_{\varepsilon \to 0} \int_{t \ge \varepsilon} \int_{\R^d} F(x,t) ( -\frac{\partial}{\partial t} - \Delta_x) \phi(x,t) \dm x \dm t \overset{!}{=} \delta(\phi)
-		\]
-		Integration by parts
-		\begin{align*}
-			& \int_{t \ge \varepsilon} \int_{\R^d} F(x,t) ( -\frac{\partial}{\partial t} - \Delta_x) \phi(x,t) \dm x \dm t \\ 
-			&= -  \int_{\R^d} \left(\int_{t \ge \varepsilon} \cH_t \frac{\partial}{\partial t} + (\Delta_x \cH_t) \phi \dm t \right) \dm x \\
-			&= - \int_{\R^d} \left(\int_{t \ge \varepsilon} \cH_t \frac{\partial}{\partial t} + ( \frac{\partial}{\partial t} \cH_t) \phi \dm t \right ) \dm x \\
-			&= \int_{\R^d} \cH_\varepsilon(x) \phi(x,\varepsilon) \dm x && \mid |\phi(x,\varepsilon) - \phi(x,0)| \le O(\varepsilon) \text{ uniformly in } x \\
-			&= \int_{\R^d} \cH_\varepsilon(x) (\phi(x,0) + O(\varepsilon)) \dm x && \ref{remark:approxId}\\
-			&\to \phi(0,0)
-		\end{align*}
-	where in the last line we let $\varepsilon \to 0$
-	\end{proof}
-	
+	Integration by parts
+	\begin{align*}
+		& \int_{t \ge \varepsilon} \int_{\R^d} F(x,t) ( -\frac{\partial}{\partial t} - \Delta_x) \phi(x,t) \dm x \dm t \\
+		&= -  \int_{\R^d} \left(\int_{t \ge \varepsilon} \cH_t \frac{\partial}{\partial t} + (\Delta_x \cH_t) \phi \dm t \right) \dm x \\
+		&= - \int_{\R^d} \left(\int_{t \ge \varepsilon} \cH_t \frac{\partial}{\partial t} + ( \frac{\partial}{\partial t} \cH_t) \phi \dm t \right ) \dm x \\
+		&= \int_{\R^d} \cH_\varepsilon(x) \phi(x,\varepsilon) \dm x && \mid |\phi(x,\varepsilon) - \phi(x,0)| \le O(\varepsilon) \text{ uniformly in } x \\
+		&= \int_{\R^d} \cH_\varepsilon(x) (\phi(x,0) + O(\varepsilon)) \dm x && \ref{remark:approxId}\\
+		&\to \phi(0,0)
+	\end{align*}
+where in the last line we let $\varepsilon \to 0$
+\end{proof}
+
 \end{document}
