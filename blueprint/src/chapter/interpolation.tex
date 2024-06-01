@@ -94,19 +94,19 @@ There are various statements of this in Lean, see \href{https://leanprover-commu
 
 
 \begin{lemma}
-    \label{lem:lp_of_sup_norm}
-    \uses{}
-    \lean{}
-    %\leanok
-    Let $p$ and $q$ be conjugate exponents and let $g$ be integrable on all sets of finite measure. If
-    \[ \sup_{||f||_{L^p} \leq 1, \ f \text{ simple}} \left| \int fg \right| = M < \infty \]
-    then $g$ is in $L^q$ and $||g||_{L^q} = M$.
-    \end{lemma}
-      \begin{proof}
-      % \uses{} % Put any results used in the proof but not in the statement here
-      % \leanok % uncomment if the lemma has been proven
-      Details to be filled later.
-      \end{proof}
+  \label{lem:lp_of_sup_norm}
+  %\uses{}
+  %\lean{}
+  %\leanok
+  Let $p$ and $q$ be conjugate exponents and let $g$ be integrable on all sets of finite measure. If
+  \[ \sup_{||f||_{L^p} \leq 1, \ f \text{ simple}} \left| \int fg \right| = M < \infty \]
+  then $g$ is in $L^q$ and $||g||_{L^q} = M$.
+  \end{lemma}
+\begin{proof}
+  % \uses{} % Put any results used in the proof but not in the statement here
+  % \leanok % uncomment if the lemma has been proven
+  Details to be filled later.
+\end{proof}
 
 \begin{comment}
       (Note: This is used by Stein-Shakarchi to prove the dual of $L^p$ is $L^q$, so it may be already formalized by the time
@@ -161,98 +161,95 @@ As a last step towards proving the theorem, let us recall a consequence of Höld
 
 
 \begin{theorem}
-    \label{thm:riesz_interpolation}
-    \uses{}
-    \lean{}
-    %\leanok
-    Let $(X, \mu)$ and $(Y, \nu)$ be measure spaces and consider all $L^p$ spaces to be complex valued.\\
-    Suppose $T$ is a linear map $L^{p_0}(X) + L^{p_1}(X) \to L^{q_0}(Y) + L^{q_1}(Y)$ that restricts to
-    bounded operators $L^{p_0} \to L^{q_0}$ and $L^{p_1} \to L^{q_1}$. Let $M_0, M_1$ be the respective bounds, i.e.,
-    \[ \begin{cases} ||Tf||_{L^{q_0}} \leq M_0 ||f||_{L^{p_0}} \\ ||Tf||_{L^{q_1}} \leq M_1 ||f||_{L^{p_1}}  \end{cases}\]
-    Then, for any pair $(p, q)$ such that there is a $t$ in $[0,1]$ for which
-    \[\frac{1}{p} = \frac{1-t}{p_0} + \frac{t}{p_1} \qquad \frac{1}{q} = \frac{1-t}{q_0} + \frac{t}{q_1} \]
-    we have that the operator is bounded $L^p \to L^q$, and in particular
-    \[ ||Tf||_{L^q} \leq M_0^{1-t} M_1^t ||f||_{L^p} \]
-    \end{theorem}
-      \begin{proof}
-      \uses{lem:lpnorm_sup, lem:threelines} % Put any results used in the proof but not in the statement here
-      % \leanok % uncomment if the lemma has been proven
-      For a valid choice of $p,q$, note that we both need to show $Tf$ is in $L^q$ and a bound on the
-      $L^q$ norm of $Tf$.
-      Let $q'$ be the conjugate exponent of $q$. By Lemma \ref{lem:lp_of_sup_norm} for $Tf$, we need a bound of the form
-      \[ \sup_{||g||_{L^{q'}} \leq 1, \ \ g \text{ simple}} \left| \int T(f) g \right| \leq M ||f||_{L^p} \]
-      \begin{itemize}
-        \item{\textbf{Case 1}: assume $p<\infty$ and $q>1$, and let $q', q_0^1, q_1'$ be the conjugate exponents of $q, q_0, q_1$ respectively.
-        \begin{itemize}
-            \item{\textbf{Subcase a:} assume $f=\sum_i a_i \chi_{E_i}$ is a simple function (finite sum with $E_i$ disjoint of finite measure).\\
-            Let $g=\sum_j b_j \chi_{F_j}$ be a simple function.
-            By writing $f$ as $||f||_{L^p} \cdot \frac{f}{||f||_{L^p}}$ and using linearity of $T$ and integrals, it suffices to prove the above inequality when $||f||_{L^p}=1$.\\
-            We want to apply the three lines lemma to an appropriate function. Define
-            \[ \gamma(z) = p \left(\frac{1-z}{p_0} + \frac{z}{p_1} \right) \qquad f_z = |f|^{\gamma(z)} \cdot \frac{f}{|f|} \]
-            \[ \delta(z) = q' \left(\frac{1-z}{q'_0} + \frac{z}{q'_1} \right) \qquad g_z = |g|^{\delta(z)} \cdot \frac{g}{|g|} \]
-            Observe that for $t$ as in the statement of the theorem, we have by definition that $\gamma(t)=1$, hence $f_t=f$.\\
-            Moreover, if $\mathrm{Re}(z)=0$, we have that $\mathrm{Re} (\gamma(z)) = \frac{p}{p_0}$, and hence
-            \[ ||f_z||_{L^{p_0}} = \left(\int |f_z|^{p_0}\right)^{\frac{1}{p_0}} = \left(\int | |f|^{\gamma(z)} |^{p_0}\right)^{\frac{1}{p_0}} = \left(\int |f| ^{\frac{p}{p_0} \cdot p_0}\right)^{\frac{1}{p_0}} = \left(||f||_{L^p}^p\right)^{\frac{1}{p_0}} = 1^{\frac{1}{p_0}} = 1  \]
-            If $\mathrm{Re}(z)=1$, we have $\mathrm{Re} (\gamma(z)) = \frac{p}{p_1}$, and the exact same computation replacing $p_0$ with $p_1$ now shows that $||f_z||_{L^{p_1}}=1$.\\
-            Similarly, one shows that
-            \[ g_t=g \qquad ||g_z||_{L^{q'_0}} = 1 \text{ if } \mathrm{Re}(z)=0 \qquad ||g_z||_{L^{q'_1}} = 1 \text{ if } \mathrm{Re}(z)=1 \]
-            Now, we want to apply the three lines lemma to the function
-            \[\phi(z) := \int (Tf_z) g_z \]
-            Since $f$ and $g$ are simple and given by the expressions above, we can explicitly write $f_z$ and $g_z$ as
-            \[f_z=\sum_i |a_i|^{\gamma(z)} \frac{a_i}{|a_i|} \chi_{E_i} \qquad g_z=\sum_j |b_j|^{\delta(z)} \frac{b_j}{|b_j|} \chi_{F_j} \]
-            (here, we use that the $E_i$ (respectively $F_j$) are disjoint, so for every point in the domain there is at most one of the $E_i$ covering it).\\
-            So, expanding everything by linearity of $T$ and integrals, we obtain
-            \[ \phi(z) = \sum_{i,j} |a_i|^{\gamma(z)} \frac{a_i}{|a_i|} |b_j|^{\delta(z)} \frac{b_j}{|b_j|} \int T(\chi_{E_i}) \chi_{F_j} \]
-            This only depends on $z$ holomorphically in terms of the exponents of the $|a_i|$ and $|b_j|$, so it is a holomorphic function on the strip $S$ in the three lines lemma and it is continuous on $S$.\\
-            It it also bounded on $\bar{S}$. In fact, we wrote $\phi$ as a finite sum, so we only need to show each summand is bounded.
-            Since the real part of $z$ is between $0$ and $1$, the terms $|a_i|^{\gamma(z)}$ and $|b_j|^{\delta(z)}$ have bounded norms.
-            Finally, recall that H\"older's inequality states that $||fg||_1 \leq ||f||_p ||g||_1$ for conjugate exponents $p,q$.
-            Hence,
-            \[ \left| \int T(\chi_{E_i}) \chi_{F_j} \right| \leq ||T(\chi_{E_i}) \chi_{F_j}||_{L^1} \leq ||T(\chi_{E_i})||_{L^{p_0}} \cdot ||\chi_{F_j}||_{p'_0} \leq M_0 \mu(E_i) \mu(F_j) \]
-            which is bounded. Moreover, if $\mathrm{Re}(z)=0$, since $||f_z||_{L^{p_0}}=||g_z||_{L^{q'_0}}=1$, we have
-            \[ | \phi(z) | \leq \int |(Tf_z) g_z| \leq ||Tf_z||_{L^{q_0}} \cdot ||g_z||_{L^{q'_0}} \leq M_0 \cdot ||g_z||_{L^{q'_0}} \leq M_0 \]
-            Similarly, if $\mathrm{Re}(z)=1$, we obtain
-            \[ | \phi(z) | \leq \int |(Tf_z) g_z| \leq ||Tf_z||_{L^{q_1}} \cdot ||g_z||_{L^{q'_1}} \leq M_1 \cdot ||g_z||_{L^{q'_1}} \leq M_1 \]
-            Thus, applying the three lines lemma to $\phi(z)$ yields that
-            \[ |\phi(t+yi)| \leq M_0^{1-t} M_1^t \]
-            In particular, this holds for $y=0$, but now
-            \[ \phi(t) = \int (Tf_t) g_t = \int (Tf) g \]
-            So we have
-            \[ \left| \int (Tf) g \right| \leq M_0^{1-t} M_1^t \]
-            which is exactly what we wanted to show.
-            }
-            \item{\textbf{Subcase b:} Now, let $f$ be any function in $L^p$. By density of simple functions, approximate $f$ by a sequence ${f_n}$ of simple functions with $||f_n - f||_{L^p} \to 0$.\\
-            By the previous case, we have $||Tf_n||_{L^q} \leq M ||f_n||_{L^p}$. In particular, the sequence $\{Tf_n\}$ is Cauchy in $L^q$, since
-            \[ ||Tf_m - Tf_n||_{L^q} = ||T(f_m-f_n)||_{L^q} \leq M ||f_m - f_n||_{L^p} \]
-            and the original sequence is Cauchy. By completeness, the $\{Tf_n\}$ converge in $L^q$, in particular the $L^q$ norm of the limit is the limit of the $L^q$ norms, which is less than $M ||f||_{L^p}$.
-            Hence, it suffices to show that the sequence $\{Tf_n\}$ converges almost everywhere to $Tf$.\\
-            Write $f= f^U + f^L$ with
-            \[ f^U := \begin{cases} f(x) & \text{if } |f(x)|\geq 1 \\ 0 & \text{otherwise} \end{cases} \qquad f^L := \begin{cases} f(x) & \text{if } |f(x)|< 1 \\ 0 & \text{otherwise} \end{cases}  \]
-            and similarly $f_n = f_n^U + f_n^L$.\\
-            Modulo reordering them, assume $p_0 \leq p_1$, so we have $p_0 \leq p \leq p_1$. Since $f\in L^p$, $f^U$ must be in $L^{p_0}$ and $f^L$ in $L^{p_1}$.
-            Similarly, since $f_n \to f$ in $L^p$, we have $f_n^U \to f^U$ in $L^{p_0}$ and $f_n^L \to f^L$ in $L^{p_1}$.\\
-            By the assumptions of boundedness of $L$
-            \[ Tf_n^U \to Tf^U \ \text{ in } L^{q_0} \qquad Tf_n^L \to Tf^L \ \text{ in } L^{q_1} \]
-            Modulo extracting subsequences, we can assume that the convergence is almost everywhere, so that almost everywhere
-            \[ Tf_n (x) = Tf_n^U (x) + Tf_n^L(x) \to Tf^U (x) + Tf(x) = Tf (x)\]
-            which is what we wanted to show.
-            }
-        \end{itemize}
+  \label{thm:riesz_interpolation}
+  \uses{}
+  \lean{}
+  %\leanok
+  Let $(X, \mu)$ and $(Y, \nu)$ be measure spaces and consider all $L^p$ spaces to be complex valued.\\
+  Suppose $T$ is a linear map $L^{p_0}(X) + L^{p_1}(X) \to L^{q_0}(Y) + L^{q_1}(Y)$ that restricts to
+  bounded operators $L^{p_0} \to L^{q_0}$ and $L^{p_1} \to L^{q_1}$. Let $M_0, M_1$ be the respective bounds, i.e.,
+  \[ \begin{cases} ||Tf||_{L^{q_0}} \leq M_0 ||f||_{L^{p_0}} \\ ||Tf||_{L^{q_1}} \leq M_1 ||f||_{L^{p_1}}  \end{cases}\]
+  Then, for any pair $(p, q)$ such that there is a $t$ in $[0,1]$ for which
+  \[\frac{1}{p} = \frac{1-t}{p_0} + \frac{t}{p_1} \qquad \frac{1}{q} = \frac{1-t}{q_0} + \frac{t}{q_1} \]
+  we have that the operator is bounded $L^p \to L^q$, and in particular
+  \[ ||Tf||_{L^q} \leq M_0^{1-t} M_1^t ||f||_{L^p} \]
+\end{theorem}
+\begin{proof}
+  \uses{lem:lpnorm_sup, lem:threelines} % Put any results used in the proof but not in the statement here
+  % \leanok % uncomment if the lemma has been proven
+  For a valid choice of $p,q$, note that we both need to show $Tf$ is in $L^q$ and a bound on the
+  $L^q$ norm of $Tf$.
+  Let $q'$ be the conjugate exponent of $q$. By Lemma \ref{lem:lp_of_sup_norm} for $Tf$, we need a bound of the form
+  \[ \sup_{||g||_{L^{q'}} \leq 1, \ \ g \text{ simple}} \left| \int T(f) g \right| \leq M ||f||_{L^p} \]
+  \begin{itemize}
+    \item{\textbf{Case 1}: assume $p<\infty$ and $q>1$, and let $q', q_0^1, q_1'$ be the conjugate exponents of $q, q_0, q_1$ respectively.
+    \begin{itemize}
+        \item{\textbf{Subcase a:} assume $f=\sum_i a_i \chi_{E_i}$ is a simple function (finite sum with $E_i$ disjoint of finite measure).\\
+        Let $g=\sum_j b_j \chi_{F_j}$ be a simple function.
+        By writing $f$ as $||f||_{L^p} \cdot \frac{f}{||f||_{L^p}}$ and using linearity of $T$ and integrals, it suffices to prove the above inequality when $||f||_{L^p}=1$.\\
+        We want to apply the three lines lemma to an appropriate function. Define
+        \[ \gamma(z) = p \left(\frac{1-z}{p_0} + \frac{z}{p_1} \right) \qquad f_z = |f|^{\gamma(z)} \cdot \frac{f}{|f|} \]
+        \[ \delta(z) = q' \left(\frac{1-z}{q'_0} + \frac{z}{q'_1} \right) \qquad g_z = |g|^{\delta(z)} \cdot \frac{g}{|g|} \]
+        Observe that for $t$ as in the statement of the theorem, we have by definition that $\gamma(t)=1$, hence $f_t=f$.\\
+        Moreover, if $\mathrm{Re}(z)=0$, we have that $\mathrm{Re} (\gamma(z)) = \frac{p}{p_0}$, and hence
+        \[ ||f_z||_{L^{p_0}} = \left(\int |f_z|^{p_0}\right)^{\frac{1}{p_0}} = \left(\int | |f|^{\gamma(z)} |^{p_0}\right)^{\frac{1}{p_0}} = \left(\int |f| ^{\frac{p}{p_0} \cdot p_0}\right)^{\frac{1}{p_0}} = \left(||f||_{L^p}^p\right)^{\frac{1}{p_0}} = 1^{\frac{1}{p_0}} = 1  \]
+        If $\mathrm{Re}(z)=1$, we have $\mathrm{Re} (\gamma(z)) = \frac{p}{p_1}$, and the exact same computation replacing $p_0$ with $p_1$ now shows that $||f_z||_{L^{p_1}}=1$.\\
+        Similarly, one shows that
+        \[ g_t=g \qquad ||g_z||_{L^{q'_0}} = 1 \text{ if } \mathrm{Re}(z)=0 \qquad ||g_z||_{L^{q'_1}} = 1 \text{ if } \mathrm{Re}(z)=1 \]
+        Now, we want to apply the three lines lemma to the function
+        \[\phi(z) := \int (Tf_z) g_z \]
+        Since $f$ and $g$ are simple and given by the expressions above, we can explicitly write $f_z$ and $g_z$ as
+        \[f_z=\sum_i |a_i|^{\gamma(z)} \frac{a_i}{|a_i|} \chi_{E_i} \qquad g_z=\sum_j |b_j|^{\delta(z)} \frac{b_j}{|b_j|} \chi_{F_j} \]
+        (here, we use that the $E_i$ (respectively $F_j$) are disjoint, so for every point in the domain there is at most one of the $E_i$ covering it).\\
+        So, expanding everything by linearity of $T$ and integrals, we obtain
+        \[ \phi(z) = \sum_{i,j} |a_i|^{\gamma(z)} \frac{a_i}{|a_i|} |b_j|^{\delta(z)} \frac{b_j}{|b_j|} \int T(\chi_{E_i}) \chi_{F_j} \]
+        This only depends on $z$ holomorphically in terms of the exponents of the $|a_i|$ and $|b_j|$, so it is a holomorphic function on the strip $S$ in the three lines lemma and it is continuous on $S$.\\
+        It it also bounded on $\bar{S}$. In fact, we wrote $\phi$ as a finite sum, so we only need to show each summand is bounded.
+        Since the real part of $z$ is between $0$ and $1$, the terms $|a_i|^{\gamma(z)}$ and $|b_j|^{\delta(z)}$ have bounded norms.
+        Finally, recall that H\"older's inequality states that $||fg||_1 \leq ||f||_p ||g||_1$ for conjugate exponents $p,q$.
+        Hence,
+        \[ \left| \int T(\chi_{E_i}) \chi_{F_j} \right| \leq ||T(\chi_{E_i}) \chi_{F_j}||_{L^1} \leq ||T(\chi_{E_i})||_{L^{p_0}} \cdot ||\chi_{F_j}||_{p'_0} \leq M_0 \mu(E_i) \mu(F_j) \]
+        which is bounded. Moreover, if $\mathrm{Re}(z)=0$, since $||f_z||_{L^{p_0}}=||g_z||_{L^{q'_0}}=1$, we have
+        \[ | \phi(z) | \leq \int |(Tf_z) g_z| \leq ||Tf_z||_{L^{q_0}} \cdot ||g_z||_{L^{q'_0}} \leq M_0 \cdot ||g_z||_{L^{q'_0}} \leq M_0 \]
+        Similarly, if $\mathrm{Re}(z)=1$, we obtain
+        \[ | \phi(z) | \leq \int |(Tf_z) g_z| \leq ||Tf_z||_{L^{q_1}} \cdot ||g_z||_{L^{q'_1}} \leq M_1 \cdot ||g_z||_{L^{q'_1}} \leq M_1 \]
+        Thus, applying the three lines lemma to $\phi(z)$ yields that
+        \[ |\phi(t+yi)| \leq M_0^{1-t} M_1^t \]
+        In particular, this holds for $y=0$, but now
+        \[ \phi(t) = \int (Tf_t) g_t = \int (Tf) g \]
+        So we have
+        \[ \left| \int (Tf) g \right| \leq M_0^{1-t} M_1^t \]
+        which is exactly what we wanted to show.
         }
-        \item{\textbf{Case 2:} $p=\infty$ or $q=1$.\\
-        If $p=\infty$, we must also have $p_0=p_1=\infty$, thus we have
-        \[ ||Tf||_{L^{q_0}} \leq M_0 ||f||_{L^{\infty}} \qquad ||Tf||_{L^{q_1}} \leq M_1 ||f||_{L^{\infty}} \]
-        Applying Lemma \ref{lem:hoelder'} with $Tf, q, q_0, q_1$, we obtain
-        \[||Tf||_{L^q} \leq ||Tf||_{L^{q_0}}^{1-t} ||Tf||_{L^{q_1}}^{t} \leq  M_0^{1-t} M_1^t ||f||_{L^{\infty}} \]
-        which is what we wanted.\\\\
-        If $p<\infty$ and $q=1$, then (since they must be at least $1$ by definition of $L^p$ spaces) we have that $q_0$ and $q_1$ must also both be $1$ (for example, since $\frac{1}{q}$ is a convex combination of the other two reciprocals, the largest one must be $1$, and from that rearranging terms shows the other one is $1$).
-        In this case, take $g_z=g$ for all $z$ and repeat the proof above (note:isn't this what already happens if we do not consider this case separately?).
+        \item{\textbf{Subcase b:} Now, let $f$ be any function in $L^p$. By density of simple functions, approximate $f$ by a sequence ${f_n}$ of simple functions with $||f_n - f||_{L^p} \to 0$.\\
+        By the previous case, we have $||Tf_n||_{L^q} \leq M ||f_n||_{L^p}$. In particular, the sequence $\{Tf_n\}$ is Cauchy in $L^q$, since
+        \[ ||Tf_m - Tf_n||_{L^q} = ||T(f_m-f_n)||_{L^q} \leq M ||f_m - f_n||_{L^p} \]
+        and the original sequence is Cauchy. By completeness, the $\{Tf_n\}$ converge in $L^q$, in particular the $L^q$ norm of the limit is the limit of the $L^q$ norms, which is less than $M ||f||_{L^p}$.
+        Hence, it suffices to show that the sequence $\{Tf_n\}$ converges almost everywhere to $Tf$.\\
+        Write $f= f^U + f^L$ with
+        \[ f^U := \begin{cases} f(x) & \text{if } |f(x)|\geq 1 \\ 0 & \text{otherwise} \end{cases} \qquad f^L := \begin{cases} f(x) & \text{if } |f(x)|< 1 \\ 0 & \text{otherwise} \end{cases}  \]
+        and similarly $f_n = f_n^U + f_n^L$.\\
+        Modulo reordering them, assume $p_0 \leq p_1$, so we have $p_0 \leq p \leq p_1$. Since $f\in L^p$, $f^U$ must be in $L^{p_0}$ and $f^L$ in $L^{p_1}$.
+        Similarly, since $f_n \to f$ in $L^p$, we have $f_n^U \to f^U$ in $L^{p_0}$ and $f_n^L \to f^L$ in $L^{p_1}$.\\
+        By the assumptions of boundedness of $L$
+        \[ Tf_n^U \to Tf^U \ \text{ in } L^{q_0} \qquad Tf_n^L \to Tf^L \ \text{ in } L^{q_1} \]
+        Modulo extracting subsequences, we can assume that the convergence is almost everywhere, so that almost everywhere
+        \[ Tf_n (x) = Tf_n^U (x) + Tf_n^L(x) \to Tf^U (x) + Tf(x) = Tf (x)\]
+        which is what we wanted to show.
         }
-
-      \end{itemize}
-
-
-  \end{proof}
+    \end{itemize}
+    }
+    \item{\textbf{Case 2:} $p=\infty$ or $q=1$.\\
+    If $p=\infty$, we must also have $p_0=p_1=\infty$, thus we have
+    \[ ||Tf||_{L^{q_0}} \leq M_0 ||f||_{L^{\infty}} \qquad ||Tf||_{L^{q_1}} \leq M_1 ||f||_{L^{\infty}} \]
+    Applying Lemma \ref{lem:hoelder'} with $Tf, q, q_0, q_1$, we obtain
+    \[||Tf||_{L^q} \leq ||Tf||_{L^{q_0}}^{1-t} ||Tf||_{L^{q_1}}^{t} \leq  M_0^{1-t} M_1^t ||f||_{L^{\infty}} \]
+    which is what we wanted.\\\\
+    If $p<\infty$ and $q=1$, then (since they must be at least $1$ by definition of $L^p$ spaces) we have that $q_0$ and $q_1$ must also both be $1$ (for example, since $\frac{1}{q}$ is a convex combination of the other two reciprocals, the largest one must be $1$, and from that rearranging terms shows the other one is $1$).
+    In this case, take $g_z=g$ for all $z$ and repeat the proof above (note:isn't this what already happens if we do not consider this case separately?).
+    }
+  \end{itemize}
+\end{proof}
 
   \section{Applications of Rietz-Thorin's Interpolation Theorem}
 
