@@ -27,7 +27,7 @@ There are various statements of this in Lean, see \href{https://leanprover-commu
 
 \begin{lemma}
     \label{lem:threelines}
-    \uses{}
+    %\uses{}
     \lean{DiffContOnCl.norm_le_pow_mul_pow}
     %\leanok
     Let $S$ be the strip $S:=\{z \in \C \ | \ 0 < \mathrm{Re} \, z < 1 \}$. Let $f: \overline{S} \to \C$
@@ -143,8 +143,8 @@ There are various statements of this in Lean, see \href{https://leanprover-commu
 As a last step towards proving the theorem, let us recall a consequence of Hölder's inequality, which will only really be substantial in a corner case of our proof.
 \begin{lemma}
   \label{lem:hoelder'}
-  \uses{}
-  \lean{}
+  %\uses{}
+  %\lean{}
   %\leanok
   Let $(X, \mu)$ be a measure space and $0<p_0<p<p_1\leq \infty$. Assume there is a $t$ such that we can write
   \[ \frac{1}{p} = \frac{1-t}{p_0} + \frac{t}{p_1} \]
@@ -162,8 +162,8 @@ As a last step towards proving the theorem, let us recall a consequence of Höld
 
 \begin{theorem}
   \label{thm:riesz_interpolation}
-  \uses{}
-  \lean{}
+  % \uses{}
+  % \lean{}
   %\leanok
   Let $(X, \mu)$ and $(Y, \nu)$ be measure spaces and consider all $L^p$ spaces to be complex valued.\\
   Suppose $T$ is a linear map $L^{p_0}(X) + L^{p_1}(X) \to L^{q_0}(Y) + L^{q_1}(Y)$ that restricts to
@@ -175,7 +175,7 @@ As a last step towards proving the theorem, let us recall a consequence of Höld
   \[ ||Tf||_{L^q} \leq M_0^{1-t} M_1^t ||f||_{L^p} \]
 \end{theorem}
 \begin{proof}
-  \uses{lem:lpnorm_sup, lem:threelines} % Put any results used in the proof but not in the statement here
+  \uses{lem:lp_of_sup_norm, lem:threelines} % Put any results used in the proof but not in the statement here
   % \leanok % uncomment if the lemma has been proven
   For a valid choice of $p,q$, note that we both need to show $Tf$ is in $L^q$ and a bound on the
   $L^q$ norm of $Tf$.
@@ -257,8 +257,8 @@ As a last step towards proving the theorem, let us recall a consequence of Höld
 
   \begin{lemma}
     \label{lem:hausdorff_young}
-    \uses{}
-    \lean{}
+    % \uses{}
+    % \lean{}
     %\leanok
     Let $X=[0,2\pi]$ with normalized Lebesgue measure $\frac{d\theta}{2\pi}$ and let $Y=\bbz$ with counting measure.\\
     Consider the operator $T: f \mapsto \{a_n\}_{n\in \bbz}$ where
@@ -300,8 +300,8 @@ Note that the target expression is indeed in $L^2([0, 2\pi])$ again.
 
 \begin{lemma}
     \label{lem:hausdorff_young_dual}
-    \uses{}
-    \lean{}
+    % \uses{}
+    % \lean{}
     %\leanok
     For $1\leq p \leq 2$ and $q$ conjugate exponent to $p$, we have
     \[ ||T' \{a_n\}||_{L^q} \leq ||\{a_n\}||_{L^p} \]
@@ -336,8 +336,8 @@ Here, we work with $X=Y=\R^d$ with standard scalar product and the usual Lebesgu
 
 \begin{lemma}
     \label{lem:young_convolution}
-    \uses{}
-    \lean{}
+    % \uses{}
+    % \lean{}
     %\leanok
     For any $f\in L^p$ and $g \in L^r$, their convolution
     \[ (f * g) (x) = \int_{\R^d} f(x-y) g(y) dy \]
