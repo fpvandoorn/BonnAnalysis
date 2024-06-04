@@ -8,7 +8,7 @@ import Mathlib.Order.Filter.Basic
 --open FourierTransform MeasureTheory Real
 
 
-namespace MeasureTheory
+namespace Topology
 
 universe u
 open Order Set Filter
@@ -181,7 +181,7 @@ instance  : NeighborhoodFilterSpace X  where
     specialize hN _ hb
     obtain ⟨ n , hn⟩ := seqInNhd hN
     apply (hN' n).choose_spec.2 n hn
-lemma isSeq : SequentialSpace X where
+instance SeqSpaceFromConv: SequentialSpace X where
   isClosed_of_seq := by
     intro A p
     rw [← @isOpen_compl_iff]
