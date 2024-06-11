@@ -577,7 +577,10 @@ theorem snorm_eq_sup_abs (hμ : SigmaFinite μ) (g : Lp ℝ q μ):
 
   by_cases hqᵢ : q ≠ ⊤; swap
   . simp at hqᵢ
-    let hp₁ : p = 1 := by sorry -- should be easy because p and q are conjugate
+    have hp₁ : p = 1 := by {
+      rw[left_eq_one_iff, ← hqᵢ]
+      exact hpq.out
+    }
     subst hqᵢ; subst hp₁
 
     apply snorm_eq_sup_abs'' μ hμ g
