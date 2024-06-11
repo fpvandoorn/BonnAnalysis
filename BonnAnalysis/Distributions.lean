@@ -13,44 +13,44 @@ import Mathlib
 
 
 namespace MeasureTheory
-
+open MaesureTheory
 universe u
 open Order Set Filter
 open Filter
 open Manifold
 
+
 open scoped Topology
 noncomputable section
-variable {d : ℕ} (Ω : Set (EuclideanSpace ℝ (Fin d))) (isOpenω : IsOpen Ω)
-instance : ChartedSpace (EuclideanSpace ℝ (Fin d)) ℝ := by sorry
-instance : ChartedSpace (EuclideanSpace ℝ (Fin d)) ↑Ω where
-  atlas := by sorry
-  mem_chart_source := by sorry
-  chartAt := by sorry
-  chart_mem_atlas := by sorry
-structure 𝓓 where
-  φ : Ω → ℝ
-  φIsSmooth : Smooth (𝓡 d) (𝓡 1) φ
+variable {V : Type u} (k : Type u)
+  [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] (Ω : Set V)-- (isOpenω : IsOpen Ω)
+
+
+
+structure 𝓓  where
+  φ : V → k
+  φIsSmooth : ContDiffOn k ⊤ φ Ω --⊤ φ
   φHasCmpctSupport : HasCompactSupport φ
-instance :  CoeFun (𝓓 Ω) (fun _ => Ω → ℝ) where
+lemma  th  : 𝓓 k Ω= 𝓓 k V := rfl
+instance  :  CoeFun 𝓓 (fun _ => Ω → ℝ) where
   coe σ := σ.φ
-instance : AddCommMonoid (𝓓 Ω) where
-instance : Module ℝ (𝓓 Ω) where
+instance : AddCommMonoid (𝓓 ) where
+instance : Module k (𝓓 ) where
 
 
-instance : Topology.ConvergingSequences (𝓓 Ω) where
+instance : ConvergingSequences 𝓓 where
   seq := fun (a , x) =>
     ∃ K : Set Ω , IsCompact K ∧ ∀ n , mulTSupport (a n) ⊆ K ∧
-    TendstoUniformlyOn (fun n => (a n).φ) x atTop univ
+    TendstoUniformlyOn (fun n => (a n).φ) x atTop univ --derivatives missing todo
   seq_cnst := by sorry
   seq_diag := by sorry
   seq_sub := by sorry
-def 𝓓' := (𝓓 Ω) →L[ℝ] ℝ
-instance :  CoeFun (𝓓' Ω) (fun _ => 𝓓 ( Ω ) → ℝ ) where
-  coe σ := by sorry
-instance : Topology.ConvergingSequences (𝓓' Ω) where
-  seq := fun (a , x) => ∀ φ : 𝓓 Ω , Tendsto (fun n => (a n) φ ) atTop (𝓝 (x φ))
+def 𝓓' := (𝓓) →L[ℝ] ℝ
+
+instance :  CoeFun (𝓓' ) (fun _ => 𝓓  → ℝ ) where
+  coe σ := σ.toFun
+instance : ConvergingSequences (𝓓' ) where
+  seq := fun (a , x) => ∀ φ : 𝓓 , Tendsto (fun n => (a n) φ ) atTop (𝓝 (x φ))
   seq_cnst := by sorry
   seq_diag := by sorry
   seq_sub := by sorry
-instance : TopologicalSpace (𝓓' Ω) := by -- should follow automatically

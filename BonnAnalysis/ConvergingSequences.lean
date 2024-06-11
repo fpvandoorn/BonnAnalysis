@@ -8,7 +8,7 @@ import Mathlib.Order.Filter.Basic
 --open FourierTransform MeasureTheory Real
 
 
-namespace Topology
+namespace MaesureTheory
 
 universe u
 open Order Set Filter
@@ -22,7 +22,7 @@ class NeighborhoodFilterSpace (X : Type u) where
   nbh_interior : ∀ x : X , ∀ N ∈ nbh x ,  { z ∈ N | N ∈ nbh z} ∈ nbh x
 open NeighborhoodFilterSpace
 
-instance {X : Type u} [NeighborhoodFilterSpace X] : TopologicalSpace X where
+instance topFromNbh {X : Type u} [NeighborhoodFilterSpace X] : TopologicalSpace X where
   IsOpen A := ∀ x ∈ A , A ∈ nbh x
   isOpen_univ := fun x _ => (nbh x).univ_sets
   isOpen_inter := fun U V hU hV x hx => by
