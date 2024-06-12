@@ -193,6 +193,7 @@ theorem integrable_bilin (hpq : p.IsConjExponent q) (μ : Measure α) {f : α �
   exact ENNReal.mul_lt_top (ENNReal.mul_ne_top coe_ne_top hf.snorm_ne_top) hg.snorm_ne_top
 
 end IsConjExponent
+
 end ENNReal
 
 end
@@ -200,6 +201,7 @@ end
 section
 namespace MeasureTheory
 namespace Lp
+open ENNReal.IsConjExponent
 
 variable {α E E₁ E₂ E₃ : Type*} {m : MeasurableSpace α} {p q : ℝ≥0∞}
   {μ : Measure α}
@@ -217,24 +219,57 @@ variable
   [hpq : Fact (p.IsConjExponent q)] [h'p : Fact (p < ∞)]
   [hp : Fact (1 ≤ p)] [hq : Fact (1 ≤ q)] -- note: these are superfluous, but it's tricky to make them instances.
 
-lemma hp₀ : p ≠ 0 := by have := by calc 0 < 1 := by norm_num
-                                        _ ≤ p := hp.out
-                        apply ne_zero_of_lt this
-lemma hpᵢ : p ≠ ∞ := by apply lt_top_iff_ne_top.mp h'p.out
-lemma hq₀ : q ≠ 0 := by have := by calc 0 < 1 := by norm_num
-                                        _ ≤ q := hq.out
-                        apply ne_zero_of_lt this
-lemma hq₀' : ¬ q = 0 := hq₀
+lemma hp₀ : p ≠ 0 := left_ne_zero hpq.out
+lemma hpᵢ : p ≠ ∞ := lt_top_iff_ne_top.mp h'p.out
+lemma hp₀' : p.toReal ≠ 0 := by
+  apply toReal_ne_zero.mpr
+  exact ⟨hp₀ (q := q), hpᵢ⟩
 
-lemma is_conj_exponent : p + q = p*q := hpq.out.mul_eq_add.symm
+lemma hq₀ : q ≠ 0 := right_ne_zero hpq.out
+lemma hq₀' (hqᵢ : q ≠ ∞) : q.toReal ≠ 0 := by
+  apply toReal_ne_zero.mpr
+  exact ⟨hq₀ (p := p), hqᵢ⟩
 
-lemma is_conj_exponent' (hqᵢ : q ≠ ∞) : p.toReal + q.toReal = p.toReal*q.toReal := by
+lemma add_conj_exponent : p + q = p * q := hpq.out.mul_eq_add.symm
+lemma add_conj_exponent' (hqᵢ : q ≠ ∞) : p.toReal + q.toReal = p.toReal*q.toReal := by
   rw[←toReal_add hpᵢ hqᵢ]
   rw[←toReal_mul]
   congr
-  exact is_conj_exponent
+  exact add_conj_exponent
 
-open ENNReal.IsConjExponent
+lemma div_self_p : p / p = 1 := by
+  rw[ENNReal.div_self (a := p)]
+  exact left_ne_zero hpq.out
+  exact hpᵢ
+
+lemma div_conj_exponent_ne_top (hqᵢ : q ≠ ∞) : q / p ≠ ∞ := by
+  by_contra!
+  have := (@ENNReal.div_eq_top q p).mp this
+  contrapose! this
+  constructor
+  . intro _; exact (hp₀ (q := q))
+  . intro _; contradiction
+
+lemma div_conj_exponent : q / p + 1 = q := by
+  calc _ = q / p + p / p := by rw[ENNReal.div_self (hp₀ (q := q)) hpᵢ];
+       _ = (q + p) / p := by rw[←ENNReal.add_div]
+       _ = (p + q) / p := by rw[add_comm]
+       _ = (p * q) / p := by rw[add_conj_exponent]
+       _ = (p * q) / (p * 1) := by rw[mul_one]
+       _ = q / 1 := by rw[ENNReal.mul_div_mul_left _ _ (hp₀ (q := q)) hpᵢ]
+       _ = q := by rw[div_one]
+
+lemma div_conj_exponent' (hqᵢ : q ≠ ∞) : q.toReal / p.toReal + 1 = q.toReal := by
+  calc _ = (q / p).toReal + 1 := by rw[toReal_div]
+       _ = (q / p + 1).toReal := by rw[toReal_add]; simp; exact div_conj_exponent_ne_top hqᵢ; simp
+       _ = q.toReal := by rw[div_conj_exponent]
+
+lemma div_conj_exponent'' (hqᵢ : q ≠ ∞) : q.toReal / p.toReal = q.toReal - 1 := by
+  calc _ = q.toReal / p.toReal + 1 - 1 := by simp
+       _ = q.toReal - 1 := by rw[div_conj_exponent' hqᵢ]
+
+
+
 open ContinuousLinearMap
 open Memℒp
 
@@ -242,7 +277,7 @@ section BasicFunctions
 
 def step' : ℝ → ℝ := Set.piecewise {x | x ≤ 0} 0 1
 
-@[fun_prop]
+@[fun_prop, measurability]
 theorem measurable_step' : Measurable step' := by
   apply Measurable.piecewise
   . apply measurableSet_le
@@ -265,6 +300,7 @@ lemma sign_eq_step : Real.sign = fun x => step' x - step' (-x) := by
     . have h₃ : x = 0 := by linarith
       simp[h₁, h₂, h₃]
 
+@[fun_prop, measurability]
 theorem measurable_sign : Measurable (Real.sign : ℝ → ℝ) := by
   rw[sign_eq_step]
   fun_prop
@@ -277,24 +313,44 @@ theorem abs_of_sign (x) : |Real.sign x| = if x = 0 then 0 else 1 := by
     simp[h₁, h₂]
   . by_cases h₂ : x = 0
     . simp[h₁, h₂]
-    . have h₃ : 0 < x := by apply lt_of_le_of_ne; simp at h₁; exact h₁; symm; exact h₂
+    . have h₃ : 0 < x := by
+        apply lt_of_le_of_ne
+        simp at h₁
+        exact h₁
+        symm
+        exact h₂
       simp[h₁, h₂, h₃]
+
 @[simp]
 theorem nnnorm_of_sign (x) : ‖Real.sign x‖₊ = if x = 0 then 0 else 1 := by
   ext
   rw [coe_nnnorm, norm_eq_abs, abs_of_sign, apply_ite toReal]
   rfl
 
-def rpow' (y : ℝ) (x : ℝ≥0) : ℝ≥0 := NNReal.rpow x y
+def NNReal.rpow' (y : ℝ) (x : ℝ≥0) : ℝ≥0 := NNReal.rpow x y
+def ENNReal.rpow' (y : ℝ) (x : ℝ≥0∞) : ℝ≥0∞ := ENNReal.rpow x y
 
-theorem rpow'_eq_rpow (x : ℝ≥0) (y : ℝ) : rpow' y x = x^y := rfl
+theorem NNReal.rpow'_eq_rpow (x : ℝ≥0) (y : ℝ) : NNReal.rpow' y x = x^y := rfl
+theorem ENNReal.rpow'_eq_rpow (x : ℝ≥0∞) (y : ℝ) : ENNReal.rpow' y x = x^y := rfl
+theorem ennreal_rpow_of_nnreal (x : ℝ≥0) (y : ℝ)
+    : (ENNReal.rpow x y).toNNReal = NNReal.rpow x y := by
+  simp only [ENNReal.rpow_eq_pow, NNReal.rpow_eq_pow]
+  rw[←ENNReal.toNNReal_rpow]
+  simp only [ENNReal.toNNReal_coe]
+theorem ennreal_rpow_of_nnreal' (x : ℝ≥0) (y : ℝ) (hynneg : y ≥ 0)
+    : ENNReal.rpow x y = ofNNReal (NNReal.rpow x y) := by
+  apply (ENNReal.toNNReal_eq_toNNReal_iff' _ _).mp <;> simp
+  . rw[←ENNReal.toNNReal_rpow, ENNReal.toNNReal_coe]
+  . intro _; assumption
 
-theorem measurable_rpow'_const (c : ℝ) : Measurable (rpow' c) := by
-  apply Measurable.pow (f := fun x => x) (g := fun _ => c)
-  . apply measurable_id
-  . apply measurable_const
+@[fun_prop, measurability]
+theorem measurable_NNReal_rpow'_const (c : ℝ) : Measurable (NNReal.rpow' c) := by
+  apply Measurable.pow (f := fun x => x) (g := fun _ => c) <;> measurability
 
-@[simp]
+@[fun_prop, measurability]
+theorem measurable_ENNReal_rpow'_const (c : ℝ) : Measurable (ENNReal.rpow' c) := by
+  apply Measurable.pow (f := fun x => x) (g := fun _ => c) <;> measurability
+
 theorem rpow_eq_one_iff (x : ℝ≥0∞) (y : ℝ) (hy : y > 0) : x^y = (1 : ℝ≥0∞) ↔ x = 1 := by
   constructor; swap; intro h; rw[h]; apply ENNReal.one_rpow
   intro h
@@ -308,10 +364,9 @@ theorem rpow_div_eq_one_iff (x : ℝ≥0∞) (y : ℝ) (hy : y > 0) : x^(1/y) = 
 
 lemma toNNReal_of_norm_eq_nnnorm (x : ℝ) : ‖x‖.toNNReal = ‖x‖₊ := by
   calc _ = ‖‖x‖‖₊ := by apply toNNReal_eq_nnnorm_of_nonneg; apply norm_nonneg
-       _ = _ := by simp
+       _ = _      := by simp
 
 end BasicFunctions
-
 
 theorem integral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : Lp E₁ p μ} {g : Lp E₂ q μ}
     : ∫ a, ‖L (f a) (g a)‖ ∂μ ≤ ‖L‖ * ‖f‖ * ‖g‖ := by
@@ -339,31 +394,111 @@ theorem integral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : Lp E�
     . apply snorm_ne_top f
     . apply snorm_ne_top g
 
-variable (μ) in
-theorem snorm_eq_sup_abs'' (hμ : SigmaFinite μ) (g : Lp ℝ ∞ μ) :
+theorem snorm_eq_sup_abs'' {μ : Measure α} (hμ : SigmaFinite μ) (g : Lp ℝ ∞ μ) :
               ‖g‖ = sSup ((fun f => ‖∫ x, (f x) * (g x) ∂μ‖) '' {(f : Lp ℝ 1 μ) | ‖f‖ ≤ 1}) := by
   -- we need μ to be σ-finite
   sorry
 
-def to_conjᵢ (g : Lp ℝ q μ) : α → ℝ :=
-    fun x => Real.sign (g x) * (rpow' (q.toReal-1) ‖g x‖₊) * ‖g‖₊^(1- q.toReal)
+def to_conj_of_gt_one_lt_inf' {q : ℝ≥0∞} (g : Lp ℝ q μ) : α → ℝ :=
+  fun x => Real.sign (g x) * (NNReal.rpow' (q.toReal-1) ‖g x‖₊)
 
-theorem conjᵢ_aestrongly_measurable (g : Lp ℝ q μ) : AEStronglyMeasurable (to_conjᵢ g) μ := by
+def to_conj_of_gt_one_lt_inf {q : ℝ≥0∞} (g : Lp ℝ q μ) : α → ℝ :=
+  fun x => (to_conj_of_gt_one_lt_inf' g x) * (NNReal.rpow' (1 - q.toReal) ‖g‖₊)
+
+@[measurability]
+theorem conj_of_gt_one_lt_inf'_aestrongly_measurable (g : Lp ℝ q μ)
+    : AEStronglyMeasurable (to_conj_of_gt_one_lt_inf' g) μ := by
   apply (aestronglyMeasurable_iff_aemeasurable (μ := μ)).mpr
-  unfold to_conjᵢ
+  unfold to_conj_of_gt_one_lt_inf'
   apply AEMeasurable.mul
-  . apply AEMeasurable.mul
+  . apply Measurable.comp_aemeasurable'
+    . measurability
+    . exact (Lp.memℒp g).aestronglyMeasurable.aemeasurable
+  . apply Measurable.comp_aemeasurable'
+    . measurability
     . apply Measurable.comp_aemeasurable'
-      . apply measurable_sign
-      . exact (Lp.memℒp g).aestronglyMeasurable.aemeasurable
-    . apply Measurable.comp_aemeasurable'
-      . apply measurable_coe_nnreal_real
+      . measurability
       . apply Measurable.comp_aemeasurable'
-        . apply measurable_rpow'_const
-        . apply Measurable.comp_aemeasurable'
-          . apply measurable_nnnorm
-          . exact (Lp.memℒp g).aestronglyMeasurable.aemeasurable
-  . apply aemeasurable_const
+        . measurability
+        . exact (Lp.memℒp g).aestronglyMeasurable.aemeasurable
+
+@[measurability]
+theorem conj_of_gt_one_lt_inf'_aemeasurable (g : Lp ℝ q μ)
+    : AEMeasurable (to_conj_of_gt_one_lt_inf' g) μ := by
+  apply (aestronglyMeasurable_iff_aemeasurable (μ := μ)).mp
+  exact conj_of_gt_one_lt_inf'_aestrongly_measurable g
+
+@[measurability]
+theorem conj_of_gt_one_lt_inf_aestrongly_measurable (g : Lp ℝ q μ)
+    : AEStronglyMeasurable (to_conj_of_gt_one_lt_inf g) μ := by
+  unfold to_conj_of_gt_one_lt_inf
+  apply (aestronglyMeasurable_iff_aemeasurable (μ := μ)).mpr
+  apply AEMeasurable.mul <;> measurability
+
+@[measurability]
+theorem conj_of_gt_one_lt_inf_aemeasurable (g : Lp ℝ q μ)
+    : AEMeasurable (to_conj_of_gt_one_lt_inf g) μ := by
+  apply (aestronglyMeasurable_iff_aemeasurable (μ := μ)).mp
+  exact conj_of_gt_one_lt_inf_aestrongly_measurable g
+
+theorem snorm'_of_conj_of_gt_one_lt_inf'_of_nnnorm_gt_zero
+    (g : Lp ℝ q μ) (hqᵢ : q ≠ ∞)
+    : snorm' (to_conj_of_gt_one_lt_inf' g) p.toReal μ = (snorm' g q.toReal μ) ^ (q.toReal - 1) := by
+
+  unfold snorm'
+  rw[←ENNReal.rpow_mul, ←div_conj_exponent'' (q := q) (p := p) hqᵢ]
+  rw[←mul_div_right_comm (a := 1) (c := q.toReal)]
+  rw[one_mul, div_div, div_mul_cancel_right₀ (hq₀' (p := p) hqᵢ) (a := p.toReal)]
+  rw[inv_eq_one_div]
+  congr 1
+
+  unfold to_conj_of_gt_one_lt_inf'
+  unfold rpow'
+
+  conv =>
+    lhs
+    pattern _ ^ _
+    congr
+    rw[nnnorm_mul, ENNReal.coe_mul]
+    rfl
+
+  -- apply lintegral_congr_ae
+  -- apply ae_iff.mpr
+  -- push_neg
+
+
+  -- dsimp only [snorm']
+  -- apply (rpow_div_eq_one_iff _ _ ?_).mpr; swap
+  -- . apply (toReal_pos_iff_ne_top p).mpr hpᵢ
+
+  -- -- dsimp only [to_conj_of_gt_one_lt_inf']
+  -- have : ∫⁻ x, ‖g x‖₊^(q.toReal - 1) * ‖g‖₊^(1 - q.toReal) ∂μ = 1 := sorry
+  -- rw[←this]
+  -- apply lintegral_congr_ae
+  -- apply ae_iff.mpr
+  -- simp only
+  -- dsimp only [to_conj_of_gt_one_lt_inf']
+  -- conv =>
+  --   lhs
+  --   pattern _ = _
+  --   rw[nnnorm_mul, nnnorm_mul]
+  --   lhs
+  --   rw[ENNReal.coe_mul, ENNReal.coe_mul]
+  --   rw[ENNReal.mul_rpow_of_nonneg _ _ hp₀']
+  --   rw[ENNReal.mul_rpow_of_nonneg _ _ hp₀']
+  -- sorry
+
+
+def to_conj_of_gt_one_lt_inf (g : Lp ℝ q μ) : Lp ℝ p μ := by
+  apply toLp (to_conj_of_gt_one_lt_inf' g)
+  constructor
+  . apply conj_of_gt_one_lt_inf'_aestrongly_measurable g
+  . dsimp only [snorm]
+    split; exact zero_lt_top
+    split
+    . have : p ≠ ∞ := hpᵢ
+      contradiction
+    . sorry
 
 -- theorem abs_conjᵢ (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (x) : |to_conjᵢ g x| = |g x|^(q.toReal-1) * ‖g‖^(1- q.toReal) := by
 --   dsimp [to_conjᵢ, rpow']
@@ -392,14 +527,14 @@ theorem conjᵢ_aestrongly_measurable (g : Lp ℝ q μ) : AEStronglyMeasurable (
 --     rw[abs_of_sign]
 --     simp[h]
 
-theorem nnnorm_conjᵢ (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (x)
-    : ‖to_conjᵢ g x‖₊ = ‖g x‖₊^(q.toReal-1) * ‖g‖₊^(1- q.toReal) := by
-  sorry
+-- theorem nnnorm_conjᵢ (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (x)
+--     : ‖g x‖₊ = ‖g x‖₊^(q.toReal-1) * ‖g‖₊^(1- q.toReal) := by
+--   sorry
 
-theorem nnnorm_conjᵢ' (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (x)
-    : ofNNReal ‖to_conjᵢ g x‖₊ = ofNNReal (‖g x‖₊^(q.toReal-1) * ‖g‖₊^(1- q.toReal)) := by
-  congr
-  exact nnnorm_conjᵢ g hq₁ x
+-- theorem nnnorm_conjᵢ' (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (x)
+--     : ofNNReal ‖to_conjᵢ g x‖₊ = ofNNReal (‖g x‖₊^(q.toReal-1) * ‖g‖₊^(1- q.toReal)) := by
+--   congr
+--   exact nnnorm_conjᵢ g hq₁ x
 
 -- theorem pow_abs_conjᵢ (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (hqᵢ : q ≠ ∞) (x) : |to_conjᵢ g x|^p.toReal = |g x|^q.toReal * ‖g‖^(-q.toReal) := by
 
@@ -427,9 +562,9 @@ theorem nnnorm_conjᵢ' (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (x)
 --   apply rpow_nonneg
 --   apply norm_nonneg
 
-theorem pow_nnnorm_conjᵢ (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (hqᵢ : q ≠ ∞) (x)
-    : (‖to_conjᵢ g x‖₊ : ℝ≥0∞) ^ p.toReal = (‖g x‖₊ : ℝ≥0∞) ^ q.toReal * ‖g‖₊ ^ (-q.toReal) := by
-  sorry
+-- theorem pow_nnnorm_conjᵢ (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (hqᵢ : q ≠ ∞) (x)
+--     : (‖to_conjᵢ g x‖₊ : ℝ≥0∞) ^ p.toReal = (‖g x‖₊ : ℝ≥0∞) ^ q.toReal * ‖g‖₊ ^ (-q.toReal) := by
+--   sorry
 
 def to_conj₁ (g : Lp ℝ 1 μ) : α → ℝ := fun x => Real.sign (g x)
 
@@ -445,19 +580,19 @@ theorem conj₁_aestrongly_measurable (g : Lp ℝ 1 μ) : AEStronglyMeasurable (
 theorem abs_conj₁ (g : Lp ℝ 1 μ) (x) : |to_conj₁ g x| = if g x = 0 then 0 else 1 := by
   apply abs_of_sign
 
-variable (p) in
-theorem conjᵢ_snorm' (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (hqᵢ : q ≠ ∞) :
-  (snorm' (to_conjᵢ g) p.toReal μ).toReal = ‖g‖^(q.toReal/p.toReal) := by
+-- variable (p) in
+-- theorem conjᵢ_snorm' (g : Lp ℝ q μ) (hq₁ : q ≠ 1) (hqᵢ : q ≠ ∞) :
+--   (snorm' (to_conjᵢ g) p.toReal μ).toReal = ‖g‖^(q.toReal/p.toReal) := by
 
-  dsimp only [snorm']
-  #check pow_nnnorm_conjᵢ (p := p) g hq₁ hqᵢ
+--   dsimp only [snorm']
+--   #check pow_nnnorm_conjᵢ (p := p) g hq₁ hqᵢ
 
-  conv =>
-    lhs
-    pattern ↑‖to_conjᵢ g a‖₊ ^ p.toReal
-    rw[pow_nnnorm_conjᵢ (p := p) g hq₁ hqᵢ a]
+--   conv =>
+--     lhs
+--     pattern ↑‖to_conjᵢ g a‖₊ ^ p.toReal
+--     rw[pow_nnnorm_conjᵢ (p := p) g hq₁ hqᵢ a]
 
-  sorry
+--   sorry
 
 variable (p q μ) in
 theorem snorm_eq_sup_abs' (g : Lp ℝ q μ) (hqᵢ : q ≠ ∞) :
@@ -689,7 +824,7 @@ def toDualₗᵢ' : Lp ℝ q μ →ₗᵢ[ℝ] Lp ℝ p μ →L[ℝ] ℝ where
 
       let f := fun (x : α) => (Real.sign (g x))
 
-      #check snorm'_lim_eq_lintegral_liminf
+      -- #check snorm'_lim_eq_lintegral_liminf
       sorry
       -- f = g ^ q-1 have := hbound
 
@@ -750,5 +885,6 @@ def dualIsometry (L : E₁ →L[ℝ] Dual ℝ E₂) :
 
 end Lp
 end MeasureTheory
+
 
 end
