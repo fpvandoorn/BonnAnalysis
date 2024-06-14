@@ -400,7 +400,7 @@ theorem snorm_eq_sup_abs'' {μ : Measure α} (hμ : SigmaFinite μ) (g : Lp ℝ 
   sorry
 
 def to_conj_of_gt_one_lt_inf' {q : ℝ≥0∞} (g : Lp ℝ q μ) : α → ℝ :=
-  fun x => Real.sign (g x) * (NNReal.rpow' (q.toReal-1) ‖g x‖₊)
+  fun x => Real.sign (g x) * (ENNReal.rpow' (q.toReal-1) ‖g x‖₊).toReal
 
 def to_conj_of_gt_one_lt_inf {q : ℝ≥0∞} (g : Lp ℝ q μ) : α → ℝ :=
   fun x => (to_conj_of_gt_one_lt_inf' g x) * (NNReal.rpow' (1 - q.toReal) ‖g‖₊)
@@ -420,7 +420,9 @@ theorem conj_of_gt_one_lt_inf'_aestrongly_measurable (g : Lp ℝ q μ)
       . measurability
       . apply Measurable.comp_aemeasurable'
         . measurability
-        . exact (Lp.memℒp g).aestronglyMeasurable.aemeasurable
+        . apply Measurable.comp_aemeasurable'
+          . measurability
+          . exact (Lp.memℒp g).aestronglyMeasurable.aemeasurable
 
 @[measurability]
 theorem conj_of_gt_one_lt_inf'_aemeasurable (g : Lp ℝ q μ)
