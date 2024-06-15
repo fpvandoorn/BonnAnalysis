@@ -560,8 +560,8 @@ theorem snorm'_of_conj_of_gt_one_lt_inf' (g : Lp ℝ q μ) (hqᵢ : q ≠ ∞)
 
   simp
 
-theorem conj_of_gt_one_lt_inf_of_nnnorm_zero (g : Lp ℝ q μ) (hg : ‖g‖₊ = 0)
-    (hqᵢ : q ≠ ∞) : to_conj_of_gt_one_lt_inf g = 0 := by
+theorem conj_of_gt_one_lt_inf_of_nnnorm_zero (g : Lp ℝ q μ)
+    (hg : ‖g‖₊ = 0) (hqᵢ : q ≠ ∞) : to_conj_of_gt_one_lt_inf g = 0 := by
   ext x
   unfold to_conj_of_gt_one_lt_inf
   unfold NNReal.rpow'
@@ -569,6 +569,13 @@ theorem conj_of_gt_one_lt_inf_of_nnnorm_zero (g : Lp ℝ q μ) (hg : ‖g‖₊ 
   right
   apply Real.zero_rpow
   linarith [hq_gt_one' (p := p) hqᵢ]
+
+theorem snorm'_of_conj_of_gt_one_lt_inf_of_nnnorm_zero (g : Lp ℝ q μ)
+    (hg : ‖g‖₊ = 0) (hqᵢ : q ≠ ∞)
+    : snorm' (to_conj_of_gt_one_lt_inf g) p.toReal μ = 0 := by
+  rw[conj_of_gt_one_lt_inf_of_nnnorm_zero (p := p) g hg hqᵢ]
+  apply snorm'_zero
+  exact hp_gt_zero'
 
 theorem snorm'_of_conj_of_gt_one_lt_inf_of_nnnorm_ne_zero (g : Lp ℝ q μ)
     (hg : ‖g‖₊ ≠ 0) (hqᵢ : q ≠ ∞)
