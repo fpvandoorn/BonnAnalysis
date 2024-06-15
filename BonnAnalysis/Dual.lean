@@ -245,7 +245,17 @@ lemma hq_gt_zero' (hqᵢ : q ≠ ∞) : q.toReal > 0 := by
   exact hqᵢ
 lemma hq_ge_zero : q ≥ 0 := by simp
 lemma hq_ge_zero' : q.toReal ≥ 0 := by aesop
+lemma hq_gt_one : q > 1 := by
+  exact (left_ne_top_iff hpq.out).mp hpᵢ
+lemma ENNReal.one_toReal : (1 : ℝ≥0∞).toReal = 1 := by simp
 
+lemma hq_gt_one' (hqᵢ : q ≠ ∞) : q.toReal > 1 := by
+  rw[←ENNReal.one_toReal]
+  apply (ENNReal.toReal_lt_toReal _ _).mpr
+  . show q > 1
+    apply hq_gt_one (q := q) (p := p)
+  . simp
+  . exact hqᵢ
 lemma add_conj_exponent : p + q = p * q := hpq.out.mul_eq_add.symm
 
 lemma add_conj_exponent' (hqᵢ : q ≠ ∞) : p.toReal + q.toReal = p.toReal*q.toReal := by
@@ -549,6 +559,22 @@ theorem snorm'_of_conj_of_gt_one_lt_inf' (g : Lp ℝ q μ) (hqᵢ : q ≠ ∞)
     rfl
 
   simp
+
+theorem conj_of_gt_one_lt_inf_of_nnnorm_zero (g : Lp ℝ q μ) (hg : ‖g‖₊ = 0)
+    (hqᵢ : q ≠ ∞) : to_conj_of_gt_one_lt_inf g = 0 := by
+  ext x
+  unfold to_conj_of_gt_one_lt_inf
+  unfold NNReal.rpow'
+  simp_all
+  right
+  apply Real.zero_rpow
+  linarith [hq_gt_one' (p := p) hqᵢ]
+
+theorem snorm'_of_conj_of_gt_one_lt_inf_of_nnnorm_ne_zero (g : Lp ℝ q μ)
+    (hg : ‖g‖₊ ≠ 0) (hqᵢ : q ≠ ∞)
+    : snorm' (to_conj_of_gt_one_lt_inf g) p.toReal μ = 1 := by
+  unfold to_conj_of_gt_one_lt_inf
+  sorry
 
 def to_conj₁ (g : Lp ℝ 1 μ) : α → ℝ := fun x => Real.sign (g x)
 
