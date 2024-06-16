@@ -10,7 +10,7 @@ import Mathlib.Order.Filter.Basic
 
 namespace MaesureTheory
 
-universe u
+universe u v
 open Order Set Filter
 open Filter
 open scoped Topology
@@ -23,16 +23,64 @@ class SubSequence {X : Type u} (a : ℕ → X) where
    hφ : StrictMono φ
 --open SubSequence
 instance {X : Type u} {a : ℕ → X}  :  CoeFun (SubSequence a) (fun _ => ℕ → X) where
-  coe σ := a ∘ σ.φ
+  coe σ := a ∘ σ.φ    -- todo how to not automatically coerce everywhere?
+--instance {X Y : Type u} {f : X → Y} {a : ℕ → X} : Coe (SubSequence a) (SubSequence (f ∘ a)) where
+--  coe σ := ⟨ σ.φ , σ.hφ⟩
+lemma bndOnStrictMono {φ : ℕ → ℕ} (hφ : StrictMono φ) {a : ℕ} : ¬ (φ a < a) := by
+      intro ass
+      induction' a with n hn
+      · exact Nat.not_succ_le_zero (φ 0) ass
+      · apply hn
+        have : φ (n + 1) ≤ n  := Nat.le_of_lt_succ ass
+        apply LE.le.trans_lt' this
+        apply hφ
+        exact lt_add_one n
+lemma subsequencePreservesTop  {φ : ℕ → ℕ}
+  (hφ : StrictMono φ) : map φ atTop  ≤ atTop := by
+  rw [le_def]
+  intro U hU
+  simp at hU
+  obtain ⟨ a , ha⟩ := hU
+  have : ∃ a' , φ a' ≥ a := by
+    by_contra ass
+    push_neg at ass
+    specialize ass a
+    apply bndOnStrictMono hφ ass
+  simp
+
+  use this.choose
+  intro b hb
+  apply ha
+  trans
+  exact this.choose_spec
+  apply StrictMono.monotone hφ hb
+
+lemma subSeqConverges' {X : Type u} {ι : Type v} {q : Filter ι}{p : Filter X} {a : ι → X}
+  {φ : ι → ι}
+  (hφ : map φ q ≤ q) (pf : Tendsto a q p)  :
+  Tendsto (a ∘ φ) q p := by
+    intro U hU
+    rw [tendsto_def] at pf
+    specialize pf U hU
+    rw [mem_map]
+    exact hφ pf
+lemma subSeqConverges {X : Type u} {p : Filter X} {a : ℕ → X}
+  (pf : Tendsto a atTop p) (a' : SubSequence a) :
+  Tendsto a' atTop p := subSeqConverges' (subsequencePreservesTop a'.hφ) pf
+
+
+
+
+
+
+
+
+
 
 class ConvergingSequences (X : Type u) where
   seq : (ℕ → X) × X → Prop
   seq_cnst : ∀ x : X , seq (fun _ => x , x )
   seq_sub : ∀ {a x} , seq ( a, x) → ∀ a' : SubSequence a , seq (a' , x)
-  -- seq_diag : ∀ {a x} , seq ( a , x) →
-  --   ∀ (b : ℕ → ℕ → X) , (∀ n , seq (b n , a n)) →
-  --   seq (fun n => b n n , x)
-
 
 
 variable {X : Type u} [ConvergingSequences X]
@@ -61,22 +109,7 @@ scoped notation a " ⟶ " x => seq (a , x)
     apply hZ a ha
     -- def IsSeqClosed (s : Set X) : Prop := ∀ ⦃x : ℕ → X⦄ ⦃p : X⦄, (∀ n, x n ∈ s) ∧ seq (x , p) → p ∈ s
 
-instance topFromNbh  : TopologicalSpace X where
-  IsOpen A := ∀ x ∈ A , A ∈ nbh x
-  isOpen_univ := fun x _ => (nbh x).univ_sets
-  isOpen_inter := fun U V hU hV x hx => by
-    apply (nbh x).inter_sets
-    exact hU x hx.1
-    exact hV x hx.2
-
-  isOpen_sUnion := fun U ass => by
-    intro x hx
-    obtain ⟨ Ui , hUi ⟩ := hx
-    apply (nbh x).sets_of_superset (ass _ hUi.1 _ hUi.2)
-    rw [@subset_def]
-    intro x hx
-    use Ui
-    exact ⟨ hUi.1 , hx⟩
+instance : TopologicalSpace X := .mkOfNhds nbh
 
 lemma tendsToNbh  {x : X} (a : ℕ → X) (ha : a ⟶ x) : Tendsto a atTop (nbh x) := by
   intro N hN
