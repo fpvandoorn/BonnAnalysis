@@ -5,6 +5,7 @@ import Mathlib.Order.Filter.Basic
 import BonnAnalysis.ConvergingSequences
 import Mathlib.Geometry.Manifold.Instances.Real
 import Mathlib.Topology.UniformSpace.UniformConvergence
+
 import BonnAnalysis.UniformConvergenceSequences
 import Mathlib
 --import Mathlib.Analysis.InnerProductSpace
@@ -14,7 +15,7 @@ import Mathlib
 
 
 namespace MeasureTheory
-open MaesureTheory
+open MeasureTheory
 universe u v
 open Order Set Filter
 open Filter
@@ -23,23 +24,24 @@ open NNReal Topology
 
 
 open scoped Topology
+open TopologicalSpace
 noncomputable section
-structure Open (V : Type u)[TopologicalSpace V]  : Type u where
-  subset : Set V
-  isOpen : IsOpen subset
-instance (V : Type u)[TopologicalSpace V]  :  Coe (Open V) (Set V) where
-  coe U := U.subset
 
 
 variable {V : Type u} (k : Type v)
-  [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] (Ω : Open V) --{ΩisOpen : IsOpen Ω}
-
-
+  [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] (Ω : Opens V) --{ΩisOpen : IsOpen Ω}
+/--
+structure HasCompactSupportIn (φ : V → k)  : Prop where
+  hasCmpctSprt :  HasCompactSupport φ
+  sprtinΩ  : tsupport φ ⊆ Ω
+  -/
+--Set.EqOn
 
 @[ext] structure 𝓓  where
   φ : V → k
-  φIsSmooth : ContDiffOn k ⊤ φ Ω --⊤ φ
-  φHasCmpctSupport : HasCompactSupport φ
+  φIsSmooth : ContDiffOn k ⊤ φ univ --⊤ φ
+  φHasCmpctSupport :  HasCompactSupport φ
+  sprtinΩ  : tsupport φ ⊆ Ω
 
 instance  :  CoeFun (𝓓 k Ω) (fun _ => V → k) where
   coe σ := σ.φ
@@ -47,15 +49,16 @@ instance : Zero (𝓓 k Ω ) where
     zero := ⟨
       0 ,
       by apply contDiffOn_const ,
-      by rw [hasCompactSupport_def, Function.support_zero' , closure_empty] ; exact isCompact_empty ⟩
+      by rw [hasCompactSupport_def, Function.support_zero' , closure_empty] ; exact isCompact_empty  ,
+      by sorry ⟩
 instance : Add (𝓓 k Ω ) where
    add := fun φ ψ => ⟨
     φ + ψ ,
     ContDiffOn.add φ.φIsSmooth ψ.φIsSmooth,
-    HasCompactSupport.add φ.φHasCmpctSupport ψ.φHasCmpctSupport  ⟩
+    HasCompactSupport.add φ.φHasCmpctSupport ψ.φHasCmpctSupport  , by sorry ⟩
 instance : Neg (𝓓 k Ω ) where
   neg := fun φ =>
-    ⟨ - φ , ContDiffOn.neg φ.φIsSmooth , by sorry ⟩
+    ⟨ - φ , ContDiffOn.neg φ.φIsSmooth , by sorry , by sorry ⟩
 instance : AddCommGroup (𝓓 k Ω ) where
   add_assoc := fun φ ψ τ => by ext x ; apply add_assoc
   zero_add := fun φ => by ext x ; apply zero_add
@@ -69,7 +72,7 @@ instance : AddCommGroup (𝓓 k Ω ) where
 @[simp] instance : SMul k (𝓓 k Ω ) where
   smul := fun l φ => ⟨ fun x => l * φ x ,
     ContDiffOn.smul  contDiffOn_const  φ.φIsSmooth   ,
-    HasCompactSupport.mul_left φ.φHasCmpctSupport   ⟩
+    HasCompactSupport.mul_left φ.φHasCmpctSupport   , by sorry ⟩
 instance : Module k (𝓓 k Ω) where
 
   one_smul := fun φ => by ext x ; exact one_smul k (φ x)
@@ -119,11 +122,27 @@ instance : ConvergingSequences (𝓓' k Ω ) where
   seq := fun AT => ∀ φ : 𝓓 k Ω , Tendsto (fun n => (AT.1 n) φ ) atTop (𝓝 (AT.2 φ))
   seq_cnst := fun T φ => by apply tendsto_const_nhds
   seq_sub := fun hAT A' φ => subSeqConverges (hAT φ) ⟨ _ , A'.hφ ⟩
-lemma diffAt (φ : 𝓓 k Ω) {x : V} (p : x ∈ Ω.subset) : DifferentiableAt k φ x := by
+lemma diffAt (φ : 𝓓 k Ω) {x : V} (p : x ∈ Ω) : DifferentiableAt k φ x := by
             have := ContDiffOn.differentiableOn φ.φIsSmooth (OrderTop.le_top 1)
             apply DifferentiableOn.differentiableAt this
             rw [mem_nhds_iff]
             use Ω
-            exact ⟨ subset_rfl , Ω.isOpen , p ⟩
+            exact ⟨ by exact fun ⦃a⦄ a ↦ trivial , Ω.isOpen , p ⟩
 
 notation  A "°" T => T ∘L A
+
+
+variable (k : Type v) [NontriviallyNormedField k]
+  {X : Type w} [ConvergingSequences X] [AddCommMonoid X] [Module k X]
+  {M : Type* } [TopologicalSpace M] [AddCommGroup M] [Module k M]
+
+class IsSeqCtsLinearMap (f : X → M) where
+  isAdd : ∀ x y, f (x + y) = f x + f y -- we write this out because X might not be a normed space
+  isMul : ∀ (c : k) (x), f (c • x) = c • f x
+  isSeqCts : SeqContinuous' f
+open IsSeqCtsLinearMap
+
+def mk  (T : X → M) (hT : IsSeqCtsLinearMap k T) : X →L[k] M  := by
+  -- (hT2 : IsLinearMap k T) (hT : SeqContinuous' T) := by
+  use ⟨ ⟨ T ,hT.isAdd ⟩ , hT.isMul ⟩
+  apply continuous_of_SeqContinuous  hT.isSeqCts

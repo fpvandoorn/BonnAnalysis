@@ -2,13 +2,14 @@ import Mathlib.Topology.Sequences
 import Mathlib.Topology.Defs.Filter
 import Mathlib.Topology.Order
 import Mathlib.Order.Filter.Basic
+import Mathlib.Tactic.FunProp
 -- import Mathlib.Order
 -- noncomputable section
 
 --open FourierTransform MeasureTheory Real
 
 
-namespace MaesureTheory
+namespace MeasureTheory
 
 universe u v
 open Order Set Filter
@@ -22,8 +23,9 @@ class SubSequence {X : Type u} (a : ℕ → X) where
    φ : ℕ → ℕ
    hφ : StrictMono φ
 --open SubSequence
+--@[coe] def coeSubS {X : Type u} {a : ℕ → X}  (σ : SubSequence a): ℕ → X  := a ∘ σ.φ    --help how to not automatically coerce everywhere?
 instance {X : Type u} {a : ℕ → X}  :  CoeFun (SubSequence a) (fun _ => ℕ → X) where
-  coe σ := a ∘ σ.φ    -- help how to not automatically coerce everywhere?
+  coe σ := a ∘ σ.φ    --help how to not automatically coerce everywhere?
 --instance {X Y : Type u} {f : X → Y} {a : ℕ → X} : Coe (SubSequence a) (SubSequence (f ∘ a)) where
 --  coe σ := ⟨ σ.φ , σ.hφ⟩
 lemma bndOnStrictMono {φ : ℕ → ℕ} (hφ : StrictMono φ) {a : ℕ} : ¬ (φ a < a) := by
@@ -67,15 +69,6 @@ lemma subSeqConverges' {X : Type u} {ι : Type v} {q : Filter ι}{p : Filter X} 
 lemma subSeqConverges {X : Type u} {p : Filter X} {a : ℕ → X}
   (pf : Tendsto a atTop p) (a' : SubSequence a) :
   Tendsto a' atTop p := subSeqConverges' (subsequencePreservesTop a'.hφ) pf
-
-
-
-
-
-
-
-
-
 
 class ConvergingSequences (X : Type u) where
   seq : (ℕ → X) × X → Prop
@@ -176,11 +169,12 @@ lemma important (x : X) (N : Set X) (p : N ∈ 𝓝 x) : N ∈ nbh x := by
 
   obtain ⟨ U , ⟨ q , r , p⟩ ⟩ := p
   exact mem_of_superset (r x p) q
-class SeqContinuous' {Y : Type v} [TopologicalSpace Y] (f : X → Y) where
+@[fun_prop] structure SeqContinuous' {Y : Type v} [TopologicalSpace Y] (f : X → Y) : Prop where
   seqCont :∀ {x} {a : X} , (x ⟶ a) → Tendsto (f ∘ x) atTop (𝓝 (f a))
 open SeqContinuous'
-@[continuity] instance continuous_of_SeqContinuous {Y : Type v} [TopologicalSpace Y] {f : X → Y} --help
-  [SeqContinuous' f] : Continuous f := by
+
+@[fun_prop] lemma continuous_of_SeqContinuous {Y : Type v} [TopologicalSpace Y] {f : X → Y} --help
+  (hf : SeqContinuous' f) : Continuous f := by
     apply continuous_iff_isClosed.mpr
     intro C hC
     rw [← @isOpen_compl_iff]
@@ -194,9 +188,12 @@ open SeqContinuous'
     apply hC
     · exact ha'
     · intro N hN
-      apply seqCont
-      apply seq_sub ha
-      exact hN
+      sorry
+      --apply seqCont
+
+      --
+      --apply seq_sub ha
+      --exact hN
   --#align continuous_of_SeqContinuous continuous.seq_continuous'
 
 /-

@@ -9,7 +9,7 @@ import Mathlib
 
 
 namespace MeasureTheory
-open MaesureTheory
+open MeasureTheory
 universe u v x w
 open Order Set Filter
 open Filter
