@@ -147,16 +147,22 @@ Note that the hard case already exists as `ENNReal.lintegral_mul_le_Lp_mul_Lq`. 
 lemma _root_.ContinuousLinearMap.le_opNNNorm₂ (L : E₁ →L[𝕜] E₂ →L[𝕜] E₃) (x : E₁) (y : E₂) :
     ‖L x y‖₊ ≤ ‖L‖₊ * ‖x‖₊ * ‖y‖₊ := L.le_opNorm₂ x y
 
-lemma lintegral_mul_le_one_top (μ : Measure α) {f : α → E₁} {g : α → E₂}
+lemma _root_.ENNReal.lintegral_mul_le_one_top (μ : Measure α) {f g : α → ℝ≥0∞} (hf : AEMeasurable f μ) :
+  ∫⁻ (a : α), (f * g) a ∂μ ≤ (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
+    calc ∫⁻ (a : α), (f * g) a ∂μ = ∫⁻ (a : α), (f * g) a ∂μ := rfl
+    _ ≤ ∫⁻ (a : α), f a * (essSup g μ) ∂μ := by
+      apply MeasureTheory.lintegral_mono_ae
+      rw [Filter.eventually_iff, ← Filter.exists_mem_subset_iff]
+      use {a | g a ≤ essSup g μ}
+      rw [← Filter.eventually_iff]
+      exact ⟨ae_le_essSup _, by simp; intro _ ha; apply ENNReal.mul_left_mono ha⟩
+    _ = (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
+      rw [lintegral_mul_const'' _ hf]
+
+lemma _root_.ENNReal.lintegral_norm_mul_le_one_top (μ : Measure α) {f : α → E₁} {g : α → E₂}
     (hf : AEMeasurable f μ) : ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ ≤ snorm f 1 μ * snorm g ⊤ μ := by
-    calc ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ ≤ ∫⁻ (a : α), ‖f a‖₊ * snormEssSup g μ ∂μ := MeasureTheory.lintegral_mono_ae (h := by
-        rw [Filter.eventually_iff, ← Filter.exists_mem_subset_iff]
-        use {a | ↑‖g a‖₊ ≤ snormEssSup g μ}
-        rw [← Filter.eventually_iff]
-        exact ⟨ae_le_snormEssSup, by simp; intro _ ha; apply ENNReal.mul_left_mono ha⟩)
-    _ = snorm f 1 μ * snorm g ⊤ μ := by
-      rw [lintegral_mul_const'' _ hf.ennnorm]
-      simp [snorm, snorm']
+      simp [snorm, snorm', snormEssSup]
+      apply lintegral_mul_le_one_top _ hf.ennnorm
 
 theorem lintegral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : α → E₁} {g : α → E₂}
     (hf : AEMeasurable f μ) (hg : AEMeasurable g μ) :
@@ -178,11 +184,11 @@ theorem lintegral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : α �
         apply ENNReal.lintegral_mul_le_Lp_mul_Lq _ (NNReal.isConjExponent_coe.mpr hpq)
         . apply hf.ennnorm
         . apply hg.ennnorm
-  case one => exact lintegral_mul_le_one_top _ hf
+  case one => exact lintegral_norm_mul_le_one_top _ hf
   case infty =>
     calc
       ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ = ∫⁻ a, ‖g a‖₊ * ‖f a‖₊ ∂μ := by simp_rw [mul_comm]
-    _ ≤ snorm f ⊤ μ * snorm g 1 μ := by rw [mul_comm]; exact lintegral_mul_le_one_top _ hg
+    _ ≤ snorm f ⊤ μ * snorm g 1 μ := by rw [mul_comm]; exact lintegral_norm_mul_le_one_top _ hg
 
 theorem integrable_bilin (hpq : p.IsConjExponent q) (μ : Measure α) {f : α → E₁} {g : α → E₂}
     (hf : Memℒp f p μ) (hg : Memℒp g q μ) :
