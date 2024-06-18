@@ -159,8 +159,6 @@ theorem DiffContOnCl.norm_le_pow_mul_pow₀₁ {f : ℂ → ℂ}
       sorry
     }
 
-
-
 theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b)
     (hf : DiffContOnCl ℂ f { z | z.re ∈ Ioo a b})
     (h2f : IsBounded (f '' { z | z.re ∈ Icc a b}))
@@ -295,8 +293,7 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
       assumption
     }
 
-
-    ‖f (x + I * y)‖ ≤ M₀ ^ t * M₁ ^ s := by sorry
+-- prove a variant of Hölder's inequality
 
 lemma ENNReal.rpow_add_of_pos {x : ENNReal} (y : ℝ) (z : ℝ) (hy : 0 < y) (hz : 0 < z) :
 x ^ (y + z) = x ^ y * x ^ z := by
