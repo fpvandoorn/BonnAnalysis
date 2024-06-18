@@ -5,6 +5,7 @@ import Mathlib.Order.Filter.Basic
 import BonnAnalysis.ConvergingSequences
 import Mathlib.Geometry.Manifold.Instances.Real
 import Mathlib.Topology.UniformSpace.UniformConvergence
+import BonnAnalysis.UniformConvergenceSequences
 import Mathlib
 --import Mathlib.Analysis.InnerProductSpace
 -- import Mathlib.Order
@@ -14,16 +15,24 @@ import Mathlib
 
 namespace MeasureTheory
 open MaesureTheory
-universe u
+universe u v
 open Order Set Filter
 open Filter
-
+open scoped Classical
+open NNReal Topology
 
 
 open scoped Topology
 noncomputable section
-variable {V : Type u} (k : Type u)
-  [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] (Ω : Set V)-- (isOpenω : IsOpen Ω)
+structure Open (V : Type u)[TopologicalSpace V]  : Type u where
+  subset : Set V
+  isOpen : IsOpen subset
+instance (V : Type u)[TopologicalSpace V]  :  Coe (Open V) (Set V) where
+  coe U := U.subset
+
+
+variable {V : Type u} (k : Type v)
+  [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] (Ω : Open V) --{ΩisOpen : IsOpen Ω}
 
 
 
@@ -72,48 +81,7 @@ instance : Module k (𝓓 k Ω) where
 -- theorem tendsto_const_nhds {α : Type u} {β : Type v} [TopologicalSpace α] {a : α} {f : Filter β} :
 -- Filter.Tendsto (fun x => a) f (nhds a)
 open Uniformity
-universe v w x
-
-lemma CnstSeqTendstoUniformlyOn {α : Type u} {β : Type v}  {ι : Type x} [UniformSpace β]
- (f : α → β) (p : Filter ι) (s : Set α) : TendstoUniformlyOn (fun n => f) f p s := by
-  unfold TendstoUniformlyOn
-  simp
-  intro u hu
-  have : True = ∀ x ∈ s , (f x , f x) ∈ u := by rw [eq_true_eq_id] ; simp ; intro x _ ; apply refl_mem_uniformity hu
-  rw [← this]
-  simp
-lemma SubSeqConvergesUniformly' {α : Type u} {β : Type v}  {ι : Type x} [UniformSpace β]
- {f : α → β} {p : Filter ι} {s : Set α} {φ : ι → ι}
-  (hφ : map φ p ≤ p) {F : ι → α → β} (hF : TendstoUniformlyOn F f p s)
-  : TendstoUniformlyOn (F ∘ φ) f p s := by
-  rw [tendstoUniformlyOn_iff_tendsto]
-  rw [tendstoUniformlyOn_iff_tendsto] at hF
-  let φ' : ι × α  → ι × α  := fun (x , y) => (φ x , y)
-  have hφ' : map φ' (p ×ˢ 𝓟 s) ≤ (p ×ˢ 𝓟 s) := by
-    rw [le_def]
-    intro q hq
-    rw [mem_map]
-    rw[mem_prod_iff]
-    rw [mem_prod_iff] at hq
-    obtain ⟨ t₁ , ht₁ , t₂ , ht₂ , ht ⟩ := hq
-    use φ ⁻¹' t₁
-    constructor
-    · exact hφ ht₁
-    · use t₂
-      constructor
-      · exact ht₂
-      · trans φ' ⁻¹' (t₁ ×ˢ t₂)
-        · apply subset_rfl
-        · exact fun ⦃a⦄ x ↦ ht x
-  exact subSeqConverges' hφ' hF
- --
-  lemma SubSeqConvergesUniformly {α : Type u} {β : Type v}  [UniformSpace β]
-  {f : α → β}  {s : Set α}
-  {F : ℕ → α → β} (hF : TendstoUniformlyOn F f atTop s)
-  (F' : SubSequence F)
-  : TendstoUniformlyOn F' f atTop s :=
-    SubSeqConvergesUniformly' (subsequencePreservesTop F'.hφ) hF
-
+universe w x
 instance : ConvergingSequences (𝓓 k Ω) where
   seq := fun (a , x) =>
     (∃ K : Set V , IsCompact K ∧ ∀ n , tsupport (a n).φ ⊆ K) ∧
@@ -151,23 +119,11 @@ instance : ConvergingSequences (𝓓' k Ω ) where
   seq := fun AT => ∀ φ : 𝓓 k Ω , Tendsto (fun n => (AT.1 n) φ ) atTop (𝓝 (AT.2 φ))
   seq_cnst := fun T φ => by apply tendsto_const_nhds
   seq_sub := fun hAT A' φ => subSeqConverges (hAT φ) ⟨ _ , A'.hφ ⟩
-variable {V : Type u} {k : Type u}
-  [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] {Ω : Set V} -- (isOpenω : IsOpen Ω)
-
-def mk  {M : Type*}   [TopologicalSpace M]
-  [AddCommGroup M] [Module k M]
-   (T : 𝓓 k Ω →ₗ[k] M) (isc : SeqContinuous T) : 𝓓 k Ω →L[k] M := ⟨ T , SeqContinuous.continuous isc ⟩
+lemma diffAt (φ : 𝓓 k Ω) {x : V} (p : x ∈ Ω.subset) : DifferentiableAt k φ x := by
+            have := ContDiffOn.differentiableOn φ.φIsSmooth (OrderTop.le_top 1)
+            apply DifferentiableOn.differentiableAt this
+            rw [mem_nhds_iff]
+            use Ω
+            exact ⟨ subset_rfl , Ω.isOpen , p ⟩
 
 notation  A "°" T => T ∘L A
-
-
-def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
-  apply mk ; swap
-  · apply LinearMap.mk ; swap
-    · apply AddHom.mk ; swap
-      exact fun φ => ⟨ fun x => fderiv k φ x v , by sorry , by sorry ⟩
-      · sorry
-    · sorry
-  · sorry
-variable (T : 𝓓' k Ω )
-example (v : V) (φ : 𝓓 k Ω ): (fderiv𝓓 v ° T) φ = T (fderiv𝓓 v φ) := by rfl

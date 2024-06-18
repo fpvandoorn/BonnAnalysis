@@ -23,7 +23,7 @@ class SubSequence {X : Type u} (a : ℕ → X) where
    hφ : StrictMono φ
 --open SubSequence
 instance {X : Type u} {a : ℕ → X}  :  CoeFun (SubSequence a) (fun _ => ℕ → X) where
-  coe σ := a ∘ σ.φ    -- todo how to not automatically coerce everywhere?
+  coe σ := a ∘ σ.φ    -- help how to not automatically coerce everywhere?
 --instance {X Y : Type u} {f : X → Y} {a : ℕ → X} : Coe (SubSequence a) (SubSequence (f ∘ a)) where
 --  coe σ := ⟨ σ.φ , σ.hφ⟩
 lemma bndOnStrictMono {φ : ℕ → ℕ} (hφ : StrictMono φ) {a : ℕ} : ¬ (φ a < a) := by
@@ -109,11 +109,26 @@ scoped notation a " ⟶ " x => seq (a , x)
     apply hZ a ha
     -- def IsSeqClosed (s : Set X) : Prop := ∀ ⦃x : ℕ → X⦄ ⦃p : X⦄, (∀ n, x n ∈ s) ∧ seq (x , p) → p ∈ s
 
-instance : TopologicalSpace X := .mkOfNhds nbh
+instance fromSeq : TopologicalSpace X := .mkOfNhds nbh
 
 lemma tendsToNbh  {x : X} (a : ℕ → X) (ha : a ⟶ x) : Tendsto a atTop (nbh x) := by
   intro N hN
   apply hN
+  exact ha
+lemma nbhdCofinalIn𝓝 {x : X} {U} (hU : U ∈ 𝓝 x) : ∃ V ∈ nbh x , V ⊆ U := by
+  rw [@mem_nhds_iff] at hU
+  obtain ⟨ V , hV ⟩ := hU
+  use V
+  constructor
+  · apply hV.2.1
+    exact hV.2.2
+  · exact hV.1
+lemma tendsTo𝓝  {x : X} (a : ℕ → X) (ha : a ⟶ x) : Tendsto a atTop (𝓝 x) := by
+intro U hU
+obtain ⟨ V , hV ⟩ := nbhdCofinalIn𝓝 hU
+apply mem_of_superset ; swap
+· exact hV.2
+· apply hV.1
   exact ha
 
 lemma subSeqCnstrction {a : ℕ → X} {Y : Set (X)} (as : Y ∉ map a atTop) :
@@ -161,8 +176,30 @@ lemma important (x : X) (N : Set X) (p : N ∈ 𝓝 x) : N ∈ nbh x := by
 
   obtain ⟨ U , ⟨ q , r , p⟩ ⟩ := p
   exact mem_of_superset (r x p) q
+class SeqContinuous' {Y : Type v} [TopologicalSpace Y] (f : X → Y) where
+  seqCont :∀ {x} {a : X} , (x ⟶ a) → Tendsto (f ∘ x) atTop (𝓝 (f a))
+open SeqContinuous'
+@[continuity] instance continuous_of_SeqContinuous {Y : Type v} [TopologicalSpace Y] {f : X → Y} --help
+  [SeqContinuous' f] : Continuous f := by
+    apply continuous_iff_isClosed.mpr
+    intro C hC
+    rw [← @isOpen_compl_iff]
+    intro x hx a ha
+    by_contra φ
+    obtain ⟨ a' , ha' ⟩ := subSeqCnstrction φ
+    simp at ha'
+    apply hx
+    have hC : IsSeqClosed C := IsClosed.isSeqClosed hC
 
+    apply hC
+    · exact ha'
+    · intro N hN
+      apply seqCont
+      apply seq_sub ha
+      exact hN
+  --#align continuous_of_SeqContinuous continuous.seq_continuous'
 
+/-
 instance SeqSpaceFromConv: SequentialSpace X where
   isClosed_of_seq := by
     intro A p
@@ -178,3 +215,4 @@ instance SeqSpaceFromConv: SequentialSpace X where
       apply important x N hN a'
       apply seq_sub
       exact ha
+-/
