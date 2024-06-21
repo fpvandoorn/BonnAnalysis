@@ -21,6 +21,7 @@ variable {α β E E₁ E₂ E₃ : Type*} {m : MeasurableSpace α} {n : Measurab
 (and that file also contains useful corollaries). -/
 #check Complex.eqOn_of_isPreconnected_of_isMaxOn_norm
 
+/- TODO: split proofs into smaller lemmas to recycle code -/
 
 /-- Hadamard's three lines lemma/theorem on the unit strip with bounds M₀=M₁=1 and vanishing at infinity condition. -/
 theorem DiffContOnCl.norm_le_pow_mul_pow''' {f : ℂ → ℂ}
@@ -55,6 +56,15 @@ theorem DiffContOnCl.norm_le_pow_mul_pow₀₁ {f : ℂ → ℂ}
     (h₀f : ∀ y : ℝ, ‖f (I * y)‖ ≤ M₀) (h₁f : ∀ y : ℝ, ‖f (1 + I * y)‖ ≤ M₁)
     {y t s : ℝ} (ht : 0 ≤ t) (hs : 0 ≤ s) (hts : t + s = 1) :
     ‖f (t + I * y)‖ ≤ M₀ ^ s * M₁ ^ t := by{
+
+      have hts'' : s = 1-t := by {
+        symm
+        -- Not sure why this is so messed up if I don't make it explicit
+        rw[@sub_eq_of_eq_add ℝ _ (1:ℝ) t s]
+        rw[add_comm]
+        exact hts.symm
+      }
+
       let g:= fun z ↦ M₀ ^ (z-1) * M₁ ^(-z) * (f z)
       let p₁ : ℂ → ℂ := fun z ↦ M₀ ^ (z-1)
       let p₂ : ℂ → ℂ := fun z ↦ M₁ ^(-z)
@@ -70,7 +80,18 @@ theorem DiffContOnCl.norm_le_pow_mul_pow₀₁ {f : ℂ → ℂ}
           · sorry
         · exact hf
       }
-      have h2g:  IsBounded (g '' { z | z.re ∈ Icc 0 1}) := by sorry
+
+      have h2g:  IsBounded (g '' { z | z.re ∈ Icc 0 1}) := by {
+        obtain⟨C, hC⟩ := Metric.isBounded_image_iff.mp h2f
+        rw[Metric.isBounded_image_iff]
+        -- Bound |M₀|^{z-1} and |M₁|^{-z}, then use product of C with both bounds
+        -- then use Complex.dist_eq, scalar property of norm, and the hypothesis hC to conclude.
+        sorry
+
+
+
+      }
+
       have h₀g : ∀ y : ℝ, ‖g (I * y)‖ ≤ 1 := by {
         intro y
         simp [g]
@@ -154,9 +175,17 @@ theorem DiffContOnCl.norm_le_pow_mul_pow₀₁ {f : ℂ → ℂ}
       }
 
       rw[h₁, h₂] at hgoal
-      --The rest is just very painful dealing with inequalities but it should be just manual labour
 
-      sorry
+      have hM₁': M₁^(-t)>0 := Real.rpow_pos_of_pos hM₁ (-t)
+      have hM₀': M₀^(t-1)>0 := Real.rpow_pos_of_pos hM₀ (t-1)
+      rw[← mul_le_mul_left hM₁',← mul_le_mul_left hM₀']
+      nth_rewrite 2 [mul_comm (M₁^(-t)), ← mul_assoc]
+      rw[mul_assoc, mul_assoc, ← Real.rpow_add hM₁ t (-t)]
+      simp[hts'']
+      rw[ ← Real.rpow_add hM₀ (t-1) (1-t)]
+      simp
+      rw[← mul_assoc]
+      exact hgoal
     }
 
 theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b)
@@ -173,6 +202,7 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
           exact hts.symm
         }
 
+      -- DUPLICATE FROM PREVIOUS PROOF
       have hts'' : s = 1-t := by {
         symm
         -- Not sure why this is so messed up if I don't make it explicit
@@ -213,9 +243,22 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
 
       let g : ℂ → ℂ := fun z ↦ f (a + (z.re *(b-a)) + I*z.im)
       have hg: DiffContOnCl ℂ g { z | z.re ∈ Ioo 0 1} := by{
-        -- I guess write g as f after the squeeze and then use composition of DiffContOnCl functions
-        sorry
+        let h : ℂ → ℂ := fun z ↦ a + (z.re *(b-a)) + I*z.im
+        have hcomp: g = f ∘ h := rfl
+        rw[hcomp]
+        apply DiffContOnCl.comp (s:={ z | z.re ∈ Ioo a b})
+        · exact hf
+        · sorry --not sure what the quickest way of doing this is supposed to be
+        · simp[h, MapsTo]
+          intro z hz₀ hz₁
+          constructor
+          · apply Real.mul_pos hz₀
+            simp[hab]
+          · calc
+            a + z.re * (b-a) < a + 1 *(b - a) := by gcongr; simp[hab]
+            _ = b := by simp
       }
+
       have h2g: IsBounded (g '' { z | z.re ∈ Icc 0 1}) := by{
         simp only [g]
         apply IsBounded.subset h2f
