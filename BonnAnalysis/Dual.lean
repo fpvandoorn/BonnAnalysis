@@ -40,7 +40,7 @@ structure IsConjExponent (p q : ℝ≥0∞) : Prop where
 namespace IsConjExponent
 
 lemma symm (hpq : p.IsConjExponent q) : q.IsConjExponent p := by
-  simp [isConjExponent_iff, add_comm, hpq.inv_add_inv_conj]
+  rw [isConjExponent_iff, add_comm, hpq.inv_add_inv_conj]
 
 lemma one_le_left (hpq : p.IsConjExponent q) : 1 ≤ p := by
   simp_rw [← ENNReal.inv_le_one, ← hpq.inv_add_inv_conj, self_le_add_right]
