@@ -298,16 +298,14 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
 lemma ENNReal.rpow_add_of_pos {x : ENNReal} (y : ℝ) (z : ℝ) (hy : 0 < y) (hz : 0 < z) :
 x ^ (y + z) = x ^ y * x ^ z := by
   cases x with
-  | top =>
-      simp [hy, hz, add_pos hy hz]
+  | top => simp [hy, hz, add_pos hy hz]
   | coe x =>
       rcases eq_or_ne ↑x 0 with hx0 | hx0'
-      simp [hx0, hy, hz, add_pos hy hz]
-      apply ENNReal.rpow_add
-      <;> simp [hx0']
+      simp only [hx0, coe_zero, add_pos hy hz, zero_rpow_of_pos, hy, hz, mul_zero]
+      apply ENNReal.rpow_add <;> simp [hx0']
 
-lemma ENNReal.essSup_const_rpow (f : α → ℝ≥0∞) {r : ℝ} (hr : 0 < r) : (essSup f μ) ^ r = essSup (fun x ↦ (f x) ^ r) μ := by
-  apply OrderIso.essSup_apply (g := ENNReal.orderIsoRpow r hr)
+lemma ENNReal.essSup_const_rpow (f : α → ℝ≥0∞) {r : ℝ} (hr : 0 < r) : (essSup f μ) ^ r = essSup (fun x ↦ (f x) ^ r) μ :=
+  OrderIso.essSup_apply (g := ENNReal.orderIsoRpow r hr) _ _
 
 def InSegment.toIsConjugateExponent (p₀ p₁ p : ℝ≥0∞) (t s : ℝ≥0)  (hp₀ : 0 < p₀)
 (hp₁ : 0 < p₁) (hp₀₁ : p₀ < p₁) (hp : s * p₀⁻¹ + t * p₁⁻¹ = p⁻¹)
@@ -376,7 +374,7 @@ lemma lintegral_mul_le_segment_exponent_aux (p₀ p₁ p : ℝ≥0∞) (t s : �
   rw [toReal_inv, inv_inv, ← mul_assoc, ← mul_assoc, mul_comm _ p.toReal, mul_assoc p.toReal, mul_comm t.toReal, ← mul_assoc, mul_assoc _ t.toReal,
   mul_inv_cancel (ENNReal.toReal_ne_zero.mpr ⟨hp0', hpt'⟩), mul_inv_cancel (by rwa [NNReal.coe_ne_zero]), one_mul, one_mul]
 
-  repeat' simp only [toReal_mul, coe_toReal, mul_inv_rev, one_div, inv_inv, ← mul_assoc, ENNReal.toReal_inv]
+  repeat' simp [← mul_assoc, ENNReal.toReal_inv]
 
 lemma lintegral_mul_le_segment_exponent (p₀ p₁ p : ℝ≥0∞) (t s : ℝ≥0) (hp₀ : 0 < p₀) (hp₁ : 0 < p₁) (hp₀₁ : p₀ < p₁)
 (hp : s * p₀⁻¹ + t * p₁⁻¹ = p⁻¹) (hst : s + t = 1)
@@ -389,8 +387,7 @@ lemma lintegral_mul_le_segment_exponent (p₀ p₁ p : ℝ≥0∞) (t s : ℝ≥
 
   rcases eq_or_ne t 0 with ht0 | ht0'
   simp only [ht0, add_zero] at hst
-  simp only [hst, ENNReal.coe_one, one_mul, ht0, ENNReal.coe_zero, zero_mul, add_zero,
-  inv_inj] at hp
+  simp only [hst, ENNReal.coe_one, one_mul, ht0, ENNReal.coe_zero, zero_mul, add_zero, inv_inj] at hp
   simp only [hp, hst, NNReal.coe_one, ENNReal.rpow_one, ht0, NNReal.coe_zero, ENNReal.rpow_zero, mul_one, le_refl]
 
   rcases eq_or_ne s 0 with hs0 | hs0'
