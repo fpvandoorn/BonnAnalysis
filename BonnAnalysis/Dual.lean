@@ -6,7 +6,6 @@ import Mathlib.Analysis.NormedSpace.Dual
 import Mathlib.Analysis.NormedSpace.LinearIsometry
 import Mathlib.MeasureTheory.Integral.Bochner
 import Mathlib.Data.Real.Sign
-import Mathlib.Tactic.FunProp.Measurable
 
 /-! We show that the dual space of `L^p` for `1 ≤ p < ∞`.
 
