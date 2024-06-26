@@ -30,25 +30,30 @@ open scoped Topology
 open TopologicalSpace
 noncomputable section
 open Function
-variable {V : Type u} {k : Type v} [NontriviallyNormedField k]
-  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V] {Ω : Opens V}
-class GoodEnoughAutom (k : Type v) [NontriviallyNormedField k]  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V] (Ω : Opens V) (Φ : V → V) where
+def Full (V : Type u) [TopologicalSpace V] : Opens V := ⟨ univ , isOpen_univ ⟩
+def squareOpen {V : Type u} [TopologicalSpace V]  (Ω : Opens V) : Opens (V × V) := ⟨ Ω ×ˢ  Ω , by sorry ⟩
+abbrev 𝓓F  (k : Type v) (V : Type u) [NontriviallyNormedField k]
+  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V]  := 𝓓 k (Full V)
+abbrev 𝓓'F  (k : Type v) (V : Type u) [NontriviallyNormedField k]
+  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V]  := 𝓓' k (Full V)
+class GoodEnoughAutom (k : Type v) (V : Type u)[NontriviallyNormedField k]  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V] (Φ : V → V) where
   isLinear : IsLinearMap k Φ
   isSmooth : ContDiffOn k ⊤ Φ univ
-  restToΩ : Φ '' Ω ⊆ Ω
+  --restToΩ : Φ '' Ω ⊆ Ω
   inj : Function.Injective Φ
-
+variable {V : Type u} {k : Type v} [NontriviallyNormedField k]
+  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V] {Ω : Opens V}
   /-
   Issue : If test functions are supported inside Ω, then things like negation and shift have to send Ω to Ω
   -/
 open GoodEnoughAutom
 open 𝓓
 
-def fromAutoOfV (Φ : V → V) [GoodEnoughAutom k Ω Φ] : 𝓓 k Ω →L[k] 𝓓 k Ω := by
+@[simp] def fromAutoOfV (Φ : V → V) [GoodEnoughAutom k V Φ] : 𝓓F k V →L[k] 𝓓F k V := by
   apply mk ; swap
   ·   intro ψ
       use ψ ∘ Φ
-      · exact ContDiffOn.comp ψ.φIsSmooth (isSmooth Ω) (subset_rfl)
+      · exact ContDiffOn.comp ψ.φIsSmooth (isSmooth) (subset_rfl)
       · sorry
       · sorry
       --ψ.φHasCmpctSupport
@@ -59,20 +64,26 @@ def fromAutoOfV (Φ : V → V) [GoodEnoughAutom k Ω Φ] : 𝓓 k Ω →L[k] �
     · sorry
     · sorry
 
-def negation : V → V := fun x => -x
-def Full (V : Type u) [TopologicalSpace V] : Opens V := ⟨ univ , isOpen_univ ⟩
-instance : (GoodEnoughAutom k (Full V)) negation where
+@[simp] def reflection' : V → V := fun x => -x
+@[simp] def shift' (x : V) : V → V := fun y => y - x
+
+instance : (GoodEnoughAutom k V) reflection' where
   isLinear := by sorry
   isSmooth := by sorry
-  restToΩ := by sorry
+  --restToΩ := by sorry
   inj := by sorry
 
+instance (v : V) :  (GoodEnoughAutom k V) (shift' v) where
+  isLinear := by sorry
+  isSmooth := by sorry
+  --restToΩ := by sorry
+  inj := by sorry
 
 
 /--
         Issue: If φ ψ : V → k and are smooth on Ω , how to show that the derivative is additive outside Ω ?
         --/
-
+def δ : 𝓓' k Ω := mk k (fun φ => φ 0) (by sorry)
 def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
   let f : 𝓓 k Ω → 𝓓 k Ω := fun φ => ⟨ fun x => fderiv k φ x v , by sorry , by sorry , by sorry ⟩
   apply mk ; swap
@@ -125,75 +136,132 @@ example (v : V) (φ : 𝓓 k Ω ) (T : 𝓓' k Ω ): (fderiv𝓓 v ° T) φ = T 
 -- def reflection : 𝓓 k Ω → 𝓓 k Ω := fun ψ => ⟨ fun x => ψ (-x) , by sorry , by sorry ⟩
 -- instance : AddHomClass reflection _ _ where
 
---notation "𝓓F" k V => 𝓓 k (Full V)
-def reflection  : (𝓓 k (Full V)) →L[k] (𝓓 k V) := fromAutoOfV negation
+
+
+@[simp] def reflection  : 𝓓F k V →L[k] (𝓓F k V) := fromAutoOfV reflection'
+
 
 notation:67 ψ "ʳ" => reflection ψ
 
-
-structure LocallyIntegrableFunction (V : Type u) [MeasureSpace V] [NormedAddCommGroup V]  [NormedSpace ℝ V] where
+---------- the rest deals with real numbers
+variable  (V : Type u) [MeasureSpace V] [NormedAddCommGroup V]  [NormedSpace ℝ V]
+structure LocallyIntegrableFunction where
    f : V → ℝ
    hf : MeasureTheory.LocallyIntegrable f
+
+def 𝓓kSquareCurry (φ : 𝓓F ℝ (V × V)) (x : V ) : 𝓓F ℝ V := ⟨ fun y => φ ( x, y) , by sorry , by sorry , by sorry⟩
+def intSm (φ : 𝓓F ℝ (V × V)) : 𝓓F ℝ V := ⟨ fun y => ∫ x , φ ( x, y) , by sorry , by sorry , by sorry⟩
+lemma FcommWithIntegrals (φ : 𝓓F ℝ (V × V)) (T : 𝓓'F ℝ V) : T (intSm V φ) =  ∫ x : V ,  T (𝓓kSquareCurry V φ x)  := by sorry
+def fromCurrying (φ : V → 𝓓F ℝ V) : 𝓓F ℝ (V × V ) := ⟨ fun x => φ x.1 x.2 , by sorry  , by sorry , by sorry⟩
 variable {V : Type u}  [MeasureSpace V]
-   [NormedAddCommGroup V]  [NormedSpace ℝ V] {Ω : Open V}
+   [NormedAddCommGroup V]  [NormedSpace ℝ V] {Ω : Opens V}
+instance : Coe ( 𝓓F ℝ V) (LocallyIntegrableFunction V) where
+  coe φ := ⟨ φ , by sorry ⟩
+
+--def 𝓓kSquareCurry (φ : 𝓓 ℝ (squareOpen Ω )) (x : Ω ) : 𝓓 ℝ Ω := ⟨ fun y => φ ( x, y) , by sorry , by sorry , by sorry⟩
+--def intSm (φ : 𝓓 ℝ (squareOpen Ω )) : 𝓓 ℝ Ω := ⟨ fun y => ∫ x , φ ( x, y) , by sorry , by sorry , by sorry⟩
+--lemma FcommWithIntegrals [MeasureSpace Ω] (φ : 𝓓 ℝ (squareOpen Ω )) (T : 𝓓' ℝ Ω) :  ∫ x , T (𝓓kSquareCurry φ x) = T (intSm φ) := by sorry
+--def transport (φ : 𝓓 k Ω) {ψ : V → ℝ} (p : φ = ψ) : 𝓓 k Ω
 instance  :  CoeFun (LocallyIntegrableFunction V) (fun _ => V → ℝ) where
   coe σ := σ.f
-def Λ (f : LocallyIntegrableFunction V) : 𝓓' ℝ Ω := by
+@[simp] def Λ (f : LocallyIntegrableFunction V) : 𝓓' ℝ Ω := by
   apply mk ; swap
   · exact fun φ => ∫ v , f v * φ v
   · sorry
 --instance : Coe (LocallyIntegrableFunction V) (𝓓 k Ω ) where
 open Convolution
-def shift (x : V) : 𝓓 ℝ Ω →L[ℝ] 𝓓 ℝ Ω := by
-  apply mk ; swap
-  · exact fun φ => ⟨ fun y => φ (y - x)  , by sorry , by sorry ⟩
-  · constructor
-    · sorry
-    · sorry
-    · sorry
 
-def convolution𝓓 : (𝓓 ℝ Ω)[×2]→L[ℝ] 𝓓 ℝ Ω := by
+@[simp] def shift (x : V) : 𝓓F ℝ V →L[ℝ] 𝓓F ℝ V := fromAutoOfV (shift' x)
+
+def convolution𝓓Mult : (𝓓 ℝ Ω)[×2]→L[ℝ] 𝓓 ℝ Ω := by
 
   let c : MultilinearMap ℝ (fun (i : Fin 2) => 𝓓 ℝ Ω) (𝓓 ℝ  Ω) := ⟨
-      fun φ  => ⟨ φ 0 ⋆ φ 1 , by sorry , by sorry ⟩,
+      fun φ  => ⟨ φ 0 ⋆ φ 1 , by sorry , by sorry, by sorry ⟩,
       by sorry ,
       by sorry
     ⟩
   use c
-
-/-
-(𝓓 ℝ Ω)→L[ℝ] (𝓓 ℝ Ω) →L[ℝ] 𝓓 ℝ Ω :=
--/
-    -- apply MultiLinearMap.mk ; swap
-    -- · apply AddHom.mk ; swap
-    --   intro φ ψ
-
-    --   use φ ⋆ ψ -- (ContinuousLinearMap.mul k k)
-    --   sorry
-    --   sorry
-    --   sorry
-
-    -- · sorry
-
   sorry
-def tF2 {X : Type u} (x y : X) : (Fin 2) → X
+
+@[simp] def tF2 {X : Type u} (x y : X) : (Fin 2) → X
 | 0 => x
 | 1 => y
 
+@[simp] def convWith ( φ : 𝓓 ℝ Ω) : (𝓓 ℝ Ω) →L[ℝ] 𝓓 ℝ Ω := mk ℝ (fun ψ => ⟨ φ ⋆ ψ , by sorry , by sorry , by sorry ⟩) sorry
 
-notation:67 φ " 𝓓⋆ " ψ => convolution𝓓 (tF2 φ ψ)
-def curry (φ : 𝓓 ℝ Ω ) : 𝓓 ℝ Ω →L[ℝ] 𝓓 ℝ Ω := ContinuousMultilinearMap.toContinuousLinearMap convolution𝓓 (tF2 φ 0) 1
-notation:67 T " °⋆ " φ => ( curry (reflection φ) ) ° T
-example  (φ : 𝓓 ℝ Ω ) (T : 𝓓' ℝ Ω ) : ∀ ψ, (T °⋆ φ) ψ = T ( φʳ 𝓓⋆ ψ) := fun _ => rfl
-theorem convolution𝓓'IsSmooth (ψ : 𝓓 ℝ Ω ) (T : 𝓓' ℝ Ω ) : ∃ ψ' , ContDiffOn ℝ ⊤ ψ'.f Ω ∧ (T °⋆ ψ) = Λ ψ' := by
-  let ψ' : V → ℝ := fun x => by
+
+
+
+
+notation:67 φ " 𝓓⋆ " ψ => convWith φ ψ -- convolution𝓓Mult (tF2 φ ψ)
+--@[simp] def convWith (φ : 𝓓 ℝ Ω ) : 𝓓 ℝ Ω →L[ℝ] 𝓓 ℝ Ω := ContinuousMultilinearMap.toContinuousLinearMap convolution𝓓Mult (tF2 φ 0) 1
+notation:67 T " °⋆ " φ => ( convWith  (reflection φ) ) ° T
+
+example  (φ : 𝓓F ℝ V ) (T : 𝓓' ℝ (Full V) ) : ∀ ψ, (T °⋆ φ) ψ = T ( φʳ 𝓓⋆ ψ) := fun _ => rfl
+lemma convAsLambda (φ ψ : 𝓓F ℝ V) : (φ 𝓓⋆ ψ) = fun x => Λ φ (shift x (reflection ψ)) := by
+  simp
+  unfold convolution
+  congr
+
+
+theorem integral_congr {f g : V → ℝ} (p : ∀ x , f x = g x) : ∫ x , f x = ∫ x , g x := by congr ; ext x ; exact p x
+lemma invext {A : Type u} {B : Type v} {f g : A → B} (p : f = g) (x : A) : f x = g x := by exact?
+-- def smoothFuncForConv (ψ : 𝓓F ℝ V ) :  (𝓓F ℝ V) :=
+theorem convolution𝓓'IsSmooth (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : ∃ ψ' , ContDiff ℝ ⊤ ψ'.f ∧ (T °⋆ ψ) = Λ ψ' := by
+  let ψ' : LocallyIntegrableFunction V := ⟨ fun x => by
     let ψ'' := shift x (reflection ψ)
-    exact T ψ''
-  use ⟨ ψ , by sorry ⟩
+    exact T ψ'' , by sorry ⟩
+
+  use ⟨ ψ' , by sorry ⟩
   constructor
   · sorry
   · ext φ
-    simp
+
+    symm
+    trans
+    · have : Λ ψ' φ = ∫ x , φ x  * T (shift x (reflection ψ)) := by apply integral_congr ; intro x; rw [mul_comm]
+      exact this
+    ·
+      trans
+      · apply integral_congr
+        intro x
+        symm
+        exact T.map_smul (φ.φ x) _
+
+      · let biφ : 𝓓F ℝ (V × V) := fromCurrying V (fun x => φ x • (shift x) (reflection ψ))
+        trans  ;
+        · symm ; exact FcommWithIntegrals V biφ T
+        · simp
+          congr
+          ext y
+          trans ; swap
+          · exact (congrFun (convAsLambda ( reflection ψ) (φ )) y).symm
+          · simp
+            --just use linear transformation x = y-v
+            sorry
+
+
+            --change
+
+
+
+
+
+
+
+
+
+
+
+
+        -- rw [ (FcommWithIntegrals V ((φ.φ x) • ((shift x) ψ)) T)]
+
+
+
+
+
+
+
 
 
     sorry

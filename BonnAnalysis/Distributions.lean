@@ -142,7 +142,7 @@ class IsSeqCtsLinearMap (f : X → M) where
   isSeqCts : SeqContinuous' f
 open IsSeqCtsLinearMap
 
-def mk  (T : X → M) (hT : IsSeqCtsLinearMap k T) : X →L[k] M  := by
+@[simp] def mk  (T : X → M) (hT : IsSeqCtsLinearMap k T) : X →L[k] M  := by
   -- (hT2 : IsLinearMap k T) (hT : SeqContinuous' T) := by
   use ⟨ ⟨ T ,hT.isAdd ⟩ , hT.isMul ⟩
   apply continuous_of_SeqContinuous  hT.isSeqCts
