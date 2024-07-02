@@ -150,10 +150,10 @@ lemma _root_.ENNReal.lintegral_mul_le_one_top (μ : Measure α) {f g : α → �
     calc ∫⁻ (a : α), (f * g) a ∂μ = ∫⁻ (a : α), (f * g) a ∂μ := rfl
     _ ≤ ∫⁻ (a : α), f a * (essSup g μ) ∂μ := by
       apply MeasureTheory.lintegral_mono_ae
-        rw [Filter.eventually_iff, ← Filter.exists_mem_subset_iff]
-        use {a | g a ≤ essSup g μ}
-        rw [← Filter.eventually_iff]
-        exact ⟨ae_le_essSup _, by simp; intro _ ha; apply ENNReal.mul_left_mono ha⟩
+      rw [Filter.eventually_iff, ← Filter.exists_mem_subset_iff]
+      use {a | g a ≤ essSup g μ}
+      rw [← Filter.eventually_iff]
+      exact ⟨ae_le_essSup _, by simp; intro _ ha; apply ENNReal.mul_left_mono ha⟩
     _ = (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
       rw [lintegral_mul_const'' _ hf]
 
@@ -515,7 +515,7 @@ theorem integral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : Lp E�
 
   gcongr
   apply mul_ne_top; apply mul_ne_top
-    . simp [this]
+  . simp [this]
   . apply snorm_ne_top f
   . apply snorm_ne_top g
 
@@ -570,7 +570,7 @@ theorem conj_q_lt_top'_aemeasurable (g : Lp ℝ q μ)
   . exact (Lp.memℒp g).aestronglyMeasurable.aemeasurable
   . apply ENNReal.measurable_toReal
   . apply Measurable.comp_aemeasurable'
-    . apply MeasureTheory.Lp.measurable_ENNReal_rpow'_const
+    . apply ENNReal.measurable_rpow'_const
     . apply Measurable.comp_aemeasurable'
       . apply measurable_coe_nnreal_ennreal
       . apply Measurable.comp_aemeasurable'
@@ -712,7 +712,7 @@ end conj_q_lt_top'
 section normalized_conj_q_lt_top'
 
 def normalized_conj_q_lt_top' {q : ℝ≥0∞} (g : Lp ℝ q μ) : α → ℝ :=
-  fun x => (conj_q_lt_top' g x) * (NNReal.rpow' (1 - q.toReal) ‖g‖₊)
+  fun x => (conj_q_lt_top' g x) * (rpow' (1 - q.toReal) ‖g‖₊)
 
 @[measurability]
 theorem normalized_conj_q_lt_top'_ae_measurable (g : Lp ℝ q μ)
@@ -732,7 +732,7 @@ theorem normalized_conj_q_lt_top'_aestrongly_measurable (g : Lp ℝ q μ)
 theorem snorm'_normalized_conj_q_lt_top' {g : Lp ℝ q μ} (hqᵢ : q ≠ ∞) (hg : ‖g‖₊ ≠ 0)
     : snorm' (normalized_conj_q_lt_top' g) p.toReal μ = 1 := by
   unfold normalized_conj_q_lt_top'
-  unfold NNReal.rpow'
+  unfold rpow'
 
   rw[snorm'_mul_const p_gt_zero',
      snorm'_of_conj_q_lt_top' hqᵢ,
