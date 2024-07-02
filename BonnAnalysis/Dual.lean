@@ -544,7 +544,6 @@ theorem lint_conj_q_lt_top'_mul_self (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ}
         . apply toReal_nonneg
       . rfl
 
-
   sorry
 
 theorem int_conj_q_lt_top'_mul_self (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ}
