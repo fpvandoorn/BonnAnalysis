@@ -152,7 +152,7 @@ structure LocallyIntegrableFunction where
 def 𝓓kSquareCurry (φ : 𝓓F ℝ (V × V)) (x : V ) : 𝓓F ℝ V := ⟨ fun y => φ ( x, y) , by sorry , by sorry , by sorry⟩
 def intSm (φ : 𝓓F ℝ (V × V)) : 𝓓F ℝ V := ⟨ fun y => ∫ x , φ ( x, y) , by sorry , by sorry , by sorry⟩
 lemma FcommWithIntegrals (φ : 𝓓F ℝ (V × V)) (T : 𝓓'F ℝ V) : T (intSm V φ) =  ∫ x : V ,  T (𝓓kSquareCurry V φ x)  := by sorry
-def fromCurrying (φ : V → 𝓓F ℝ V) : 𝓓F ℝ (V × V ) := ⟨ fun x => φ x.1 x.2 , by sorry  , by sorry , by sorry⟩
+def fromCurrying (φ : V → 𝓓F ℝ V) (hφ : HasCompactSupport φ) : 𝓓F ℝ (V × V ) := ⟨ fun x => φ x.1 x.2 , by sorry  , by sorry ,   fun ⦃a⦄ a ↦ trivial ⟩ -- todo
 variable {V : Type u}  [MeasureSpace V]
    [NormedAddCommGroup V]  [NormedSpace ℝ V] {Ω : Opens V}
 instance : Coe ( 𝓓F ℝ V) (LocallyIntegrableFunction V) where
@@ -205,7 +205,7 @@ lemma convAsLambda (φ ψ : 𝓓F ℝ V) : (φ 𝓓⋆ ψ) = fun x => Λ φ (shi
 
 
 theorem integral_congr {f g : V → ℝ} (p : ∀ x , f x = g x) : ∫ x , f x = ∫ x , g x := by congr ; ext x ; exact p x
-lemma invext {A : Type u} {B : Type v} {f g : A → B} (p : f = g) (x : A) : f x = g x := by exact?
+
 -- def smoothFuncForConv (ψ : 𝓓F ℝ V ) :  (𝓓F ℝ V) :=
 theorem convolution𝓓'IsSmooth (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : ∃ ψ' , ContDiff ℝ ⊤ ψ'.f ∧ (T °⋆ ψ) = Λ ψ' := by
   let ψ' : LocallyIntegrableFunction V := ⟨ fun x => by
