@@ -150,10 +150,10 @@ lemma _root_.ENNReal.lintegral_mul_le_one_top (μ : Measure α) {f g : α → �
     calc ∫⁻ (a : α), (f * g) a ∂μ = ∫⁻ (a : α), (f * g) a ∂μ := rfl
     _ ≤ ∫⁻ (a : α), f a * (essSup g μ) ∂μ := by
       apply MeasureTheory.lintegral_mono_ae
-      rw [Filter.eventually_iff, ← Filter.exists_mem_subset_iff]
-      use {a | g a ≤ essSup g μ}
-      rw [← Filter.eventually_iff]
-      exact ⟨ae_le_essSup _, by simp; intro _ ha; apply ENNReal.mul_left_mono ha⟩
+        rw [Filter.eventually_iff, ← Filter.exists_mem_subset_iff]
+        use {a | g a ≤ essSup g μ}
+        rw [← Filter.eventually_iff]
+        exact ⟨ae_le_essSup _, by simp; intro _ ha; apply ENNReal.mul_left_mono ha⟩
     _ = (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
       rw [lintegral_mul_const'' _ hf]
 
@@ -495,29 +495,29 @@ end BasicFunctions
 theorem integral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : Lp E₁ p μ} {g : Lp E₂ q μ}
     : ∫ a, ‖L (f a) (g a)‖ ∂μ ≤ ‖L‖ * ‖f‖ * ‖g‖ := by
 
-    have : AEStronglyMeasurable (fun x => L (f x) (g x)) μ :=
-                          by apply L.aestronglyMeasurable_comp₂
-                             apply (Lp.memℒp f).aestronglyMeasurable
-                             apply (Lp.memℒp g).aestronglyMeasurable
-    rw [integral_norm_eq_lintegral_nnnorm this]
+  have : AEStronglyMeasurable (fun x => L (f x) (g x)) μ :=
+    by apply L.aestronglyMeasurable_comp₂
+       apply (Lp.memℒp f).aestronglyMeasurable
+       apply (Lp.memℒp g).aestronglyMeasurable
+  rw [integral_norm_eq_lintegral_nnnorm this]
 
-    have : (‖L‖₊ * (snorm f p μ) * (snorm g q μ)).toReal = ‖L‖ * ‖f‖ * ‖g‖ := by
-              calc _ = ‖L‖₊.toReal * (snorm f p μ).toReal * (snorm g q μ).toReal := by simp
-                   _ = ‖L‖ * ‖f‖ * ‖g‖                                           := by congr
-    rw [←this]
+  have : (‖L‖₊ * (snorm f p μ) * (snorm g q μ)).toReal = ‖L‖ * ‖f‖ * ‖g‖ := by
+    calc _ = ‖L‖₊.toReal * (snorm f p μ).toReal * (snorm g q μ).toReal := by simp
+         _ = ‖L‖ * ‖f‖ * ‖g‖                                           := by congr
+  rw [←this]
 
   have : ∫⁻ (a : α), ↑‖(L (f a)) (g a)‖₊ ∂μ ≤ ↑‖L‖₊ * snorm (f) p μ * snorm (g) q μ := by
     apply lintegral_mul_le L hpq μ
-                                                            . apply aestronglyMeasurable_iff_aemeasurable.mp
-                                                              apply (Lp.memℒp f).aestronglyMeasurable
-                                                            . apply aestronglyMeasurable_iff_aemeasurable.mp
-                                                              apply (Lp.memℒp g).aestronglyMeasurable
+    . apply aestronglyMeasurable_iff_aemeasurable.mp
+      apply (Lp.memℒp f).aestronglyMeasurable
+    . apply aestronglyMeasurable_iff_aemeasurable.mp
+      apply (Lp.memℒp g).aestronglyMeasurable
 
-    gcongr
-    apply mul_ne_top; apply mul_ne_top
+  gcongr
+  apply mul_ne_top; apply mul_ne_top
     . simp [this]
-    . apply snorm_ne_top f
-    . apply snorm_ne_top g
+  . apply snorm_ne_top f
+  . apply snorm_ne_top g
 
 section conj_q_lt_top'
 
@@ -829,21 +829,21 @@ theorem snorm_eq_sup_abs'' {μ : Measure α} (hμ : SigmaFinite μ) (g : Lp ℝ 
 theorem snorm_eq_sup_q_gt_top (g : Lp ℝ q μ) (hqᵢ : q ≠ ∞) :
               ‖g‖ = sSup ((fun f => ‖∫ x, (f x) * (g x) ∂μ‖) '' {(f : Lp ℝ p μ) | ‖f‖ ≤ 1}) := by
   apply le_antisymm;
-    . apply le_csSup
-      . use ‖g‖
-        intro x hx
-        rcases hx with ⟨f, hf, rfl⟩
+  . apply le_csSup
+    . use ‖g‖
+      intro x hx
+      rcases hx with ⟨f, hf, rfl⟩
       dsimp at hf
       dsimp only
       calc _ ≤ ∫ x, ‖f x * g x‖ ∂μ             := by apply norm_integral_le_integral_norm
-            _ = ∫ x, ‖(mul ℝ ℝ) (f x) (g x)‖ ∂μ := by simp
+           _ = ∫ x, ‖(mul ℝ ℝ) (f x) (g x)‖ ∂μ := by simp
            _ ≤ ‖(mul ℝ ℝ)‖ * ‖f‖ * ‖g‖         := by apply integral_mul_le; exact hpq.out
-            _ = ‖f‖ * ‖g‖                       := by simp
-            _ ≤ 1 * ‖g‖                         := by gcongr
-            _ = ‖g‖                             := by simp
+           _ = ‖f‖ * ‖g‖                       := by simp
+           _ ≤ 1 * ‖g‖                         := by gcongr
+           _ = ‖g‖                             := by simp
     . use normalized_conj_q_lt_top (p := p) hqᵢ (?_ : ‖g‖₊ ≠ 0)
       swap; sorry
-        constructor
+      constructor
       . simp only [Set.mem_setOf_eq]
         rw[norm_of_normalized_conj_q_lt_top]
       . dsimp only
