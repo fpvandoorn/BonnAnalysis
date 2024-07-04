@@ -1,6 +1,9 @@
 import Mathlib.Analysis.Complex.AbsMax
 import Mathlib.Order.Filter.Basic
 import BonnAnalysis.Dual
+import Mathlib.Topology.MetricSpace.Sequences
+import Mathlib.Analysis.Complex.HalfPlane
+import Mathlib.Analysis.Complex.ReImTopology
 
 noncomputable section
 
@@ -25,7 +28,7 @@ variable {α β E E₁ E₂ E₃ : Type*} {m : MeasurableSpace α} {n : Measurab
 /- TODO: split proofs into smaller lemmas to recycle code -/
 
 -- All these names are probably very bad
-lemma real_pow_le_pow_iff {M:ℝ} (hM: M>0) (a b : ℝ) : M^a ≤ M^b ↔ ((1 ≤ M ∧ a ≤ b ) ∨ (M ≤ 1 ∧ b ≤ a)) := by{
+lemma Real.pow_le_pow_iff {M:ℝ} (hM: M>0) (a b : ℝ) : M^a ≤ M^b ↔ ((1 ≤ M ∧ a ≤ b ) ∨ (M ≤ 1 ∧ b ≤ a)) := by{
   have hMb : M^(-b) > 0 := Real.rpow_pos_of_pos hM (-b)
   rw[← mul_le_mul_right hMb, ←Real.rpow_add, ← Real.rpow_add]
   simp
@@ -44,7 +47,7 @@ lemma pow_bound₀ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex
   · left
     have : 1 = M^0 := rfl
     nth_rewrite 2 [this]
-    have := (real_pow_le_pow_iff hM (z.re-1) 0).mpr
+    have := (Real.pow_le_pow_iff hM (z.re-1) 0).mpr
     simp at this
     apply this
     left
@@ -54,7 +57,7 @@ lemma pow_bound₀ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex
   · right
     have : M^(-1:ℝ) = M⁻¹ := by apply Real.rpow_neg_one
     rw[← this]
-    have := (real_pow_le_pow_iff hM (z.re-1) (-1:ℝ)).mpr
+    have := (Real.pow_le_pow_iff hM (z.re-1) (-1:ℝ)).mpr
     simp at this
     apply this
     right
@@ -72,7 +75,7 @@ lemma pow_bound₁ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex
   · left
     have : 1 = M^0 := rfl
     rw [this]
-    have := (real_pow_le_pow_iff hM (-z.re) 0).mpr
+    have := (Real.pow_le_pow_iff hM (-z.re) 0).mpr
     simp at this
     apply this
     left
@@ -82,7 +85,7 @@ lemma pow_bound₁ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex
   · right
     have : M^(-1:ℝ) = M⁻¹ := by apply Real.rpow_neg_one
     rw[← this]
-    have := (real_pow_le_pow_iff hM (-z.re) (-1:ℝ)).mpr
+    have := (Real.pow_le_pow_iff hM (-z.re) (-1:ℝ)).mpr
     simp at this
     apply this
     right
@@ -97,6 +100,77 @@ def at_height (f:ℂ → ℂ) (y:ℝ) : (Icc 0 1 : Set ℝ) → ℝ  := fun x �
 
 def sup_at_height (f: ℂ → ℂ) (y: ℝ) := sSup ((at_height f y)'' univ)
 
+def abs_sup (f: ℂ → ℂ ) := sSup ((fun z ↦ Complex.abs (f z))'' { z | z.re ∈ Icc 0 1} )
+
+lemma abs_fun_nonempty (f: ℂ → ℂ) : ((fun z ↦ Complex.abs (f z))'' { z | z.re ∈ Icc 0 1}).Nonempty := by{
+  simp
+  use 0
+  simp
+}
+
+lemma abs_fun_bounded {f:ℂ → ℂ} (h2f : IsBounded (f '' { z | z.re ∈ Icc 0 1})) : BddAbove ((fun z ↦ Complex.abs (f z))'' { z | z.re ∈ Icc 0 1}) := by{
+  simp[BddAbove, upperBounds]
+  obtain ⟨R, hR⟩:= (Metric.isBounded_iff_subset_ball 0).mp h2f
+  simp only [subset_def, mem_image] at hR
+  use R
+  simp
+  intro r z hz₁ hz₂ habs
+  rw[← habs]
+  apply le_of_lt
+  specialize hR (f z) (by use z; constructor; simp[hz₁, hz₂]; rfl)
+  simp at hR
+  exact hR
+}
+
+-- For the first version of this, we need
+#check exists_seq_tendsto_sSup
+#check tendsto_subseq_of_bounded
+
+#check Complex.eqOn_of_isPreconnected_of_isMaxOn_norm
+#check Complex.norm_eqOn_closure_of_isPreconnected_of_isMaxOn -- I believe this is the one!
+
+
+#check IsPreconnected.image
+
+#check IsPreconnected.prod --but this would require seeing ℂ as ℝ^2
+
+/- Some technical lemmas to apply the maximum modulus principle -/
+lemma strip_prod : { z:ℂ  | z.re ∈ Ioo 0 1} = (Ioo 0 1 : Set ℝ) ×ℂ univ := by{
+  ext z
+  simp[Complex.mem_reProdIm]
+}
+
+lemma clstrip_prod : {z: ℂ | z.re ∈ Icc 0 1} = (Icc 0 1 : Set ℝ) ×ℂ univ := by{
+  ext z
+  simp[Complex.mem_reProdIm]
+}
+
+
+lemma isPreconnected_strip : IsPreconnected { z : ℂ | z.re ∈ Ioo 0 1} := by{
+  have : { z : ℂ | z.re ∈ Ioo 0 1} = ⇑equivRealProdCLM.toHomeomorph ⁻¹' ((Ioo 0 1 : Set ℝ) ×ˢ  (univ: Set ℝ)) := by{
+    ext z
+    simp
+  }
+  rw[this, Homeomorph.isPreconnected_preimage Complex.equivRealProdCLM.toHomeomorph]
+  exact IsPreconnected.prod isPreconnected_Ioo isPreconnected_univ
+}
+
+lemma isOpen_strip : IsOpen { z : ℂ | z.re ∈ Ioo 0 1} := by{
+  rw[strip_prod]
+  exact IsOpen.reProdIm isOpen_Ioo isOpen_univ
+}
+
+lemma isClosed_clstrip : IsClosed { z : ℂ | z.re ∈ Icc 0 1} := by{
+  rw[clstrip_prod]
+  exact IsClosed.reProdIm isClosed_Icc isClosed_univ
+}
+
+
+lemma closure_strip : closure { z:ℂ  | z.re ∈ Ioo 0 1} = { z: ℂ  | z.re ∈ Icc 0 1} := by{
+  rw[strip_prod, clstrip_prod]
+  rw [Complex.closure_reProdIm, closure_univ, closure_Ioo]
+  norm_num
+}
 
 /-- Hadamard's three lines lemma/theorem on the unit strip with bounds M₀=M₁=1 and vanishing at infinity condition. -/
 theorem DiffContOnCl.norm_le_pow_mul_pow''' {f : ℂ → ℂ}
@@ -105,9 +179,132 @@ theorem DiffContOnCl.norm_le_pow_mul_pow''' {f : ℂ → ℂ}
     (h₀f : ∀ y : ℝ, ‖f (I * y)‖ ≤ 1) (h₁f : ∀ y : ℝ, ‖f (1 + I * y)‖ ≤ 1)
     {y t s : ℝ} (ht : 0 ≤ t) (hs : 0 ≤ s) (hts : t + s = 1) (htop: Tendsto (fun y ↦ (sup_at_height f y)) atTop (nhds  0)) (hbot: Tendsto (fun y ↦ (sup_at_height f y)) atBot (nhds 0) ) :
     ‖f (t + I * y)‖ ≤ 1 := by{
-      sorry
-    }
+      have ht' : t ≤ 1 := by{
+        calc
+        t = 1 - s := eq_sub_of_add_eq hts
+        _ ≤ 1 := by simp[hs]
+      }
 
+      --let M := abs_sup f
+
+      obtain ⟨u, hu1, hu2, hu3⟩ :=  exists_seq_tendsto_sSup (abs_fun_nonempty f) (abs_fun_bounded h2f)
+      simp at hu3
+      --Was this doable without choice all along? And do we even care?
+      obtain ⟨z, hz⟩ := Classical.axiom_of_choice hu3
+      let S := {w | (0 ≤ w.re ∧ w.re ≤ 1) ∧ ∃ n : ℕ, Complex.abs (f w) = u n}
+      have hS : IsBounded S := by{
+        -- here, we use the vanishing at infinity
+        -- I guess morally the idea is that it is contained in a rectangle
+        -- but we need to use the 'eventually' in hu2
+
+
+        -- #check Bornology.IsBounded.reProdIm
+
+        sorry
+
+      }
+
+      have hS' : S ⊆  {w | (0 ≤ w.re ∧ w.re ≤ 1)} := by{
+        simp[S]
+        intros
+        tauto
+      }
+
+      have hSclos : closure S ⊆ {w | (0 ≤ w.re ∧ w.re ≤ 1)} := by{
+        apply (IsClosed.closure_subset_iff isClosed_clstrip).mpr
+        simp
+        exact hS'
+      }
+
+      have hzS : ∀ n : ℕ, z n ∈ S := by{
+        intro n
+        simp[S]
+        specialize hz n
+        constructor
+        · exact hz.1
+        · use n; exact hz.2
+      }
+
+      obtain ⟨z',hz', φ, hφ₁, hφ₂⟩ := tendsto_subseq_of_bounded hS hzS
+
+
+      have hmax : IsMaxOn (norm ∘ f) { w:ℂ  | w.re ∈ Icc 0 1} z' := by{
+        sorry
+      }
+
+
+      have hmax' : IsMaxOn (norm ∘ f) { w:ℂ  | w.re ∈ Ioo 0 1} z' := by{
+        simp[IsMaxOn, IsMaxFilter]
+        intro w hw₁ hw₂
+        -- I want to say: find n with Complex.abs (f (u n)) ≥  Complex.abs (f w)
+        --simp[Tendsto, map, atTop, nhds] at hu2
+        sorry
+      }
+
+
+      by_cases h : z' ∈ { w : ℂ | w.re ∈ Ioo 0 1}
+      · have := Complex.norm_eqOn_closure_of_isPreconnected_of_isMaxOn (isPreconnected_strip) (isOpen_strip) hf h hmax'
+        simp[EqOn] at this
+        have h0 : Complex.abs (f 0) = Complex.abs (f z') := by{
+          apply this
+          have hcl := closure_strip
+          simp at hcl
+          rw[hcl]
+          simp
+        }
+        have hpt : Complex.abs (f (t + I*y)) = Complex.abs (f z') := by {
+          apply this
+          have hcl := closure_strip
+          simp at hcl
+          rw[hcl]
+          simp
+          constructor
+          · exact ht
+          · exact ht'
+        }
+        simp
+        rw[hpt, ← h0]
+        specialize h₀f 0
+        simp at h₀f
+        exact h₀f
+
+      · have : z'.re = 0 ∨ z'.re = 1 := by{
+          simp at h
+          have : z'.re ≥ 0 ∧ z'.re ≤ 1 := by{
+            specialize hSclos hz'
+            simp at hSclos
+            tauto
+          }
+          by_cases hc: z'.re = 0
+          · left; assumption
+          · right
+            specialize h (lt_of_le_of_ne this.1 (Ne.symm hc) )
+            exact eq_of_le_of_le this.2 h
+        }
+        simp[IsMaxOn, IsMaxFilter] at hmax
+        specialize hmax (t+I*y)
+        simp at hmax
+        specialize hmax ht ht'
+        obtain hz'₁|hz'₂ := this
+        · specialize h₀f (z'.im)
+          have : z' = I * z'.im := by {
+            nth_rewrite 1 [← Complex.re_add_im z']
+            simp[hz'₁, mul_comm]
+          }
+          rw[this] at hmax
+          calc
+          _ ≤ _ := hmax
+          _ ≤ _ := h₀f
+        · specialize h₁f (z'.im)
+          have : z' = 1 + I * z'.im := by {
+            nth_rewrite 1 [← Complex.re_add_im z']
+            simp[hz'₂, mul_comm]
+          }
+          rw[this] at hmax
+          calc
+          _ ≤ _ := hmax
+          _ ≤ _ := h₁f
+    }
 
 
 /-Next goal: prove the three lines lemma with bounds M₀=M₁=1 -/
