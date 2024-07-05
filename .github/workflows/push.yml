@@ -39,17 +39,17 @@ jobs:
       - name: Build project
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis
 
-      - name: Clear build artifacts
-        run: rm -rf .lake/build/BonnAnalysis/* # Clean up build artifacts to save space
+      # - name: Clear build artifacts
+      #   run: rm -rf .lake/build/BonnAnalysis/* # Clean up build artifacts to save space
 
-      # .lake/build/doc/Init
-      # .lake/build/doc/Lake
-      # .lake/build/doc/Lean
-      # .lake/build/doc/Std
       - name: Cache mathlib docs
         uses: actions/cache@v3
         with:
           path: |
+            .lake/build/doc/Init
+            .lake/build/doc/Lake
+            .lake/build/doc/Lean
+            .lake/build/doc/Std
             .lake/build/doc/Mathlib
             .lake/build/doc/declarations
             !.lake/build/doc/declarations/declaration-data-BonnAnalysis*
@@ -62,6 +62,9 @@ jobs:
 
       - name: Build documentation
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs # Build project documentation
+
+      - name: Clear intermediate documentation build artifacts
+        run: rm -rf .lake/build/doc/Init/* .lake/build/doc/Lake/* .lake/build/doc/Lean/* # Clean up documentation cache to save space
 
       - name: Install Python
         uses: actions/setup-python@v4
