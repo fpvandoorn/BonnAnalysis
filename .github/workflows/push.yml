@@ -62,8 +62,8 @@ jobs:
           restore-keys: |
             MathlibDoc-
 
-      # - name: Build documentation
-      #   run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs
+      - name: Build documentation
+        run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs
 
       - name: Install Python
         uses: actions/setup-python@v4
@@ -118,6 +118,6 @@ jobs:
           sudo rm -rf ~/.cache/*
           docker system prune -af
 
-      #  - name: Make sure the cache works
-      #    run: |
+       - name: Make sure the cache works
+         run: |
           #  mv docs/docs .lake/build/doc
