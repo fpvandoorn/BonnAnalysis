@@ -2,7 +2,6 @@ on:
   push:
     branches:
       - master
-      - gh-pages-test
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -24,12 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Build project
     steps:
-      - name: Clean temporary files before build
-        run: |
-          sudo rm -rf /tmp/*
-          sudo rm -rf ~/.cache/*
-          docker system prune -af
-
       - name: Checkout project
         uses: actions/checkout@v2
         with:
@@ -41,11 +34,9 @@ jobs:
       - name: Get cache
         run: ~/.elan/bin/lake -Kenv=dev exe cache get || true
 
-      - name: Check disk usage before build
-        run: df -h
-
       - name: Build project
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis
+
 
       - name: Cache mathlib docs
         uses: actions/cache@v3
@@ -61,6 +52,7 @@ jobs:
           key: MathlibDoc-${{ hashFiles('lake-manifest.json') }}
           restore-keys: |
             MathlibDoc-
+
 
       - name: Build documentation
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs
@@ -103,21 +95,8 @@ jobs:
       - name: Upload docs & blueprint artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: docs/
+          path: docs/_site
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
-
-      - name: Check disk usage after build
-        run: df -h
-
-      - name: Clean temporary files after build
-        run: |
-          sudo rm -rf /tmp/*
-          sudo rm -rf ~/.cache/*
-          docker system prune -af
-
-       - name: Make sure the cache works
-         run: |
-          #  mv docs/docs .lake/build/doc
