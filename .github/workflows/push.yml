@@ -57,8 +57,11 @@ jobs:
           restore-keys: |
             MathlibDoc- # Cache Mathlib documentation to save rebuild time
 
-      - name: Build documentation
-        run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs # Build project documentation
+      - name: List available documentation parts
+        run: ls -R .lake/build/doc # List all available documentation parts for monitoring
+
+      # - name: Build documentation
+      #   run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs # Build project documentation
 
       # - name: Clear intermediate documentation build artifacts
       #   run: rm -rf .lake/build/doc/* # Clean up documentation build artifacts to save space
