@@ -39,10 +39,17 @@ jobs:
       - name: Build project
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis
 
+      # - name: Clear build artifacts
+      #   run: rm -rf .lake/build/BonnAnalysis/* # Clean up build artifacts to save space
+
       - name: Cache mathlib docs
         uses: actions/cache@v3
         with:
           path: |
+            .lake/build/doc/Init
+            .lake/build/doc/Lake
+            .lake/build/doc/Lean
+            .lake/build/doc/Std
             .lake/build/doc/Mathlib
             .lake/build/doc/declarations
             !.lake/build/doc/declarations/declaration-data-BonnAnalysis*
@@ -56,10 +63,8 @@ jobs:
       - name: Build documentation
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs # Build project documentation
 
-      # - name: Clear intermediate documentation build artifacts
-      #   run: |
-      #     rm -rf .lake/build/doc/declarations/*
-      #     find .lake/build/doc/ -mindepth 1 -maxdepth 1 ! -name 'Mathlib' ! -name 'declarations' -exec rm -rf {} +
+      - name: Clear cached documentation files
+        run: rm -rf .lake/build/doc/declarations/* # Clean up documentation cache to save space
 
       - name: Install Python
         uses: actions/setup-python@v4
@@ -82,9 +87,7 @@ jobs:
       - name: Copy documentation to `docs/docs`
         run: |
           sudo chown -R runner docs
-          mkdir -p docs/docs/Mathlib docs/docs/declarations
-          cp -r .lake/build/doc/Mathlib docs/docs/Mathlib
-          cp -r .lake/build/doc/declarations docs/docs/declarations
+          cp -r .lake/build/doc docs/docs # Copy the built documentation to the correct directory
 
       - name: Bundle dependencies
         uses: ruby/setup-ruby@v1
