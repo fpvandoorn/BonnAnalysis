@@ -30,14 +30,14 @@ jobs:
           fetch-depth: 0
 
       - name: Install elan
-        run: curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:4.0.0
+        run: |
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:4.0.0
 
       - name: Get cache
         run: ~/.elan/bin/lake -Kenv=dev exe cache get || true
 
       - name: Build project
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis
-
 
       - name: Cache mathlib docs
         uses: actions/cache@v3
@@ -53,7 +53,6 @@ jobs:
           key: MathlibDoc-${{ hashFiles('lake-manifest.json') }}
           restore-keys: |
             MathlibDoc-
-
 
       - name: Build documentation
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs
@@ -74,8 +73,7 @@ jobs:
           cd blueprint && pip install -r requirements.txt
 
       - name: Build blueprint and copy to `docs/blueprint`
-        run: |
-          inv all
+        run: inv all
 
       - name: Copy documentation to `docs/docs`
         run: |
