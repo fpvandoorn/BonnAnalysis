@@ -25,14 +25,11 @@ variable {α β E E₁ E₂ E₃ : Type*} {m : MeasurableSpace α} {n : Measurab
 /- TODO: split proofs into smaller lemmas to recycle code -/
 
 -- All these names are probably very bad
-lemma real_pow_le_pow_iff {M:ℝ} (hM: M>0) (a b : ℝ) : M^a ≤ M^b ↔ ((1 ≤ M ∧ a ≤ b ) ∨ (M ≤ 1 ∧ b ≤ a)) := by{
+lemma Real.rpow_le_rpow_iff_left {M:ℝ} (hM: M>0) (a b : ℝ) : M^a ≤ M^b ↔ ((1 ≤ M ∧ a ≤ b ) ∨ (M ≤ 1 ∧ b ≤ a)) := by{
   have hMb : M^(-b) > 0 := Real.rpow_pos_of_pos hM (-b)
-  rw[← mul_le_mul_right hMb, ←Real.rpow_add, ← Real.rpow_add]
+  rw [← mul_le_mul_right hMb, ←Real.rpow_add hM, ← Real.rpow_add hM, add_right_neg, Real.rpow_zero,
+    Real.rpow_le_one_iff_of_pos hM]
   simp
-  rw[Real.rpow_le_one_iff_of_pos hM]
-  · simp
-  · exact hM
-  · exact hM
 }
 
 
@@ -44,7 +41,7 @@ lemma pow_bound₀ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex
   · left
     have : 1 = M^0 := rfl
     nth_rewrite 2 [this]
-    have := (real_pow_le_pow_iff hM (z.re-1) 0).mpr
+    have := (Real.rpow_le_rpow_iff_left hM (z.re-1) 0).mpr
     simp at this
     apply this
     left
@@ -54,7 +51,7 @@ lemma pow_bound₀ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex
   · right
     have : M^(-1:ℝ) = M⁻¹ := by apply Real.rpow_neg_one
     rw[← this]
-    have := (real_pow_le_pow_iff hM (z.re-1) (-1:ℝ)).mpr
+    have := (Real.rpow_le_rpow_iff_left hM (z.re-1) (-1:ℝ)).mpr
     simp at this
     apply this
     right
@@ -72,7 +69,7 @@ lemma pow_bound₁ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex
   · left
     have : 1 = M^0 := rfl
     rw [this]
-    have := (real_pow_le_pow_iff hM (-z.re) 0).mpr
+    have := (Real.rpow_le_rpow_iff_left hM (-z.re) 0).mpr
     simp at this
     apply this
     left
@@ -82,7 +79,7 @@ lemma pow_bound₁ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex
   · right
     have : M^(-1:ℝ) = M⁻¹ := by apply Real.rpow_neg_one
     rw[← this]
-    have := (real_pow_le_pow_iff hM (-z.re) (-1:ℝ)).mpr
+    have := (Real.rpow_le_rpow_iff_left hM (-z.re) (-1:ℝ)).mpr
     simp at this
     apply this
     right
