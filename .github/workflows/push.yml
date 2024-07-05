@@ -86,8 +86,8 @@ jobs:
           sudo chown -R runner docs
           cp -r .lake/build/doc docs/docs # Copy the built documentation to the correct directory
 
-      - name: Clear cached documentation files
-        run: rm -rf .lake/build/doc/* # Clean up documentation cache to save space
+      # - name: Clear cached documentation files
+      #   run: rm -rf .lake/build/doc/* # Clean up documentation cache to save space
 
       - name: Bundle dependencies
         uses: ruby/setup-ruby@v1
