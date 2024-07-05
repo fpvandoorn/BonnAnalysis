@@ -60,8 +60,8 @@ jobs:
       - name: Build documentation
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs # Build project documentation
 
-      - name: Clear intermediate documentation build artifacts
-        run: rm -rf .lake/build/doc/* # Clean up documentation build artifacts to save space
+      # - name: Clear intermediate documentation build artifacts
+      #   run: rm -rf .lake/build/doc/* # Clean up documentation build artifacts to save space
 
       - name: Install Python
         uses: actions/setup-python@v4
