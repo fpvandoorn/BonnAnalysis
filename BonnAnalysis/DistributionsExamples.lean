@@ -31,14 +31,17 @@ open TopologicalSpace
 noncomputable section
 open Function
 def Full (V : Type u) [TopologicalSpace V] : Opens V := ⟨ univ , isOpen_univ ⟩
-def squareOpen {V : Type u} [TopologicalSpace V]  (Ω : Opens V) : Opens (V × V) := ⟨ Ω ×ˢ  Ω , by sorry ⟩
+--def squareOpen {V : Type u} [TopologicalSpace V]  (Ω : Opens V) : Opens (V × V) := ⟨ Ω ×ˢ  Ω , by sorry ⟩
 abbrev 𝓓F  (k : Type v) (V : Type u) [NontriviallyNormedField k]
   [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V]  := 𝓓 k (Full V)
 abbrev 𝓓'F  (k : Type v) (V : Type u) [NontriviallyNormedField k]
   [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V]  := 𝓓' k (Full V)
 class GoodEnoughAutom (k : Type v) (V : Type u)[NontriviallyNormedField k]  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V] (Φ : V → V) where
   isLinear : IsLinearMap k Φ
-  isSmooth : ContDiffOn k ⊤ Φ univ
+  --IsInjective : Function.Injective Φ
+  IsProper : IsProperMap Φ
+  isSmooth : ContDiff k ⊤ Φ
+
   --restToΩ : Φ '' Ω ⊆ Ω
   inj : Function.Injective Φ
 variable {V : Type u} {k : Type v} [NontriviallyNormedField k]
@@ -48,21 +51,53 @@ variable {V : Type u} {k : Type v} [NontriviallyNormedField k]
   -/
 open GoodEnoughAutom
 open 𝓓
+lemma supportfromAutoOfV (Φ : V → V) [GoodEnoughAutom k V Φ] (ψ : 𝓓F k V) : tsupport (ψ ∘ Φ) ⊆ Φ ⁻¹' (tsupport ψ ) := by
+
+  have ( A : Set V ) : closure (Φ ⁻¹' (A)) ⊆ Φ ⁻¹' (closure A) := by
+    apply Continuous.closure_preimage_subset
+    apply ContDiff.continuous (𝕜:=k) (isSmooth)
+  apply this (ψ ⁻¹' {x | x ≠ 0})
+
 
 @[simp] def fromAutoOfV (Φ : V → V) [GoodEnoughAutom k V Φ] : 𝓓F k V →L[k] 𝓓F k V := by
   apply mk ; swap
   ·   intro ψ
       use ψ ∘ Φ
-      · exact ContDiffOn.comp ψ.φIsSmooth (isSmooth) (subset_rfl)
-      · sorry
-      · sorry
+      · exact ContDiffOn.comp ψ.φIsSmooth (by rw [contDiffOn_univ] ; exact  isSmooth) (subset_rfl)
+      · apply IsCompact.of_isClosed_subset ; swap
+        exact isClosed_tsupport (ψ.φ ∘ Φ)
+        swap
+        · exact supportfromAutoOfV (k:=k) Φ ψ
+        · apply IsProperMap.isCompact_preimage
+          apply (IsProper (k:=k))
+          exact (ψ.φHasCmpctSupport)
+      · exact fun ⦃a⦄ a ↦ trivial
       --ψ.φHasCmpctSupport
   · constructor
     · intro φ ψ
       ext x
       rfl
-    · sorry
-    · sorry
+    · intro c φ
+      ext x
+      rfl
+    · constructor
+      intro φ φ0 hφ
+      obtain ⟨ ⟨ K , hK⟩  ,hφ ⟩ := hφ
+      apply tendsTo𝓝
+      constructor
+      · use Φ ⁻¹' K
+        constructor
+        · apply IsProperMap.isCompact_preimage
+          apply (IsProper (k:=k))
+          exact hK.1
+        · intro n
+          trans
+          · exact supportfromAutoOfV (k:=k) Φ (φ n)
+          · apply Set.monotone_preimage
+            exact hK.2 n
+
+      · intro l
+        sorry
 
 @[simp] def reflection' : V → V := fun x => -x
 @[simp] def shift' (x : V) : V → V := fun y => y - x
@@ -70,12 +105,14 @@ open 𝓓
 instance : (GoodEnoughAutom k V) reflection' where
   isLinear := by sorry
   isSmooth := by sorry
+  IsProper := by sorry
   --restToΩ := by sorry
   inj := by sorry
 
 instance (v : V) :  (GoodEnoughAutom k V) (shift' v) where
   isLinear := by sorry
   isSmooth := by sorry
+  IsProper := by sorry
   --restToΩ := by sorry
   inj := by sorry
 
@@ -149,10 +186,18 @@ structure LocallyIntegrableFunction where
    f : V → ℝ
    hf : MeasureTheory.LocallyIntegrable f
 
-def 𝓓kSquareCurry (φ : 𝓓F ℝ (V × V)) (x : V ) : 𝓓F ℝ V := ⟨ fun y => φ ( x, y) , by sorry , by sorry , by sorry⟩
-def intSm (φ : 𝓓F ℝ (V × V)) : 𝓓F ℝ V := ⟨ fun y => ∫ x , φ ( x, y) , by sorry , by sorry , by sorry⟩
-lemma FcommWithIntegrals (φ : 𝓓F ℝ (V × V)) (T : 𝓓'F ℝ V) : T (intSm V φ) =  ∫ x : V ,  T (𝓓kSquareCurry V φ x)  := by sorry
-def fromCurrying (φ : V → 𝓓F ℝ V) (hφ : HasCompactSupport φ) : 𝓓F ℝ (V × V ) := ⟨ fun x => φ x.1 x.2 , by sorry  , by sorry ,   fun ⦃a⦄ a ↦ trivial ⟩ -- todo
+
+def intSm (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun x y => φ y x)) : 𝓓F ℝ V := ⟨ fun y => ∫ x , φ y x , by sorry , by sorry , by sorry⟩
+--ContinuousLinearMap.integral_comp_comm PROBLEM: 𝓓F ℝ V is not NormedAddGroup so we cant apply
+lemma FcommWithIntegrals (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun x y => φ y x)) (T : 𝓓'F ℝ V) : T (intSm V φ hφ) =  ∫ x : V ,  T (φ x)  := by
+  symm
+  -- have : Integrable φ := by sorry
+  -- rw [ContinuousLinearMap.integral_comp_comm T.1]
+
+
+
+  sorry
+--def fromCurrying (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun x y => φ y x)) : 𝓓F ℝ (V × V ) := ⟨ fun x => φ x.1 x.2 , by sorry  , by sorry ,   fun ⦃a⦄ a ↦ trivial ⟩ -- todo
 variable {V : Type u}  [MeasureSpace V]
    [NormedAddCommGroup V]  [NormedSpace ℝ V] {Ω : Opens V}
 instance : Coe ( 𝓓F ℝ V) (LocallyIntegrableFunction V) where
@@ -183,9 +228,9 @@ def convolution𝓓Mult : (𝓓 ℝ Ω)[×2]→L[ℝ] 𝓓 ℝ Ω := by
   use c
   sorry
 
-@[simp] def tF2 {X : Type u} (x y : X) : (Fin 2) → X
-| 0 => x
-| 1 => y
+-- @[simp] def tF2 {X : Type u} (x y : X) : (Fin 2) → X
+-- | 0 => x
+-- | 1 => y
 
 @[simp] def convWith ( φ : 𝓓 ℝ Ω) : (𝓓 ℝ Ω) →L[ℝ] 𝓓 ℝ Ω := mk ℝ (fun ψ => ⟨ φ ⋆ ψ , by sorry , by sorry , by sorry ⟩) sorry
 
@@ -228,9 +273,10 @@ theorem convolution𝓓'IsSmooth (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : ∃ �
         symm
         exact T.map_smul (φ.φ x) _
 
-      · let biφ : 𝓓F ℝ (V × V) := fromCurrying V (fun x => φ x • (shift x) (reflection ψ))
+      · let biφ : V → 𝓓F ℝ V := fun x => φ x • (shift x) (reflection ψ)
+        have hbiφ : HasCompactSupport (fun x y => biφ y x) := by sorry
         trans  ;
-        · symm ; exact FcommWithIntegrals V biφ T
+        · symm ; exact FcommWithIntegrals V biφ hbiφ T
         · simp
           congr
           ext y
