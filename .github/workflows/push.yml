@@ -78,7 +78,6 @@ jobs:
       # Update TeX Live packages and ensure XeLatex format file is generated
       - name: Update TeX Live and generate XeLatex format file
         run: |
-          sudo tlmgr update --self
           sudo tlmgr update --all
           sudo fmtutil-sys --all
 
