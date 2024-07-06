@@ -69,22 +69,12 @@ jobs:
           cache: 'pip'
 
       # Cache and install required apt packages for blueprint
-      #graphviz libgraphviz-dev pdf2svg dvisvgm texlive-full
-      #graphviz libgraphviz-dev pdf2svg dvisvgm texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-xetex
+      # graphviz libgraphviz-dev pdf2svg dvisvgm texlive-full
       - name: Cache and install blueprint apt dependencies
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: graphviz libgraphviz-dev pdf2svg dvisvgm texlive-full
+          packages: graphviz libgraphviz-dev pdf2svg dvisvgm texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-xetex
           version: 1.0
-
-      # # Update TeX Live packages and ensure XeLatex format file is generated
-
-      # - name: Update TeX Live and generate XeLatex format file
-      #   run: |
-      #     sudo tlmgr init-usertree
-      #     sudo tlmgr update --self
-      #     sudo tlmgr update --all
-      #     sudo fmtutil-sys --all
 
       - name: Install blueprint dependencies
         run: |
