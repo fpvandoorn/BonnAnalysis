@@ -57,13 +57,13 @@ jobs:
           restore-keys: |
             MathlibDoc- # Cache Mathlib documentation to save rebuild time
 
-      - name: Cache documentation build artifacts
-        uses: actions/cache@v3
-        with:
-          path: .lake/build
-          key: build-artifacts-${{ runner.os }}-${{ hashFiles('lake-manifest.json') }}
-          restore-keys: |
-            build-artifacts-
+      # - name: Cache documentation build artifacts
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: .lake/build
+      #     key: build-artifacts-${{ runner.os }}-${{ hashFiles('lake-manifest.json') }}
+      #     restore-keys: |
+      #       build-artifacts-
 
       - name: Build documentation
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs # Build project documentation
