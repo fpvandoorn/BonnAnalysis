@@ -58,13 +58,29 @@ jobs:
             MathlibDoc- # Cache Mathlib documentation to save rebuild time
 
       - name: Build documentation
-        run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs # Build project documentation
+        run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs
 
       - name: Install Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
           cache: 'pip'
+
+      - name: Cache apt packages
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/apt
+          key: apt-cache-${{ runner.os }}-${{ hashFiles('blueprint/requirements.txt') }}
+          restore-keys: |
+            apt-cache-${{ runner.os }}-
+
+      - name: Cache apt package lists
+        uses: actions/cache@v3
+        with:
+          path: /var/lib/apt/lists
+          key: apt-lists-${{ runner.os }}-${{ hashFiles('blueprint/requirements.txt') }}
+          restore-keys: |
+            apt-lists-${{ runner.os }}-
 
       - name: Install blueprint apt dependencies
         run: |
@@ -105,7 +121,7 @@ jobs:
 
       - name: Bundle website
         working-directory: docs
-        run: JEKYLL_ENV=production bundle exec jekyll build # Build the Jekyll site for production
+        run: JEKYLL_ENV=production bundle exec jekyll build
 
       - name: Upload docs & blueprint artifact
         uses: actions/upload-pages-artifact@v1
