@@ -15,6 +15,7 @@ jobs:
     name: Lint style
     runs-on: ubuntu-latest
     steps:
+      # Check for long lines in .lean files and report if any lines exceed 100 characters
       - name: Check for long lines
         if: always()
         run: |
@@ -30,8 +31,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install elan
-        run: |
-          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:4.0.0
+        run: curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
 
       - name: Update docgen4
         run: ~/.elan/bin/lake -R -Kenv=dev update doc-gen4
@@ -42,8 +42,7 @@ jobs:
       - name: Build project
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis
 
-      # Cache the documentation for Mathlib to save rebuild time
-      - name: Cache mathlib docs
+      - name: Cache mathlib documentation
         uses: actions/cache@v3
         with:
           path: |
@@ -58,36 +57,47 @@ jobs:
           restore-keys: |
             MathlibDoc-
 
-      - name: Build documentation
+      - name: Build project documentation
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs
 
-      - name: Install Python
-        uses: actions/setup-python@v4
+      - name: Cache blueprint environment
+        uses: actions/cache@v3
         with:
-          python-version: '3.9'
-          cache: 'pip'
-
-      - name: Cache and install blueprint apt dependencies
-        uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: graphviz libgraphviz-dev pdf2svg dvisvgm texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-xetex texlive-bibtex-extra latexmk biblatex
-          version: 1.0
-
-      - name: Install blueprint dependencies
-        run: |
-          cd blueprint && pip install -r requirements.txt
+          path: |
+            ~/texlive-env
+          key: texlive-env-${{ hashFiles('blueprint/*') }}
+          restore-keys: |
+            texlive-env-
 
       - name: Build blueprint and copy to `docs/blueprint`
-        run: |
-          sudo fmtutil-sys --all # Generate XeLaTeX format
-          inv all
+        uses: xu-cheng/texlive-action@v2
+        with:
+          docker_image: ghcr.io/xu-cheng/texlive-full:20231201
+          run: |
+            apk update
+            apk add --update make py3-pip git pkgconfig graphviz graphviz-dev gcc musl-dev
+            git config --global --add safe.directory $GITHUB_WORKSPACE
+            git config --global --add safe.directory `pwd`
+            python3 -m venv ~/texlive-env || true
+            source ~/texlive-env/bin/activate
+            pip install --upgrade pip requests wheel
+            pip install pygraphviz --global-option=build_ext --global-option="-L/usr/lib/graphviz/" --global-option="-R/usr/lib/graphviz/"
+            pip install leanblueprint
+            leanblueprint pdf
+            cp blueprint/print/print.pdf docs/blueprint.pdf
+            leanblueprint web
+            cp -r blueprint/web docs/blueprint
+
+      # - name: Check declarations
+      #   run: |
+      #       ~/.elan/bin/lake exe checkdecls blueprint/lean_decls
 
       - name: Remove lake files from documentation
         run: |
           find .lake/build/doc -name "*.trace" -delete
           find .lake/build/doc -name "*.hash" -delete
 
-      - name: Copy documentation to `docs/docs`
+      - name: Move documentation to `docs/docs`
         run: |
           sudo chown -R runner docs
           cp -r .lake/build/doc docs/docs
