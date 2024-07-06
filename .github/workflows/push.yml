@@ -15,6 +15,7 @@ jobs:
     name: Lint style
     runs-on: ubuntu-latest
     steps:
+      # Check for long lines in .lean files and report if any lines exceed 100 characters
       - name: Check for long lines
         if: always()
         run: |
@@ -24,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build project
     steps:
+
       - name: Checkout project
         uses: actions/checkout@v2
         with:
@@ -31,7 +33,7 @@ jobs:
 
       - name: Install elan
         run: |
-          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:4.0.0 # Install Lean 4
+          curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain leanprover/lean4:4.0.0
 
       - name: Update docgen4
         run: ~/.elan/bin/lake -R -Kenv=dev update doc-gen4
@@ -42,6 +44,7 @@ jobs:
       - name: Build project
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis
 
+      # Cache the documentation for Mathlib to save rebuild time
       - name: Cache mathlib docs
         uses: actions/cache@v3
         with:
@@ -55,10 +58,10 @@ jobs:
             !.lake/build/doc/declarations/declaration-data-BonnAnalysis*
           key: MathlibDoc-${{ hashFiles('lake-manifest.json') }}
           restore-keys: |
-            MathlibDoc- # Cache Mathlib documentation to save rebuild time
+            MathlibDoc-
 
       - name: Build documentation
-        run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs # Build project documentation
+        run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs
 
       - name: Install Python
         uses: actions/setup-python@v4
@@ -66,6 +69,7 @@ jobs:
           python-version: '3.9'
           cache: 'pip'
 
+      # Install required apt packages for blueprint
       - name: Install blueprint apt dependencies
         run: |
           sudo apt-get update -qq
@@ -73,7 +77,7 @@ jobs:
 
       - name: Install blueprint dependencies
         run: |
-          cd blueprint && pip install -r requirements.txt # Install Python dependencies for blueprint
+          cd blueprint && pip install -r requirements.txt
 
       - name: Build blueprint and copy to `docs/blueprint`
         run: inv all
@@ -86,7 +90,7 @@ jobs:
       - name: Copy documentation to `docs/docs`
         run: |
           sudo chown -R runner docs
-          cp -r .lake/build/doc docs/docs # Copy the built documentation to the correct directory
+          cp -r .lake/build/doc docs/docs
 
       - name: Bundle dependencies
         uses: ruby/setup-ruby@v1
@@ -97,7 +101,7 @@ jobs:
 
       - name: Bundle website
         working-directory: docs
-        run: JEKYLL_ENV=production bundle exec jekyll build # Build the Jekyll site for production
+        run: JEKYLL_ENV=production bundle exec jekyll build
 
       - name: Upload docs & blueprint artifact
         uses: actions/upload-pages-artifact@v1
