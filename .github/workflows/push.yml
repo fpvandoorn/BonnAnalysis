@@ -75,13 +75,13 @@ jobs:
           packages: graphviz libgraphviz-dev pdf2svg dvisvgm texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-xetex
           version: 1.0
 
-      # Update TeX Live packages and ensure XeLatex format file is generated
-      - name: Update TeX Live and generate XeLatex format file
-        run: |
-          sudo tlmgr init-usertree
-          sudo tlmgr update --self
-          sudo tlmgr update --all
-          sudo fmtutil-sys --all
+      # # Update TeX Live packages and ensure XeLatex format file is generated
+      # - name: Update TeX Live and generate XeLatex format file
+      #   run: |
+      #     sudo tlmgr init-usertree
+      #     sudo tlmgr update --self
+      #     sudo tlmgr update --all
+      #     sudo fmtutil-sys --all
 
       - name: Install blueprint dependencies
         run: |
