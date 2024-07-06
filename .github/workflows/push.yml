@@ -67,38 +67,38 @@ jobs:
           cache: 'pip'
 
       - name: Cache apt packages
+        id: cache-apt
         uses: actions/cache@v3
         with:
-          path: |
-            /var/cache/apt/archives
-            !/var/cache/apt/archives/partial
-          key: apt-cache-${{ runner.os }}-${{ hashFiles('blueprint/requirements.txt') }}
+          path: ./cache/apt
+          key: apt-packages-${{ hashFiles('blueprint/requirements.txt') }}
           restore-keys: |
-            apt-cache-${{ runner.os }}-
+            apt-packages-
 
-      - name: Cache apt package lists
-        uses: actions/cache@v3
-        with:
-          path: |
-            /var/lib/apt/lists
-            !/var/lib/apt/lists/partial
-            !/var/lib/apt/lists/lock
-          key: apt-lists-${{ runner.os }}-${{ hashFiles('blueprint/requirements.txt') }}
-          restore-keys: |
-            apt-lists-${{ runner.os }}-
+      - name: Download and cache apt dependencies
+        run: |
+          mkdir -p ./cache/apt/archives
+          sudo apt-get update
+          apt-get download -o Dir::Cache::Archives="./cache/apt/archives" graphviz libgraphviz-dev pdf2svg dvisvgm texlive-full
+
+      - name: Install apt dependencies from cache
+        if: steps.cache-apt.outputs.cache-hit != 'true'
+        run: |
+          sudo dpkg -i ./cache/apt/archives/*.deb || sudo apt-get install -f
 
       - name: Install blueprint apt dependencies
+        if: steps.cache-apt.outputs.cache-hit == 'true'
         run: |
           sudo apt-get update
-          sudo apt-get install -y graphviz libgraphviz-dev pdf2svg dvisvgm texlive-full # Install necessary system packages for blueprint
+          sudo apt-get install -y ./cache/apt/archives/*.deb || sudo apt-get install -f
 
-      - name: Cache blueprint dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: blueprint-dependencies-${{ runner.os }}-${{ hashFiles('blueprint/requirements.txt') }}
-          restore-keys: |
-            blueprint-dependencies- # Cache Python dependencies for blueprint
+      # - name: Cache blueprint dependencies
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/.cache/pip
+      #     key: blueprint-dependencies-${{ hashFiles('blueprint/requirements.txt') }}
+      #     restore-keys: |
+      #       blueprint-dependencies- # Cache Python dependencies for blueprint
 
       - name: Install blueprint dependencies
         run: |
