@@ -87,13 +87,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y graphviz libgraphviz-dev pdf2svg dvisvgm texlive-full # Install necessary system packages for blueprint
 
-      - name: Cache blueprint dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: blueprint-dependencies-${{ hashFiles('blueprint/requirements.txt') }}
-          restore-keys: |
-            blueprint-dependencies- # Cache Python dependencies for blueprint
+      # - name: Cache blueprint dependencies
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/.cache/pip
+      #     key: blueprint-dependencies-${{ hashFiles('blueprint/requirements.txt') }}
+      #     restore-keys: |
+      #       blueprint-dependencies- # Cache Python dependencies for blueprint
 
       - name: Install blueprint dependencies
         run: |
