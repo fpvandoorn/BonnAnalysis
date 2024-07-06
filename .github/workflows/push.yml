@@ -69,6 +69,7 @@ jobs:
           cache: 'pip'
 
       # Cache and install required apt packages for blueprint
+      #graphviz libgraphviz-dev pdf2svg dvisvgm texlive-full
       - name: Cache and install blueprint apt dependencies
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
