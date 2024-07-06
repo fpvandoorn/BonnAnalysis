@@ -77,9 +77,7 @@ jobs:
 
       # Update TeX Live packages and ensure XeLatex format file is generated
       - name: Update TeX Live and generate XeLatex format file
-        run: |
-          sudo tlmgr update --all
-          sudo fmtutil-sys --all
+        run: sudo fmtutil-sys --all
 
       - name: Install blueprint dependencies
         run: |
