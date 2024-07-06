@@ -75,33 +75,27 @@ jobs:
           restore-keys: |
             apt-packages-
 
-      - name: Download and cache apt dependencies
+      - name: Download apt dependencies
+        if: steps.cache-apt.outputs.cache-hit != 'true'
         run: |
           mkdir -p ./cache/apt/archives
           sudo apt-get update
           apt-get download -o Dir::Cache::Archives="./cache/apt/archives" graphviz libgraphviz-dev pdf2svg dvisvgm texlive-full
-
-      - name: List cached files
-        run: ls -lh ./cache/apt/archives
+          ls -lh ./cache/apt/archives
 
       - name: Install apt dependencies from cache
-        if: steps.cache-apt.outputs.cache-hit != 'true'
         run: |
-          sudo dpkg -i ./cache/apt/archives/*.deb || sudo apt-get install -f
+          if [ -d "./cache/apt/archives" ]; then
+            sudo dpkg -i ./cache/apt/archives/*.deb || sudo apt-get install -f
+          fi
 
-      - name: Install blueprint apt dependencies
-        if: steps.cache-apt.outputs.cache-hit == 'true'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ./cache/apt/archives/*.deb || sudo apt-get install -f
-
-      - name: Cache blueprint dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: blueprint-dependencies-${{ runner.os }}-${{ hashFiles('blueprint/requirements.txt') }}
-          restore-keys: |
-            blueprint-dependencies- # Cache Python dependencies for blueprint
+      # - name: Cache blueprint dependencies
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: ~/.cache/pip
+      #     key: blueprint-dependencies-${{ runner.os }}-${{ hashFiles('blueprint/requirements.txt') }}
+      #     restore-keys: |
+      #       blueprint-dependencies-
 
       - name: Install blueprint dependencies
         run: |
