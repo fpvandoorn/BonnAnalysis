@@ -69,10 +69,12 @@ jobs:
           cache: 'pip'
 
       # Cache and install required apt packages for blueprint
+      #graphviz libgraphviz-dev pdf2svg dvisvgm texlive-full
+      #graphviz libgraphviz-dev pdf2svg dvisvgm texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-xetex
       - name: Cache and install blueprint apt dependencies
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: graphviz libgraphviz-dev pdf2svg dvisvgm texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-xetex
+          packages: graphviz libgraphviz-dev pdf2svg dvisvgm texlive-full
           version: 1.0
 
       # # Update TeX Live packages and ensure XeLatex format file is generated
