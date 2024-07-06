@@ -25,7 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Build project
     steps:
-
       - name: Checkout project
         uses: actions/checkout@v2
         with:
@@ -69,11 +68,13 @@ jobs:
           python-version: '3.9'
           cache: 'pip'
 
-      # Install required apt packages for blueprint
-      - name: Install blueprint apt dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends graphviz libgraphviz-dev pdf2svg dvisvgm texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-xetex
+      # Cache and install required apt packages for blueprint
+      # graphviz libgraphviz-dev pdf2svg dvisvgm texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra texlive-xetex
+      - name: Cache and install blueprint apt dependencies
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: graphviz libgraphviz-dev pdf2svg dvisvgm texlive-full
+          version: 1.0
 
       - name: Install blueprint dependencies
         run: |
