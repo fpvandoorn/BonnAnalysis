@@ -33,8 +33,8 @@ jobs:
       - name: Install elan
         run: curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
 
-      - name: Update docgen4
-        run: ~/.elan/bin/lake -R -Kenv=dev update doc-gen4
+      # - name: Update doc-gen4
+      #   run: ~/.elan/bin/lake -R -Kenv=dev update «doc-gen4»
 
       - name: Get cache
         run: ~/.elan/bin/lake -Kenv=dev exe cache get || true
@@ -54,32 +54,23 @@ jobs:
             .lake/build/doc/declarations
             !.lake/build/doc/declarations/declaration-data-BonnAnalysis*
           key: MathlibDoc-${{ hashFiles('lake-manifest.json') }}
-          restore-keys: |
-            MathlibDoc-
+          #restore-keys: MathlibDoc-
 
       - name: Build project documentation
         run: ~/.elan/bin/lake -Kenv=dev build BonnAnalysis:docs
-
-      - name: Cache blueprint environment
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/texlive-env
-          key: texlive-env-${{ hashFiles('blueprint/*') }}
-          restore-keys: |
-            texlive-env-
 
       - name: Build blueprint and copy to `docs/blueprint`
         uses: xu-cheng/texlive-action@v2
         with:
           docker_image: ghcr.io/xu-cheng/texlive-full:20231201
           run: |
+            export PIP_BREAK_SYSTEM_PACKAGES=1
             apk update
             apk add --update make py3-pip git pkgconfig graphviz graphviz-dev gcc musl-dev
             git config --global --add safe.directory $GITHUB_WORKSPACE
             git config --global --add safe.directory `pwd`
-            python3 -m venv ~/texlive-env || true
-            source ~/texlive-env/bin/activate
+            python3 -m venv env
+            source env/bin/activate
             pip install --upgrade pip requests wheel
             pip install pygraphviz --global-option=build_ext --global-option="-L/usr/lib/graphviz/" --global-option="-R/usr/lib/graphviz/"
             pip install leanblueprint
@@ -88,16 +79,12 @@ jobs:
             leanblueprint web
             cp -r blueprint/web docs/blueprint
 
-      # - name: Check declarations
-      #   run: |
-      #       ~/.elan/bin/lake exe checkdecls blueprint/lean_decls
-
       - name: Remove lake files from documentation
         run: |
           find .lake/build/doc -name "*.trace" -delete
           find .lake/build/doc -name "*.hash" -delete
 
-      - name: Move documentation to `docs/docs`
+      - name: Copy documentation to `docs/docs`
         run: |
           sudo chown -R runner docs
           cp -r .lake/build/doc docs/docs
@@ -113,7 +100,12 @@ jobs:
         working-directory: docs
         run: JEKYLL_ENV=production bundle exec jekyll build
 
-      - name: Upload docs & blueprint artifact
+      # - name: Upload docs & blueprint artifact to `docs/`
+      #   uses: actions/upload-pages-artifact@v1
+      #   with:
+      #     path: docs/
+
+      - name: Upload docs & blueprint artifact to `docs/_site`
         uses: actions/upload-pages-artifact@v1
         with:
           path: docs/_site
@@ -121,3 +113,6 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
+
+      - name: Make sure the cache works
+        run: mv docs/docs .lake/build/doc
