@@ -44,7 +44,7 @@ There are various statements of this in Lean, see \href{https://leanprover-commu
     ~\\
     If $|\phi|$ is constant, everything holds trivially by setting $M_0$ and $M_1$ to be the value of $|\phi|$ at a point. Assume $|\phi|$ non-constant.\\
     \begin{itemize}
-        \item{ \textbf{Case 1}: assume $M_0=M_1=1$, and $\sup_{0 \leq x \leq 1} | \phi(x+iy) | \to 0$ when $|y| \to 0$.\\
+        \item{ \textbf{Case 1}: assume $M_0=M_1=1$, and $\sup_{0 \leq x \leq 1} | \phi(x+iy) | \to 0$ when $|y| \to \infty$.\\
         Let $M$ be the supremum of $|\phi(z)|$ on $\bar{S}$. Since the function is non-constant, we have $M>0$.\\
         Let $\{z_n\}$ be a sequence of points in $S$ such that $|\phi(z_n)|$ converges to $M$.\\
         Since we assumed the absolute value of $\phi$ goes to zero as $|y|$ goes to infinity, all points where $|\phi(z)|>M-\epsilon$ must be in some rectangle around zero, i.e. the sequence ${z_n}$ must be bounded.\\
