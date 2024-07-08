@@ -65,7 +65,7 @@
    "type": "git",
    "subDir": null,
    "scope": "",
-   "rev": "38e09f6c5663173303181f2e3ac0c922f9f2eb2f",
+   "rev": "b387c548d1dc9cea5c5fcb71e5b3370cca1a04cc",
    "name": "mathlib",
    "manifestFile": "lake-manifest.json",
    "inputRev": null,
@@ -101,5 +101,5 @@
     "inputRev": "main",
     "inherited": false,
     "configFile": "lakefile.lean"}],
-  "name": "carleson",
+  "name": "bonnAnalysis",
   "lakeDir": ".lake"}
