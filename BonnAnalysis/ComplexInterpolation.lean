@@ -976,7 +976,6 @@ snorm f p μ = sSup {snorm (f * (g.1 : α → ℂ)) 1 μ | g : Lp.simpleLe1 ℂ 
 end MeasureTheory
 end
 
-#exit
 -- prove a variant of Hölder's inequality
 
 lemma ENNReal.rpow_add_of_pos {x : ENNReal} (y : ℝ) (z : ℝ) (hy : 0 < y) (hz : 0 < z) :
