@@ -100,7 +100,7 @@ def at_height (f:ℂ → ℂ) (y:ℝ) : (Icc 0 1 : Set ℝ) → ℝ  := fun x �
 
 def sup_at_height (f: ℂ → ℂ) (y: ℝ) := sSup ((at_height f y)'' univ)
 
--- Not sure this specific definition is even used later on
+-- Not sure this specific definition is even used later on, probably not
 def abs_sup (f: ℂ → ℂ ) := sSup ((fun z ↦ Complex.abs (f z))'' { z | z.re ∈ Icc 0 1} )
 
 lemma abs_fun_nonempty (f: ℂ → ℂ) : ((fun z ↦ Complex.abs (f z))'' { z | z.re ∈ Icc 0 1}).Nonempty := by{
