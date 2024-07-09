@@ -775,18 +775,8 @@ theorem DiffContOnCl.norm_le_pow_mul_pow₀₁ {f : ℂ → ℂ}
         }
 
         rw[h₁, h₂]
-
-        -- I highly doubt the following is the smartest way of doing it
-        have : M₀⁻¹ = Ring.inverse M₀ := by simp
-        have : 1 = M₀⁻¹ * M₀ := by {
-          symm
-          rw[this]
-          apply Ring.inverse_mul_cancel M₀
-          simp
-          exact ne_of_gt hM₀
-        }
         simp
-        rw[this]
+        rw[← inv_mul_cancel (ne_of_gt hM₀)]
         gcongr
         exact h₀f y
       }
@@ -810,18 +800,7 @@ theorem DiffContOnCl.norm_le_pow_mul_pow₀₁ {f : ℂ → ℂ}
 
         rw[h₁, h₂]
         simp
-
-        -- I highly doubt the following is the smartest way of doing it
-        have : M₁⁻¹ = Ring.inverse M₁ := by simp
-        have : 1 = M₁⁻¹ * M₁ := by {
-          symm
-          rw[this]
-          apply Ring.inverse_mul_cancel M₁
-          simp
-          exact ne_of_gt hM₁
-        }
-        simp
-        rw[this]
+        rw[← inv_mul_cancel (ne_of_gt hM₁)]
         gcongr
         exact h₁f y
       }
