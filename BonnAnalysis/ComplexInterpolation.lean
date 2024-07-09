@@ -526,23 +526,75 @@ lemma perturb_vanish_infty {f:ℂ → ℂ} (h2f : IsBounded (f '' { z | z.re ∈
     simp
     rw[isBounded_iff_forall_norm_le]
     simp
-    obtain ⟨r, hr⟩ := Filter.Eventually.exists (eventually_closedBall_subset hA)
+    obtain ⟨r, hr₁, hr₂⟩ := Metric.eventually_nhds_iff_ball.mp (eventually_closedBall_subset hA)
+    specialize hr₂ (r/2) (by simp; rw[abs_of_pos hr₁]; simp; exact hr₁)
+
     obtain ⟨M, hM⟩ := isBounded_iff_forall_norm_le.mp h2f
-    use Real.sqrt (1 + 1/ε * Real.log (M/r)) --I hope this is the correct bound modulo forcing M ≥ r > 0 (e.g. possibly replace M by max M r and do by_cases r > 0 to avoid corner cases)
-    intro z hz₁ hz₂ hz₃
-    have hball := Set.not_mem_subset hr hz₃
-    simp at hball
-    rw[Complex.abs_eq_sqrt_sq_add_sq, Real.sqrt_le_sqrt_iff]
-    · gcongr
+    have hM' : 0 < M ∨  0 = M := by{ --this could indeed be zero if the function f is constantly zero
+      rw[← le_iff_lt_or_eq]
+      specialize hM (f 0) (by use 0; simp)
+      calc
+      0 ≤ Complex.abs (f 0) := AbsoluteValue.nonneg Complex.abs (f 0)
+      _ ≤ M := hM
+    }
+    obtain hM'₁| hM'₂ := hM'
+    · use Real.sqrt (1 + (Real.log M - Real.log (r/2) )/ε)
+      intro z hz₁ hz₂ hz₃
+      have hball := Set.not_mem_subset hr₂ hz₃
+      simp at hball
+      rw[Complex.abs_eq_sqrt_sq_add_sq]
+      apply Real.sqrt_le_sqrt
+      gcongr
       · rw[sq_le_one_iff hz₁]; exact hz₂
-      · rw[← mul_le_mul_left hε, ← mul_assoc]
-        simp[hε]
-        rw[mul_inv_cancel (ne_of_gt hε)]
+      · rw[← mul_le_mul_left hε, ← mul_comm_div, div_self (ne_of_gt hε)]
         simp
-        rw[Real.le_log_iff_exp_le]
-        · sorry
-        · sorry --careful edge cases
-    · sorry
+        have : r/2 < M * Real.exp (ε * ((z.re)^2 - 1 - (z.im)^2)) := by{
+          calc
+          _ < _ := hball
+          _ ≤ _ := perturb_bound f ε z
+          _ ≤ _ := by {gcongr; specialize hM (f z) (by use z; simp[hz₁, hz₂]); exact hM}
+        }
+
+        have hr₁' : r/2 > 0 := by simp[hr₁]
+        have hrhs : 0 < M * Real.exp (ε * (z.re ^ 2 - 1 - z.im ^ 2)) := by{
+          apply Real.mul_pos hM'₁
+          apply Real.exp_pos
+        }
+        rw[← Real.log_lt_log_iff hr₁' hrhs, Real.log_mul (ne_of_gt hM'₁) (by apply Real.exp_ne_zero), Real.log_exp] at this
+        apply le_of_lt
+        rw[← add_lt_add_iff_right (Real.log (r/2))]
+        simp
+        have haux : ε * (z.re ^ 2 - 1 - z.im ^ 2) = ε * (z.re^2 - 1) - ε * z.im^2 := by ring
+        rw[haux, ← add_sub_assoc, ← add_lt_add_iff_right (ε * z.im ^ 2)] at this
+        simp at this
+        rw[add_comm]
+        have hre : ε * (z.re ^ 2 - 1) ≤ 0 := by{
+          rw[mul_nonpos_iff]
+          left
+          constructor
+          · exact le_of_lt hε
+          · simp; rw[_root_.abs_of_nonneg hz₁]; exact hz₂
+        }
+
+        calc
+        _ < _ := this
+        _ ≤ Real.log M := by simp[hre]
+
+    · use 0 --Any number works here
+      intro z hz₁ hz₂ hz₃
+      -- hz₃ cannot happen, so we get a contradiction
+      have hA' := mem_of_mem_nhds hA
+      have : perturb f ε z = 0 := by{
+        simp[perturb]; left
+        rw[← AbsoluteValue.eq_zero Complex.abs]
+        apply eq_of_le_of_le
+        · specialize hM (f z) (by use z; simp[hz₁, hz₂])
+          rw[← hM'₂] at hM
+          exact hM
+        · exact AbsoluteValue.nonneg Complex.abs (f z)
+      }
+      rw[this] at hz₃
+      contradiction
   · use { z | z.re ∈ Icc 0 1} ∪  (perturb f ε)⁻¹' A
     constructor
     · simp
@@ -564,214 +616,6 @@ lemma perturb_vanish_infty {f:ℂ → ℂ} (h2f : IsBounded (f '' { z | z.re ∈
             norm_num at this
           · simp[hd2]
         · simp[hc2]
-}
-
-
---This is now redundant but I'll keep it for comparison until I finish proving the previous one since the statements are reasonably similar
-lemma perturb_vanish_infty_down {f:ℂ → ℂ} (h2f : IsBounded (f '' { z | z.re ∈ Icc 0 1})) {ε : ℝ} (hε: ε > 0) :Tendsto (fun y ↦ sup_at_height (perturb f ε) y) atBot (nhds 0) := by{
-  rw [tendsto_order]
-  constructor
-  · intro t ht
-    filter_upwards
-    intro y
-    simp[sup_at_height]
-    calc
-    t < 0 := ht
-    _ ≤ sSup (range (at_height (perturb f ε) y)) := by{
-      apply Real.sSup_nonneg
-      intro x hx
-      simp[at_height, perturb] at hx
-      obtain ⟨a, ha₁, ha₂, ha₃⟩:= hx
-      positivity
-    }
-  · intro t ht
-    simp[sup_at_height, at_height]
-    obtain ⟨R, hR⟩:= (Metric.isBounded_iff_subset_ball 0).mp h2f
-    simp only [subset_def, mem_image] at hR
-    use - Real.sqrt ((Real.log R - Real.log (t/2))/ε)
-    intro y hy
-    calc
-    sSup (range fun (a: (Icc 0 1 : Set ℝ)) ↦ Complex.abs (perturb f ε (↑↑a + I * ↑y))) ≤ t/2 := by{
-      apply Real.sSup_le
-      · intro x hx
-        simp at hx
-        obtain ⟨a, h₁a, h₂a, h₃a⟩ := hx
-        specialize hR (f (a + I*y)) (by use a+I*y; constructor; simp; exact h₁a; rfl)
-        simp at hR
-        have hRpos : 0 < R := by{
-          calc
-          0 ≤ Complex.abs (f (↑a + I * ↑y)) := by apply AbsoluteValue.nonneg
-          _ < R := hR
-        }
-
-        have hbump:= perturb_bound f ε (a+I*y)
-        simp at hbump
-        /-
-        have : (ε * (a ^ 2 - 1 - y ^ 2)).exp ≤ (ε * (a^2 - 1)).exp := by{
-          simp[hε]
-          exact sq_nonneg y
-        } -/
-        have hyneg : 0 ≥  y := by{
-          calc
-          0 ≥ - √((R.log - (t / 2).log) / ε) := by simp; exact Real.sqrt_nonneg ((R.log - (t / 2).log) / ε)
-          _ ≥  y := hy
-        }
-
-        have hy' : -y^2 ≤ - ((R.log - (t / 2).log) / ε) := by {
-          simp
-          rw[← Real.sqrt_le_sqrt_iff]
-          · rw[Real.sqrt_sq_eq_abs, abs_of_nonpos hyneg, ← neg_le_neg_iff]; simp; exact hy
-          · positivity
-        }
-
-        have hε' : ε ≠ 0 := by apply ne_of_gt; exact hε
-
-        have hy'ε : ε * -y ^ 2 ≤ - ε * ((R.log - (t / 2).log) / ε) := by{
-          simp
-          simp at hy'
-          rw[mul_le_mul_left hε]
-          exact hy'
-        }
-
-        apply le_of_lt
-        calc
-        Complex.abs (perturb f ε (↑a + I * ↑y)) ≤ Complex.abs (f (↑a + I * ↑y)) * (ε * (a ^ 2 - 1 - y ^ 2)).exp := hbump
-        _ < R * (ε * (a ^ 2 - 1 - y ^ 2)).exp := by gcongr
-        _ ≤ t/2 := by{
-          rw[← Real.log_le_log_iff, Real.log_mul, Real.log_exp]
-          · calc
-            R.log + ε * (a ^ 2 - 1 - y ^ 2) ≤ R.log + ε * (- y^2) := by{
-              gcongr
-              simp
-              rw[abs_le]
-              simp[h₁a]
-              calc
-              -1 ≤ 0 := by norm_num
-              _ ≤ a := h₁a.1
-            }
-            _ ≤ R.log - ε * ((R.log - (t / 2).log) / ε) := by {
-              have : R.log - ε * ((R.log - (t / 2).log) / ε) = R.log + (- ε * ((R.log - (t / 2).log) / ε)):= by ring
-              rw[this]
-              gcongr
-            }
-            _ ≤ (t/2).log := by {
-              rw[mul_div_left_comm, div_self hε']
-              simp
-            }
-          · exact ne_of_gt hRpos
-          · exact Real.exp_ne_zero (ε * (a ^ 2 - 1 - y ^ 2))
-          · positivity
-          · positivity
-        }
-      · apply le_of_lt
-        simp
-        exact ht
-    }
-    _ < t := by norm_num; exact ht
-}
-
---REDUNDANT: see comment before previous proof
-lemma perturb_vanish_infty_up {f:ℂ → ℂ} (h2f : IsBounded (f '' { z | z.re ∈ Icc 0 1})) {ε : ℝ} (hε: ε > 0) :Tendsto (fun y ↦ sup_at_height (perturb f ε) y) atTop (nhds 0) := by{
-  rw [tendsto_order]
-  constructor
-  · intro t ht
-    filter_upwards
-    intro y
-    simp[sup_at_height]
-    calc
-    t < 0 := ht
-    _ ≤ sSup (range (at_height (perturb f ε) y)) := by{
-      apply Real.sSup_nonneg
-      intro x hx
-      simp[at_height, perturb] at hx
-      obtain ⟨a, ha₁, ha₂, ha₃⟩:= hx
-      positivity
-    }
-
-  · intro t ht
-    simp[sup_at_height, at_height]
-    obtain ⟨R, hR⟩:= (Metric.isBounded_iff_subset_ball 0).mp h2f
-    simp only [subset_def, mem_image] at hR
-    use Real.sqrt ((Real.log R - Real.log (t/2))/ε)
-    intro y hy
-    calc
-    sSup (range fun (a: (Icc 0 1 : Set ℝ)) ↦ Complex.abs (perturb f ε (↑↑a + I * ↑y))) ≤ t/2 := by{
-      apply Real.sSup_le
-      · intro x hx
-        simp at hx
-        obtain ⟨a, h₁a, h₂a, h₃a⟩ := hx
-        specialize hR (f (a + I*y)) (by use a+I*y; constructor; simp; exact h₁a; rfl)
-        simp at hR
-        have hRpos : 0 < R := by{
-          calc
-          0 ≤ Complex.abs (f (↑a + I * ↑y)) := by apply AbsoluteValue.nonneg
-          _ < R := hR
-        }
-
-        have hbump:= perturb_bound f ε (a+I*y)
-        simp at hbump
-        /-
-        have : (ε * (a ^ 2 - 1 - y ^ 2)).exp ≤ (ε * (a^2 - 1)).exp := by{
-          simp[hε]
-          exact sq_nonneg y
-        } -/
-        have hypos : 0 ≤ y := by{
-          calc
-          0 ≤ √((R.log - (t / 2).log) / ε) := Real.sqrt_nonneg ((R.log - (t / 2).log) / ε)
-          _ ≤ y := hy
-        }
-
-        have hy' : -y^2 ≤ - ((R.log - (t / 2).log) / ε) := by {
-          simp
-          rw[← Real.sqrt_le_sqrt_iff]
-          · rw[Real.sqrt_sq hypos]; exact hy
-          · positivity
-        }
-
-        have hε' : ε ≠ 0 := by apply ne_of_gt; exact hε
-
-        have hy'ε : ε * -y ^ 2 ≤ - ε * ((R.log - (t / 2).log) / ε) := by{
-          simp
-          simp at hy'
-          rw[mul_le_mul_left hε]
-          exact hy'
-        }
-
-        apply le_of_lt
-        calc
-        Complex.abs (perturb f ε (↑a + I * ↑y)) ≤ Complex.abs (f (↑a + I * ↑y)) * (ε * (a ^ 2 - 1 - y ^ 2)).exp := hbump
-        _ < R * (ε * (a ^ 2 - 1 - y ^ 2)).exp := by gcongr
-        _ ≤ t/2 := by{
-          rw[← Real.log_le_log_iff, Real.log_mul, Real.log_exp]
-          · calc
-            R.log + ε * (a ^ 2 - 1 - y ^ 2) ≤ R.log + ε * (- y^2) := by{
-              gcongr
-              simp
-              rw[abs_le]
-              simp[h₁a]
-              calc
-              -1 ≤ 0 := by norm_num
-              _ ≤ a := h₁a.1
-            }
-            _ ≤ R.log - ε * ((R.log - (t / 2).log) / ε) := by {
-              have : R.log - ε * ((R.log - (t / 2).log) / ε) = R.log + (- ε * ((R.log - (t / 2).log) / ε)):= by ring
-              rw[this]
-              gcongr
-            }
-            _ ≤ (t/2).log := by {
-              rw[mul_div_left_comm, div_self hε']
-              simp
-            }
-          · exact ne_of_gt hRpos
-          · exact Real.exp_ne_zero (ε * (a ^ 2 - 1 - y ^ 2))
-          · positivity
-          · positivity
-        }
-      · apply le_of_lt
-        simp
-        exact ht
-    }
-    _ < t := by norm_num; exact ht
 }
 
 
