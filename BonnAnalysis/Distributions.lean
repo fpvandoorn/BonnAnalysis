@@ -88,9 +88,9 @@ universe w x
 instance : ConvergingSequences (𝓓 k Ω) where
   seq := fun (a , x) =>
     (∃ K : Set V , IsCompact K ∧ ∀ n , tsupport (a n).φ ⊆ K) ∧
-    ∀ l : ℕ , TendstoUniformlyOn
+    ∀ l : ℕ , TendstoUniformly
       (fun n => iteratedFDeriv k l (a n).φ)
-                (iteratedFDeriv k l x.φ) atTop univ
+                (iteratedFDeriv k l x.φ) atTop
   seq_cnst := fun x => by
     let A : Set (V ) := @tsupport _ _ ⟨ 0 ⟩  _ x.φ --- weird
     constructor
@@ -100,6 +100,8 @@ instance : ConvergingSequences (𝓓 k Ω) where
       · intro n
         exact subset_rfl
     · intro l
+      rw [← tendstoUniformlyOn_univ ]
+
       apply CnstSeqTendstoUniformlyOn
   seq_sub := fun {a} {x} p a' => by
     obtain ⟨⟨ K , ⟨ hK1 , hK2 ⟩  ⟩ , conv ⟩  := p
@@ -111,7 +113,8 @@ instance : ConvergingSequences (𝓓 k Ω) where
         apply hK2
     · intro l
       --let da' : SubSequence (fun n => iteratedFDeriv k l (a n)) :=
-      exact SubSeqConvergesUniformly (conv l) ⟨ a'.φ , a'.hφ ⟩
+      rw [← tendstoUniformlyOn_univ ]
+      exact SubSeqConvergesUniformly ( tendstoUniformlyOn_univ.mpr (conv l)) ⟨ a'.φ , a'.hφ ⟩
 
 
 def 𝓓' := (𝓓 k Ω ) →L[k] k

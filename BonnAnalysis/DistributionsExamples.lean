@@ -43,9 +43,25 @@ class GoodEnoughAutom (k : Type v) (V : Type u)[NontriviallyNormedField k]  [Mea
   isSmooth : ContDiff k ⊤ Φ
 
   --restToΩ : Φ '' Ω ⊆ Ω
-  inj : Function.Injective Φ
+  -- inj : Function.Injective Φ
+open GoodEnoughAutom
 variable {V : Type u} {k : Type v} [NontriviallyNormedField k]
   [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V] {Ω : Opens V}
+open LinearMap
+def toLinearAuto (Φ) [GoodEnoughAutom k V Φ] : (V →L[k] V) := by
+  apply ContinuousLinearMap.mk ; swap
+  apply IsLinearMap.mk'  (Φ) (isLinear (k :=k) (V:=V))
+  sorry
+
+
+
+
+
+
+
+
+
+
   /-
   Issue : If test functions are supported inside Ω, then things like negation and shift have to send Ω to Ω
   -/
@@ -97,7 +113,41 @@ lemma supportfromAutoOfV (Φ : V → V) [GoodEnoughAutom k V Φ] (ψ : 𝓓F k V
             exact hK.2 n
 
       · intro l
-        sorry
+        -- apply TendstoUniformly.comp
+        have th : ∀ {n  : ℕ∞} , n ≤ ⊤ := OrderTop.le_top _
+        have q := fun l => (contDiffOn_univ.mp (φ l).φIsSmooth)
+        let myΦ : (i : Fin l) → V →L[k] V :=  fun _ ↦ toLinearAuto Φ
+        let precompmyΦ: (V [×l]→L[k] k) → (V [×l]→L[k] k) := fun θ ↦ θ.compContinuousLinearMap (myΦ)
+
+
+        have chainRule {φ0 : 𝓓F k V} : (iteratedFDeriv k l (φ0 ∘ Φ)) =
+          (precompmyΦ ∘ (iteratedFDeriv k l (φ0).φ ∘ Φ )) := by
+          ext1 x
+          exact ContinuousLinearMap.iteratedFDeriv_comp_right (toLinearAuto Φ) ((contDiffOn_univ.mp (φ0).φIsSmooth)) x th
+        have : (fun n => iteratedFDeriv k l ((φ n).φ ∘ Φ) ) = (fun n => precompmyΦ ∘ iteratedFDeriv k l (φ n).φ ∘ Φ )  := by
+           ext1 n
+           exact chainRule
+        have hφ' : TendstoUniformly (fun n => (iteratedFDeriv k l (φ n).φ ∘ Φ)) ((iteratedFDeriv k l φ0.φ) ∘ Φ) atTop
+          :=  TendstoUniformly.comp (hφ l) (Φ)
+        have : TendstoUniformly (fun n => iteratedFDeriv k l (φ n ∘ Φ) ) (iteratedFDeriv k l (φ0 ∘ Φ)) atTop := by
+          rw [chainRule (φ0 := φ0)]
+          rw [this]
+          apply UniformContinuous.comp_tendstoUniformly (g:= precompmyΦ)
+          · sorry -- apply UniformFun.postcomp_uniformContinuous , uniform Inducing?
+          · apply TendstoUniformly.comp
+            exact hφ l
+
+        exact this
+
+
+
+        -- rw [this]
+
+        -- rw [] --
+        -- exact hφ l
+
+
+
 
 @[simp] def reflection' : V → V := fun x => -x
 @[simp] def shift' (x : V) : V → V := fun y => y - x
@@ -107,20 +157,39 @@ instance : (GoodEnoughAutom k V) reflection' where
   isSmooth := by sorry
   IsProper := by sorry
   --restToΩ := by sorry
-  inj := by sorry
+--  inj := by sorry
 
 instance (v : V) :  (GoodEnoughAutom k V) (shift' v) where
   isLinear := by sorry
   isSmooth := by sorry
   IsProper := by sorry
   --restToΩ := by sorry
-  inj := by sorry
+ -- inj := by sorry
 
 
 /--
         Issue: If φ ψ : V → k and are smooth on Ω , how to show that the derivative is additive outside Ω ?
         --/
-def δ : 𝓓' k Ω := mk k (fun φ => φ 0) (by sorry)
+def δ : 𝓓' k Ω := mk k (fun φ => φ 0) (by
+  constructor
+  · intro x y ; rfl
+  · intro c x ; rfl
+  · constructor
+    intro x a hx
+    apply TendstoUniformly.tendsto_at
+    have := hx.2 0
+
+
+    rw [iteratedFDeriv_zero_eq_comp] at this
+    have myrw : (fun n ↦ iteratedFDeriv k 0 (x n).φ) = fun n ↦ (⇑(continuousMultilinearCurryFin0 k V k).symm ∘ (x n).φ) := by
+      ext1 n
+      rw [iteratedFDeriv_zero_eq_comp]
+    rw [myrw] at this
+    apply UniformContinuous.comp_tendstoUniformly (g:=⇑(continuousMultilinearCurryFin0 k V k)) ?_ this
+    apply Isometry.uniformContinuous
+    apply LinearIsometryEquiv.isometry
+    )
+
 def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
   let f : 𝓓 k Ω → 𝓓 k Ω := fun φ => ⟨ fun x => fderiv k φ x v , by sorry , by sorry , by sorry ⟩
   apply mk ; swap
@@ -140,7 +209,7 @@ def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
             exact obv
     · sorry
     · constructor
-      intro x a hx
+      intro α  a hx
       apply tendsTo𝓝
       constructor
       · obtain ⟨ K , hK ⟩ := hx.1
@@ -148,26 +217,38 @@ def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
         constructor
         · exact hK.1
         · intro n
-          trans (tsupport (x n).φ)
+          trans (tsupport (α n).φ)
           · sorry
           · exact hK.2 n
       · intro l
-        have : TendstoUniformlyOn (fun n ↦ iteratedFDeriv k (l+1) (x n).φ) (iteratedFDeriv k (l+1) (a).φ) atTop univ := hx.2 (l+1)
-        let g : (V[×(l+1)]→L[k] k) → (V[×l]→L[k] k)  := fun φ => by sorry -- evaluation at v
-        have hxg (x : 𝓓 k Ω)  :  iteratedFDeriv k l (f x).φ = g ∘ iteratedFDeriv k (l + 1) (x).φ := by sorry
+        have : TendstoUniformly (fun n ↦ iteratedFDeriv k (l+1) (α  n).φ) (iteratedFDeriv k (l+1) (a).φ) atTop := hx.2 (l+1)
+        let g : (V[×(l+1)]→L[k] k) → (V[×l]→L[k] k)  := fun φ => (ContinuousMultilinearMap.curryLeft φ) v-- evaluation at v
+        have hxg (ψ : 𝓓 k Ω)  :  iteratedFDeriv k l (f ψ).φ = g ∘ iteratedFDeriv k (l + 1) (ψ).φ := by
+          calc
+           _ = iteratedFDeriv k l (fun y => fderiv k ψ.φ y v) := rfl
+
+           -- _ = fun z => iteratedFDeriv k (l + 1) ψ.φ ) := by sorry
+           _ = fun z => (ContinuousMultilinearMap.curryLeft (iteratedFDeriv k (l + 1) ψ.φ z) v) := by ext1 z ; sorry
+           _ = g ∘ iteratedFDeriv k (l + 1) (ψ).φ := rfl
+
+             -- rw [← iteratedFDeriv_succ_eq_comp_left]
 
         rw [hxg]
-        have hxg :  (fun (n : ℕ) => iteratedFDeriv k l ((f ∘ x) n).φ) =
-          fun (n : ℕ) => g ∘ (iteratedFDeriv k (l + 1) (x n).φ) := by
+        have hxg :  (fun (n : ℕ) => iteratedFDeriv k l ((f ∘ α ) n).φ) =
+          fun (n : ℕ) => g ∘ (iteratedFDeriv k (l + 1) (α  n).φ) := by
             ext1 n -- does not work because it ext's all params
-            sorry -- exact hxg (x n) --help
+            exact hxg (α n) --help
 
 
         rw [hxg]
 
-
+        rw [← tendstoUniformlyOn_univ ] at this
+        rw [← tendstoUniformlyOn_univ ]
         apply UniformContPresUniformConvergence this g
         sorry
+
+
+
 
 example (v : V) (φ : 𝓓 k Ω ) (T : 𝓓' k Ω ): (fderiv𝓓 v ° T) φ = T (fderiv𝓓 v φ) := by rfl
 -- def reflection : 𝓓 k Ω → 𝓓 k Ω := fun ψ => ⟨ fun x => ψ (-x) , by sorry , by sorry ⟩
@@ -189,6 +270,7 @@ structure LocallyIntegrableFunction where
 
 def intSm (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun x y => φ y x)) : 𝓓F ℝ V := ⟨ fun y => ∫ x , φ y x , by sorry , by sorry , by sorry⟩
 --ContinuousLinearMap.integral_comp_comm PROBLEM: 𝓓F ℝ V is not NormedAddGroup so we cant apply
+-- probably some smoothness condition on φ is missing anyway really Ccinfty(Ω × Ω ) needed?
 lemma FcommWithIntegrals (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun x y => φ y x)) (T : 𝓓'F ℝ V) : T (intSm V φ hφ) =  ∫ x : V ,  T (φ x)  := by
   symm
   -- have : Integrable φ := by sorry
