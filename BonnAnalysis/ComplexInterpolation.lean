@@ -1159,6 +1159,160 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
       assumption
     }
 
+-- the following work proves that Lp norm of a function can be approximated by simple functions with Lq norm ≤ 1
+variable (E p μ) in
+def Lp.simpleLe1 := {g : SimpleFunc α E // snorm g p μ ≤ 1}
+
+def SimpleFunc.toLpSimpLe1 (q : ℝ≥0) (hq : q ≠ 0) (f : SimpleFunc α ℝ≥0) (h : (∫⁻ a, (f a) ^ (q : ℝ) ∂ μ) ^ (q : ℝ)⁻¹ ≤ 1) : Lp.simpleLe1 ℂ q μ where
+  val := {
+    toFun := fun x ↦ ((f x) : ℂ)
+    measurableSet_fiber' := by
+      intro x
+      rcases eq_or_ne x.im 0 with (H' | H')
+      rcases le_or_lt 0 x.re with (H | H)
+      convert f.measurableSet_fiber' x.re.toNNReal
+      ext y
+      simp
+      constructor
+      intro h
+      ext
+      rw [← h, Complex.ofReal_re, Real.coe_toNNReal _ (by norm_num)]
+      intro h
+      rw [h, Real.coe_toNNReal _ H]
+      apply Complex.ext
+      rw [Complex.ofReal_re]
+      rw [Complex.ofReal_im, H']
+      convert MeasurableSet.empty
+      ext y
+      simp
+      contrapose! H
+      rw [← H]
+      apply NNReal.coe_nonneg _
+      convert MeasurableSet.empty
+      ext y
+      simp
+      contrapose! H'
+      rw [← H', Complex.ofReal_im]
+    finite_range' := by
+      have : (range fun x ↦ (((f x) : ℝ) : ℂ)) = ofReal' '' (range fun x ↦ f x) := by apply Set.range_comp ofReal'
+      rw [this]
+      apply Set.Finite.image _
+      have : (range fun x ↦ ((f x) : ℝ)) = toReal '' (range fun x ↦ f x) := by apply Set.range_comp toReal
+      rw [this]
+      apply Set.Finite.image _ f.finite_range'
+  }
+  property := by simp [snorm, snorm', hq]; exact h
+
+section
+
+open SimpleFunc
+
+namespace MeasureTheory
+
+lemma mul_lintegral_eq_iSup_mul_eapprox_lintegral {f g: α → ℝ≥0∞} (hf : Measurable f) (hg : Measurable g) :
+    ∫⁻ a, (f * g) a ∂μ = ⨆ n, ∫⁻ a, (f * (eapprox g n)) a ∂μ := by
+    calc  ∫⁻ a, (f * g) a ∂μ = ∫⁻ a, ⨆ n, (f * (eapprox g n)) a ∂μ := by {
+       congr
+       ext a
+       simp only [Pi.mul_apply, ← ENNReal.mul_iSup, iSup_eapprox_apply g hg]
+       }
+    _ = ⨆ n, ∫⁻ a, (f * (eapprox g n)) a ∂μ := by
+      apply lintegral_iSup
+      . measurability
+      . intro i j h a
+        simp only [Pi.mul_apply]
+        gcongr
+        exact monotone_eapprox g h a
+
+lemma snorm_eq_lintegral_rpow_nnnorm' (f : α → E) (p : ℝ≥0) (hp : p ≠ 0): (snorm f p μ) ^ (p : ℝ) = (∫⁻ x, (‖f x‖₊ : ℝ≥0∞) ^ p.toReal ∂μ) := by
+  rw [snorm_eq_lintegral_rpow_nnnorm (by norm_num; exact hp) (by norm_num), ← ENNReal.rpow_mul, coe_toReal, one_div, inv_mul_cancel (by norm_num; exact hp), ENNReal.rpow_one]
+
+lemma ae_lt_top_of_LpNorm_ne_top {f : α → ℝ≥0∞} {p : ℝ≥0} (hp : p ≠ 0) (hf : Measurable f) (h' : (∫⁻ (a : α), f a ^ (p : ℝ) ∂μ) ^ (p : ℝ)⁻¹ ≠ ⊤) : ∀ᵐ (a : α) ∂μ, f a < ⊤ := by
+  have : {a | f a < ⊤} = {a | (f a) ^ (p : ℝ) < ⊤} := by
+    ext _
+    apply (ENNReal.rpow_lt_top_iff_of_pos (by norm_num; exact hp.bot_lt)).symm
+  rw [Filter.Eventually, this]
+  apply ae_lt_top (hf.pow_const _)
+  rw [← lt_top_iff_ne_top] at h'
+  rwa [← lt_top_iff_ne_top, ← ENNReal.rpow_lt_top_iff_of_pos (y := (p : ℝ)⁻¹) (by norm_num; exact hp.bot_lt)]
+
+lemma snorm_eq_sSup_snorm (p q : ℝ≥0) (hpq : NNReal.IsConjExponent p q) (f : α → ℂ) (hf : Measurable f) (hf' : snorm f p μ ≠ ∞) (hf0 : snorm f p μ ≠ 0):
+snorm f p μ = sSup {snorm (f * (g.1 : α → ℂ)) 1 μ | g : Lp.simpleLe1 ℂ q μ} := by
+  apply le_antisymm ?_
+  . apply sSup_le
+    rintro b ⟨g, hg⟩
+    rw [← hg]
+    calc snorm (f * (g.1 : α → ℂ)) 1 μ = ∫⁻ a, ‖f a‖₊ * ‖g.1 a‖₊ ∂μ := by simp [snorm, snorm']
+    _ = ∫⁻ a, ((‖f ·‖₊) * (‖(g.1 : α → ℂ) ·‖₊)) a ∂μ := lintegral_congr (by simp only [Pi.mul_apply, ENNReal.coe_mul, implies_true])
+    _ ≤ snorm f p μ * snorm g.1 q μ  := by
+      simp only [snorm, coe_toReal, snorm', ENNReal.coe_eq_zero,
+      hpq.ne_zero, ↓reduceIte, coe_ne_top, hpq.symm.ne_zero]
+      apply ENNReal.lintegral_mul_le_Lp_mul_Lq _ (NNReal.IsConjExponent.coe hpq) hf.ennnorm.aemeasurable (AEMeasurable.ennnorm (SimpleFunc.aemeasurable _))
+    _ ≤ snorm f p μ := mul_le_of_le_one_right (by positivity) g.2
+  . rcases eq_or_ne (snorm f p μ) 0 with hf0 | hf0
+    . simp [hf0]
+    . set g : α → ℝ≥0∞ := ENNReal.ofNNReal ∘ fun a ↦ ‖f a‖₊ ^ ((p : ℝ) - 1) * (snorm f p μ).toNNReal ^ (1 - (p : ℝ))
+      have g_meas : Measurable g :=
+        ((hf.nnnorm.pow_const _).mul_const _).coe_nnreal_ennreal
+      have g_norm : (∫⁻ (a : α), g a ^ (q : ℝ) ∂μ) ^ (q : ℝ)⁻¹ = 1 := by
+        simp only [g, Function.comp_apply, ENNReal.coe_mul]
+        calc (∫⁻ (a : α), ↑(‖f a‖₊ ^ ((p : ℝ) - 1) * (snorm f p μ).toNNReal ^ (1 - (p : ℝ))) ^ (q : ℝ) ∂μ) ^ (q : ℝ)⁻¹ = (∫⁻ (a : α), (↑‖f a‖₊ ^ (((p : ℝ) - 1) * q) * (snorm f p μ).toNNReal ^ ((1 - (p : ℝ)) * q)) ∂μ) ^ (q : ℝ)⁻¹ := by congr 1; apply lintegral_congr (by intro a; simp; rw [ENNReal.mul_rpow_of_nonneg (hz := by norm_num),
+        ← ENNReal.coe_rpow_of_nonneg _ (by norm_num; exact hpq.one_le),
+        ← ENNReal.coe_rpow_of_ne_zero (by rw [ENNReal.toNNReal_ne_zero]; exact ⟨hf0, hf'⟩),
+        ← ENNReal.rpow_mul, ← ENNReal.rpow_mul])
+        _ = 1 := by
+          rw [lintegral_mul_const _ ((Measurable.pow_const hf.ennnorm) _),
+          (isConjExponent_coe.mpr hpq).sub_one_mul_conj, ENNReal.coe_toNNReal hf',
+          ← snorm_eq_lintegral_rpow_nnnorm' _ _ hpq.ne_zero, ← ENNReal.rpow_add _ _ hf0 hf',
+          sub_mul (1 : ℝ), (isConjExponent_coe.mpr hpq).mul_eq_add, one_mul,
+          sub_add_cancel_right, add_right_neg, ENNReal.rpow_zero, ENNReal.one_rpow]
+      have f_norm : ∫⁻ (a : α), ‖f a‖₊ * (g a) ∂ μ = snorm f p μ := by
+        simp only [g, Function.comp_apply]
+        calc ∫⁻ (a : α), ↑‖f a‖₊ * (↑(‖f a‖₊ ^ ((p : ℝ) - 1)) * ↑((snorm f p μ).toNNReal ^ (1 - (p : ℝ)))) ∂μ = ∫⁻ (a : α), ↑‖f a‖₊ ^ (p : ℝ) * ↑((snorm f p μ).toNNReal ^ (1 - (p : ℝ))) ∂μ := lintegral_congr (by
+              intro _; rw [← mul_assoc]; congr
+              rw [← ENNReal.rpow_one ↑‖f _‖₊,← ENNReal.coe_rpow_of_nonneg _ (by norm_num; exact hpq.one_le), ← ENNReal.rpow_add_of_nonneg _ _ (by norm_num) (by norm_num; exact hpq.one_le), ENNReal.rpow_one, add_sub_cancel]
+              )
+        _ = (∫⁻ (a : α), ↑‖f a‖₊ ^ (p : ℝ) ∂ μ) * ↑((snorm f p μ).toNNReal ^ (1 - (p : ℝ))) := by
+          rw [lintegral_mul_const _ ((Measurable.pow_const hf.ennnorm) _)]
+        _ = snorm f p μ := by
+          rw [← snorm_eq_lintegral_rpow_nnnorm' _ _ hpq.ne_zero, ← ENNReal.coe_rpow_of_ne_zero (ENNReal.toNNReal_ne_zero.mpr ⟨hf0, hf'⟩), ENNReal.coe_toNNReal hf', ← ENNReal.rpow_add _ _ hf0 hf', add_sub_cancel, ENNReal.rpow_one]
+      calc snorm f p μ = ∫⁻ (a : α), ‖f a‖₊ * (g a) ∂ μ := f_norm.symm
+      _ = ⨆ n, ∫⁻ a, ↑‖f a‖₊  * (eapprox g n a) ∂μ := by
+        apply mul_lintegral_eq_iSup_mul_eapprox_lintegral (f := fun a ↦ (‖f a‖₊ : ℝ≥0∞)) hf.ennnorm g_meas
+      _ ≤ sSup {∫⁻ (a : α), ‖f a‖₊ * (g.1 a) ∂ μ | g : {f : SimpleFunc α ℝ≥0∞ // (∫⁻ a, (f a) ^ (q : ℝ) ∂ μ) ^ (q : ℝ)⁻¹ ≤ 1} } := by
+        apply iSup_le; intro n; apply le_sSup
+        simp only [Subtype.exists, exists_prop, mem_setOf_eq]
+        use eapprox g n
+        exact ⟨by
+          apply le_trans ?_ g_norm.le
+          gcongr
+          rw [← iSup_eapprox_apply _ g_meas]
+          apply le_iSup _ n, rfl⟩
+      _ ≤ sSup {∫⁻ (a : α), ‖f a‖₊ * (g.1 a) ∂ μ | g : {f : SimpleFunc α ℝ≥0 // (∫⁻ a, (f a) ^ (q : ℝ) ∂ μ) ^ (q : ℝ)⁻¹ ≤ 1} } := by
+        gcongr
+        rintro x ⟨h, hh⟩
+        have ae := ae_lt_top_of_LpNorm_ne_top hpq.symm.ne_zero (SimpleFunc.measurable _) (ne_top_of_le_ne_top one_ne_top h.2)
+        have : (∫⁻ (a : α), ↑(h.1 a).toNNReal ^ (q : ℝ) ∂μ) ^ (q : ℝ)⁻¹ = (∫⁻ (a : α), (h.1 a) ^ (q : ℝ) ∂μ) ^ (q : ℝ)⁻¹ := by
+          congr 1
+          apply lintegral_congr_ae
+          rw [Filter.EventuallyEq, Filter.Eventually, ← Filter.exists_mem_subset_iff]
+          use {a | h.1 a < ⊤}
+          exact ⟨ae, by simp; intro a ha; rw [ENNReal.coe_toNNReal ha.ne_top]⟩
+        use ⟨SimpleFunc.map ENNReal.toNNReal h.1, by simp [this, h.2]⟩
+        simp [← hh]
+        apply lintegral_congr_ae
+        rw [Filter.EventuallyEq, Filter.Eventually, ← Filter.exists_mem_subset_iff]
+        use {a | h.1 a < ⊤}
+        exact ⟨ae, by simp; intro a ha; rw [ENNReal.coe_toNNReal ha.ne_top]⟩
+      _ ≤ sSup {snorm (f * (g.1 : α → ℂ)) 1 μ | g : Lp.simpleLe1 ℂ q μ} := by
+        gcongr; rintro x ⟨h, hh⟩
+        use toLpSimpLe1 q hpq.symm.ne_zero _ h.2
+        convert hh
+        simp [snorm, snorm', toLpSimpLe1]
+
+end MeasureTheory
+end
+
 -- prove a variant of Hölder's inequality
 
 lemma ENNReal.rpow_add_of_pos {x : ENNReal} (y : ℝ) (z : ℝ) (hy : 0 < y) (hz : 0 < z) :
