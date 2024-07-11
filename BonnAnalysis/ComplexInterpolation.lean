@@ -625,7 +625,7 @@ lemma perturb_bound_strip {f : ℂ → ℂ} {ε : ℝ} (hε: ε > 0)
 
 lemma perturb_pointwise_converge {f : ℂ → ℂ} (z: ℂ) : Tendsto (fun ε ↦ perturb f ε z) (nhds 0) (nhds (f z)) := by{
   simp[perturb]
-  have : (fun ε ↦ f z * bump ε z) = fun ε ↦ (((fun t ↦ f z) ε)  * ((fun t ↦ bump t z) ε)) := rfl
+  have : (fun ε ↦ f z * bump ε z) = fun ε ↦ (((fun _ ↦ f z) ε)  * ((fun t ↦ bump t z) ε)) := rfl
   rw[this]
   have : f z = f z * 1 := by simp
   nth_rewrite 2 [this]
@@ -809,6 +809,11 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
     {x y t s : ℝ} (ht : 0 ≤ t) (hs : 0 ≤ s) (hx : x = t * a + s * b) (hts : t + s = 1) :
     ‖f (x + I * y)‖ ≤ M₀ ^ (1-((t-1)*a+s*b)/(b-a)) * M₁ ^ (((t-1)*a+s*b)/(b-a)) := by{
 
+      have hb_sub_a: b - a ≠ 0 := by {
+        apply ne_of_gt
+        simp[hab]
+      }
+
       have hts'' : s = 1-t := eq_sub_of_add_eq (add_comm t s ▸ hts)
 
       have hax: x ≥ a := by{
@@ -840,15 +845,19 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
         · simp; exact le_of_lt hab
       }
 
-
-      let g : ℂ → ℂ := fun z ↦ f (a + (z.re *(b-a)) + I*z.im)
+      let g : ℂ → ℂ := fun z ↦ f (a + z * (b-a))
       have hg: DiffContOnCl ℂ g { z | z.re ∈ Ioo 0 1} := by{
-        let h : ℂ → ℂ := fun z ↦ a + (z.re *(b-a)) + I*z.im
+        let h : ℂ → ℂ := fun z ↦ a + z *(b-a)
         have hcomp: g = f ∘ h := rfl
         rw[hcomp]
         apply DiffContOnCl.comp (s:={ z | z.re ∈ Ioo a b})
         · exact hf
-        · sorry --not sure what the quickest way of doing this is supposed to be; Is this even true though?
+        · simp[h]
+          apply DiffContOnCl.const_add
+          have : (fun (x:ℂ) ↦ x * (↑b - ↑a) ) = (fun (x:ℂ) ↦ x • ((b:ℂ) - (a:ℂ))) := rfl
+          rw[this]
+          apply DiffContOnCl.smul_const
+          exact DiffContOnCl.id
         · simp[h, MapsTo]
           intro z hz₀ hz₁
           constructor
@@ -865,7 +874,7 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
         intro z hz
         obtain ⟨w, hw₁, hw₂⟩ := hz
         simp
-        use ↑a + ↑w.re * (↑b - ↑a) + I * ↑w.im
+        use ↑a + w * (↑b - ↑a)
         simp
         simp at hw₁
         constructor
@@ -883,12 +892,21 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
       have h₀g : ∀ y : ℝ, ‖g (I * y)‖ ≤ M₀ := by{
         simp only [g]
         simp
+        intro y
+        specialize h₀f (y* (b-a))
+        simp at h₀f
+        rw[mul_assoc]
         exact h₀f
       }
 
       have h₁g : ∀ y : ℝ, ‖g (1 + I * y)‖ ≤ M₁ := by{
         simp only [g]
         simp
+        intro y
+        specialize h₁f (y * (b-a))
+        simp at h₁f
+        have : ↑a + (1 + I * ↑y) * (↑b - ↑a) = ↑b + I * (↑y * (↑b - ↑a)) := by ring
+        rw[this]
         exact h₁f
       }
 
@@ -912,20 +930,13 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
       }
       have hts' : t' + s' = 1 := by simp[s']
 
-      have hgoal := DiffContOnCl.norm_le_pow_mul_pow₀₁ hg h2g hM₀ hM₁ h₀g h₁g ht' hs' hts' (y:=y)
+      have hgoal := DiffContOnCl.norm_le_pow_mul_pow₀₁ hg h2g hM₀ hM₁ h₀g h₁g ht' hs' hts' (y:=y/(b-a))
+
       simp [g] at hgoal
       simp only[t'] at hgoal
       simp at hgoal
-      have : @HMul.hMul ℂ ℂ ℂ instHMul ((↑x - ↑a) / (↑b - ↑a)) (↑b - ↑a)  = (↑x - ↑a) := by{
-        rw[mul_comm_div, div_self]
-        · ring
-        · norm_cast; rw[← Ne]
-          apply ne_of_gt
-          simp; exact hab
-      }
-
-      simp[this] at hgoal
-
+      rw[add_mul, mul_comm_div, div_self (by norm_cast), mul_assoc, mul_comm_div, div_self (by norm_cast), ← add_assoc] at hgoal
+      simp at hgoal
 
       have ht'₁: t'=((t - 1) * a + s * b)/(b-a) := by{
         simp only [t', hx]
