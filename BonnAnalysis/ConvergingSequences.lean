@@ -23,9 +23,9 @@ class SubSequence {X : Type u} (a : ℕ → X) where
    φ : ℕ → ℕ
    hφ : StrictMono φ
 --open SubSequence
---@[coe] def coeSubS {X : Type u} {a : ℕ → X}  (σ : SubSequence a): ℕ → X  := a ∘ σ.φ    --help how to not automatically coerce everywhere?
+--@[coe] def coeSubS {X : Type u} {a : ℕ → X}  (σ : SubSequence a): ℕ → X  := a ∘ σ.φ    -- how to not automatically coerce everywhere?
 instance {X : Type u} {a : ℕ → X}  :  CoeFun (SubSequence a) (fun _ => ℕ → X) where
-  coe σ := a ∘ σ.φ    --help how to not automatically coerce everywhere?
+  coe σ := a ∘ σ.φ    -- how to not automatically coerce everywhere?
 --instance {X Y : Type u} {f : X → Y} {a : ℕ → X} : Coe (SubSequence a) (SubSequence (f ∘ a)) where
 --  coe σ := ⟨ σ.φ , σ.hφ⟩
 lemma bndOnStrictMono {φ : ℕ → ℕ} (hφ : StrictMono φ) {a : ℕ} : ¬ (φ a < a) := by
@@ -173,7 +173,7 @@ lemma important (x : X) (N : Set X) (p : N ∈ 𝓝 x) : N ∈ nbh x := by
   seqCont :∀ {x} {a : X} , (x ⟶ a) → Tendsto (f ∘ x) atTop (𝓝 (f a))
 open SeqContinuous'
 
-@[fun_prop] lemma continuous_of_SeqContinuous {Y : Type v} [TopologicalSpace Y] {f : X → Y} --help
+@[fun_prop] lemma continuous_of_SeqContinuous {Y : Type v} [TopologicalSpace Y] {f : X → Y}
   (hf : SeqContinuous' f) : Continuous f := by
     apply continuous_iff_isClosed.mpr
     intro C hC

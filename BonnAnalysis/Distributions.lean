@@ -39,7 +39,7 @@ structure HasCompactSupportIn (φ : V → k)  : Prop where
 
 @[ext] structure 𝓓  where
   φ : V → k
-  φIsSmooth : ContDiffOn k ⊤ φ univ --⊤ φ
+  φIsSmooth : ContDiff k ⊤ φ --⊤ φ
   φHasCmpctSupport :  HasCompactSupport φ
   sprtinΩ  : tsupport φ ⊆ Ω
 
@@ -48,17 +48,17 @@ instance  :  CoeFun (𝓓 k Ω) (fun _ => V → k) where
 instance : Zero (𝓓 k Ω ) where
     zero := ⟨
       0 ,
-      by apply contDiffOn_const ,
+      by apply contDiff_const ,
       by rw [hasCompactSupport_def, Function.support_zero' , closure_empty] ; exact isCompact_empty  ,
       by sorry ⟩
 instance : Add (𝓓 k Ω ) where
    add := fun φ ψ => ⟨
     φ + ψ ,
-    ContDiffOn.add φ.φIsSmooth ψ.φIsSmooth,
+    ContDiff.add φ.φIsSmooth ψ.φIsSmooth,
     HasCompactSupport.add φ.φHasCmpctSupport ψ.φHasCmpctSupport  , by sorry ⟩
 instance : Neg (𝓓 k Ω ) where
   neg := fun φ =>
-    ⟨ - φ , ContDiffOn.neg φ.φIsSmooth , by sorry , by sorry ⟩
+    ⟨ - φ , ContDiff.neg φ.φIsSmooth , by sorry , by sorry ⟩
 instance : AddCommGroup (𝓓 k Ω ) where
   add_assoc := fun φ ψ τ => by ext x ; apply add_assoc
   zero_add := fun φ => by ext x ; apply zero_add
@@ -71,7 +71,7 @@ instance : AddCommGroup (𝓓 k Ω ) where
   --'neg', 'zsmul', 'add_left_neg'
 @[simp] instance : SMul k (𝓓 k Ω ) where
   smul := fun l φ => ⟨ fun x => l * φ x ,
-    ContDiffOn.smul  contDiffOn_const  φ.φIsSmooth   ,
+    ContDiff.smul  contDiff_const  φ.φIsSmooth   ,
     HasCompactSupport.mul_left φ.φHasCmpctSupport   , by sorry ⟩
 instance : Module k (𝓓 k Ω) where
 
@@ -126,11 +126,11 @@ instance : ConvergingSequences (𝓓' k Ω ) where
   seq_cnst := fun T φ => by apply tendsto_const_nhds
   seq_sub := fun hAT A' φ => subSeqConverges (hAT φ) ⟨ _ , A'.hφ ⟩
 lemma diffAt (φ : 𝓓 k Ω) {x : V} (p : x ∈ Ω) : DifferentiableAt k φ x := by
-            have := ContDiffOn.differentiableOn φ.φIsSmooth (OrderTop.le_top 1)
-            apply DifferentiableOn.differentiableAt this
-            rw [mem_nhds_iff]
-            use Ω
-            exact ⟨ by exact fun ⦃a⦄ a ↦ trivial , Ω.isOpen , p ⟩
+            have := ContDiff.differentiable φ.φIsSmooth (OrderTop.le_top 1)
+            apply Differentiable.differentiableAt this
+            -- rw [mem_nhds_iff]
+            -- use Ω
+            -- exact ⟨ by exact fun ⦃a⦄ a ↦ trivial , Ω.isOpen , p ⟩
 
 notation  A "°" T => T ∘L A
 
