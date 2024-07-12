@@ -1133,13 +1133,12 @@ Real.IsConjExponent (p₀⁻¹ * (s : ℝ≥0∞) * p).toReal ⁻¹ (p₁⁻¹ *
     apply_fun (fun x ↦ x * p) at hp
     rwa [add_mul, ENNReal.inv_mul_cancel hp0' hpt', mul_comm (ofNNReal s), mul_comm (ofNNReal t)] at hp
 
-
--- can remove hpt'
-lemma lintegral_mul_le_segment_exponent_aux (p₀ p₁ p : ℝ≥0∞) (t s : ℝ≥0) (hp₀ : 0 < p₀) (hp₁ : 0 < p₁) (hp₀₁ : p₀ < p₁)
-(hp : s * p₀⁻¹ + t * p₁⁻¹ = p⁻¹) (f : α →ₘ[μ] E) (hp0' : p ≠ 0) (ht0' : t ≠ 0)
-(hs0' : s ≠ 0) :
+lemma lintegral_mul_le_segment_exponent_aux {p₀ p₁ p : ℝ≥0∞} {t s : ℝ≥0} (hp₀ : 0 < p₀)
+(hp₁ : 0 < p₁) (hp₀₁ : p₀ < p₁) (hp : p⁻¹ = s / p₀ + t / p₁)
+(f : α → E) (hf : AEMeasurable f μ) (hp0' : p ≠ 0) (ht0' : t ≠ 0) (hs0' : s ≠ 0) :
 ∫⁻ (a : α), ↑‖f a‖₊ ^ (↑s * p.toReal) * ↑‖f a‖₊ ^ (↑t * p.toReal) ∂μ ≤
   snorm (↑f) p₀ μ ^ (↑s * p.toReal) * snorm (↑f) p₁ μ ^ (↑t * p.toReal) := by
+  rw [eq_comm] at hp
   rcases eq_or_ne p ⊤ with hpt | hpt'
   simp [hpt, add_eq_zero, hs0', ht0'] at hp
   exact False.elim <| ne_top_of_lt hp₀₁ hp.1
@@ -1147,13 +1146,13 @@ lemma lintegral_mul_le_segment_exponent_aux (p₀ p₁ p : ℝ≥0∞) (t s : �
   rcases eq_or_ne p₁ ⊤ with hp₁t | hp₁t'
   simp only [snorm, (ne_of_lt hp₀).symm, ↓reduceIte, LT.lt.ne_top hp₀₁, snorm',
   one_div, hp₁t, top_ne_zero, snormEssSup]
-  simp only [hp₁t, inv_top, mul_zero, add_zero] at hp
+  simp only [hp₁t, div_top, add_zero] at hp
   apply_fun (fun x ↦ x * p₀) at hp
-  rw [mul_assoc, ENNReal.inv_mul_cancel (ne_of_lt hp₀).symm (LT.lt.ne_top hp₀₁), mul_one] at hp
+  rw [ENNReal.div_mul_cancel hp₀.ne.symm (ne_top_of_lt hp₀₁)] at hp
   have hp_aux : s * p = p₀ := by rw [hp, mul_assoc, mul_comm p₀, ← mul_assoc,
   ENNReal.inv_mul_cancel hp0' hpt', one_mul]
 
-  apply le_trans (lintegral_mul_le_one_top _ (AEMeasurable.pow_const f.measurable.ennnorm.aemeasurable _)) (le_of_eq _)
+  apply le_trans (lintegral_mul_le_one_top _ (AEMeasurable.pow_const hf.ennnorm _)) (le_of_eq _)
   congr
   rw [← ENNReal.rpow_mul, ← ENNReal.rpow_one (∫⁻ (a : α), ↑‖f a‖₊ ^ (↑s * p.toReal) ∂μ)]
   congr; ext; congr
@@ -1166,44 +1165,44 @@ lemma lintegral_mul_le_segment_exponent_aux (p₀ p₁ p : ℝ≥0∞) (t s : �
 
   simp only [snorm, (ne_of_lt hp₀).symm, ↓reduceIte, LT.lt.ne_top hp₀₁, snorm',
   one_div, (ne_of_lt hp₁).symm, hp₁t', ge_iff_le]
-  apply le_trans (ENNReal.lintegral_mul_le_Lp_mul_Lq μ (by apply InSegment.toIsConjugateExponent p₀ p₁ p t s; repeat assumption) (AEMeasurable.pow_const f.measurable.ennnorm.aemeasurable _) (AEMeasurable.pow_const f.measurable.ennnorm.aemeasurable _)) (le_of_eq _)
+  apply le_trans (ENNReal.lintegral_mul_le_Lp_mul_Lq μ (by apply InSegment.toIsConjugateExponent p₀ p₁ p t s; repeat assumption) (AEMeasurable.pow_const hf.ennnorm _) (AEMeasurable.pow_const hf.ennnorm _)) (le_of_eq _)
 
   simp only [← ENNReal.rpow_mul]
   congr
 
   simp only [toReal_mul, coe_toReal, mul_inv_rev]
-  congr
   rw [toReal_inv, inv_inv, ← mul_assoc, ← mul_assoc, mul_comm _ p.toReal, mul_assoc p.toReal, mul_comm s.toReal, ← mul_assoc, mul_assoc _ s.toReal,
   mul_inv_cancel (ENNReal.toReal_ne_zero.mpr ⟨hp0', hpt'⟩), mul_inv_cancel (by rwa [NNReal.coe_ne_zero]), one_mul, one_mul]
 
   rotate_left 1
 
   simp only [toReal_mul, coe_toReal, mul_inv_rev]
-  congr
   rw [toReal_inv, inv_inv, ← mul_assoc, ← mul_assoc, mul_comm _ p.toReal, mul_assoc p.toReal, mul_comm t.toReal, ← mul_assoc, mul_assoc _ t.toReal,
   mul_inv_cancel (ENNReal.toReal_ne_zero.mpr ⟨hp0', hpt'⟩), mul_inv_cancel (by rwa [NNReal.coe_ne_zero]), one_mul, one_mul]
 
   repeat' simp [← mul_assoc, ENNReal.toReal_inv]
 
-lemma lintegral_mul_le_segment_exponent (p₀ p₁ p : ℝ≥0∞) (t s : ℝ≥0) (hp₀ : 0 < p₀) (hp₁ : 0 < p₁) (hp₀₁ : p₀ < p₁)
-(hp : s * p₀⁻¹ + t * p₁⁻¹ = p⁻¹) (hst : s + t = 1)
-(f : α →ₘ[μ] E) (h₀f : snorm f p₀ μ ≠ ⊤) (h₁f : snorm f p₁ μ ≠ ⊤)
- : snorm f p μ ≤ (snorm f p₀ μ) ^ s.toReal * (snorm f p₁ μ) ^ t.toReal := by
-
-  have hp0' : p ≠ 0 := by by_contra h; simp only [h, ENNReal.inv_zero, add_eq_top,
-  mul_eq_top, ne_eq, ENNReal.coe_eq_zero, inv_eq_top, (ne_of_lt hp₀).symm, and_false,
-  coe_ne_top, ENNReal.inv_eq_zero, false_and, or_self, (ne_of_lt hp₁).symm] at hp
+lemma lintegral_mul_le_segment_exponent {p₀ p₁ p : ℝ≥0∞} {s t : ℝ≥0} (hp₀ : 0 < p₀) (hp₁ : 0 < p₁) (hp₀₁ : p₀ < p₁) (hp : p⁻¹ = s / p₀ + t / p₁) (hst : s + t = 1)
+(f : α → E) (hf : AEMeasurable f μ)
+ : snorm f p μ ≤ (snorm f p₀ μ) ^ (s : ℝ) * (snorm f p₁ μ) ^ (t : ℝ) := by
+  rw [eq_comm] at hp
+  have hp0' : p ≠ 0 := by
+    by_contra h
+    simp [h, ENNReal.inv_zero, add_eq_top, ENNReal.div_eq_top, hp₀.ne.symm, hp₁.ne.symm] at hp
 
   rcases eq_or_ne t 0 with ht0 | ht0'
   simp only [ht0, add_zero] at hst
-  simp only [hst, ENNReal.coe_one, one_mul, ht0, ENNReal.coe_zero, zero_mul, add_zero, inv_inj] at hp
-  simp only [hp, hst, NNReal.coe_one, ENNReal.rpow_one, ht0, NNReal.coe_zero, ENNReal.rpow_zero, mul_one, le_refl]
+  simp only [hst, ENNReal.coe_one, one_div, ht0, ENNReal.coe_zero, ENNReal.zero_div, add_zero,
+    inv_inj] at hp
+  simp only [hp, hst, NNReal.coe_one, ENNReal.rpow_one, ht0, NNReal.coe_zero, ENNReal.rpow_zero,
+    mul_one, le_refl]
 
   rcases eq_or_ne s 0 with hs0 | hs0'
   simp only [hs0, zero_add] at hst
-  simp only [hs0, ENNReal.coe_zero, zero_mul, hst, ENNReal.coe_one, one_mul, zero_add,
-  inv_inj] at hp
-  simp only [hp, hs0, NNReal.coe_zero, ENNReal.rpow_zero, hst, NNReal.coe_one, ENNReal.rpow_one, one_mul, le_refl]
+  simp only [hs0, ENNReal.coe_zero, ENNReal.zero_div, hst, ENNReal.coe_one, one_div, zero_add,
+    inv_inj] at hp
+  simp only [hs0, NNReal.coe_zero, ENNReal.rpow_zero, hp, hst, NNReal.coe_one, ENNReal.rpow_one,
+    one_mul, le_refl]
 
   rcases eq_or_ne p ⊤ with hpt | hpt'
   . simp [hpt, add_eq_zero, hs0', ht0'] at hp
@@ -1216,12 +1215,13 @@ lemma lintegral_mul_le_segment_exponent (p₀ p₁ p : ℝ≥0∞) (t s : ℝ≥
       <;> apply Real.mul_pos (lt_of_le_of_ne (NNReal.coe_nonneg _) (NNReal.coe_ne_zero.mpr (by assumption)).symm) (ENNReal.toReal_pos hp0' hpt')
     _ ≤ ((snorm f p₀ μ) ^ (s * p.toReal) *  (snorm f p₁ μ) ^ (t * p.toReal)) ^ p.toReal⁻¹ := by
       gcongr
+      rw [eq_comm] at hp
       apply lintegral_mul_le_segment_exponent_aux
-      <;> assumption -- apply should do this automatically, what's wrong?
+      <;> assumption
     _ = (snorm f p₀ μ) ^ s.toReal * (snorm f p₁ μ) ^ t.toReal := by
-      rw [ENNReal.mul_rpow_of_ne_top, ← ENNReal.rpow_mul, ← ENNReal.rpow_mul]
+      rw [ENNReal.mul_rpow_of_nonneg, ← ENNReal.rpow_mul, ← ENNReal.rpow_mul]
       repeat rw [mul_assoc, mul_inv_cancel (ENNReal.toReal_ne_zero.mpr ⟨hp0', hpt'⟩), mul_one]
-      repeat' apply ENNReal.rpow_ne_top_of_nonneg (mul_nonneg (NNReal.coe_nonneg _) ENNReal.toReal_nonneg) (by assumption)
+      norm_num
 
 /-- Riesz-Thorin interpolation theorem -/
 theorem exists_lnorm_le_of_subadditive_of_lbounded {p₀ p₁ q₀ q₁ : ℝ≥0∞} {M₀ M₁ : ℝ≥0}
@@ -1231,5 +1231,30 @@ theorem exists_lnorm_le_of_subadditive_of_lbounded {p₀ p₁ q₀ q₁ : ℝ≥
     (h₀T : HasStrongType T p₀ q₀ μ ν M₀)
     (h₁T : HasStrongType T p₁ q₁ μ ν M₁)
     {θ η : ℝ≥0} (hθη : θ + η = 1)
-    {p q : ℝ≥0∞} (hp : p⁻¹ = (1 - θ) / p₀ + θ / p₁) (hr : q⁻¹ = (1 - θ) / q₀ + θ / q₁) :
-    HasStrongType T p q μ ν (M₀ ^ (η : ℝ) * M₁ ^ (θ : ℝ)) := by sorry
+    {p q : ℝ≥0∞} (hp : p⁻¹ = θ / p₀ + η / p₁) (hq : q⁻¹ = θ / q₀ + η / q₁)
+    (hp₀ : 0 < p₀) (hp₁ : 0 < p₁) (hq₀ : 0 < q₀) (hq₁ : 0 < q₁) :
+    HasStrongType T p q μ ν (M₀ ^ (θ : ℝ) * M₁ ^ (η : ℝ)) := by
+      rcases eq_or_ne p₀ p₁ with (hp₀₁ | hp₀₁)
+      . simp only [hp₀₁, ← ENNReal.add_div, ← ENNReal.coe_add, hθη, ENNReal.coe_one, one_div, inv_inj] at hp
+        intro f hf
+        have aesm := (h₀T f (by rwa [hp₀₁, ← hp])).1
+        constructor
+        exact aesm
+        calc snorm (T f) q ν ≤ (snorm (T f) q₀ ν) ^ (θ : ℝ) * (snorm (T f) q₁ ν) ^ (η : ℝ) := by {
+          rcases lt_or_le q₀ q₁ with hq₀₁ | hq₀₁
+          exact lintegral_mul_le_segment_exponent hq₀ hq₁ hq₀₁ hq hθη _ aesm.aemeasurable
+          rcases lt_or_eq_of_le hq₀₁ with hq₀₁ | hq₀₁
+          rw [mul_comm]
+          apply lintegral_mul_le_segment_exponent hq₁ hq₀ hq₀₁ (by rwa [add_comm]) (by rwa [add_comm]) _ aesm.aemeasurable
+          simp only [hq₀₁, ← ENNReal.add_div, ← ENNReal.coe_add, hθη, ENNReal.coe_one, one_div, inv_inj] at hq
+          rw [hq₀₁, ← hq, ← ENNReal.rpow_add_of_nonneg _ _ (by norm_num) (by norm_num), ← NNReal.coe_add, hθη, NNReal.coe_one, ENNReal.rpow_one]
+        }
+        _ ≤ (M₀ * snorm f p μ) ^ (θ : ℝ) * (M₁ * snorm f p μ) ^ (η : ℝ) := by
+          gcongr
+          rw [hp, ← hp₀₁] at *
+          apply (h₀T f hf).2
+          rw [hp] at *
+          apply (h₁T f hf).2
+        _ = ↑(M₀ ^ (θ : ℝ) * M₁ ^ (η : ℝ)) * snorm f p μ := by
+          rw [ENNReal.mul_rpow_of_nonneg _ _ (by norm_num), ENNReal.mul_rpow_of_nonneg _ _ (by norm_num), ← mul_assoc, mul_assoc ((M₀ : ℝ≥0∞) ^ (θ : ℝ)), mul_comm _ ((M₁ : ℝ≥0∞) ^ (η : ℝ)), ← mul_assoc, mul_assoc, ← ENNReal.rpow_add_of_nonneg _ _ (by norm_num) (by norm_num), ← NNReal.coe_add, hθη, NNReal.coe_one, ENNReal.rpow_one, coe_mul, ENNReal.coe_rpow_of_ne_zero hM₀.ne.symm, ENNReal.coe_rpow_of_ne_zero hM₁.ne.symm]
+      .  sorry
