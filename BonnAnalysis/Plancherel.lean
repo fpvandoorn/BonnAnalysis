@@ -2,6 +2,7 @@ import Mathlib.Analysis.Fourier.FourierTransformDeriv
 import Mathlib.Analysis.Fourier.Inversion
 import Mathlib.Analysis.Fourier.PoissonSummation
 import Mathlib.Analysis.Fourier.RiemannLebesgueLemma
+import BonnAnalysis.StrongType
 
 noncomputable section
 
