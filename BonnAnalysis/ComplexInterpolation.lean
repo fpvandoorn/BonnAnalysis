@@ -5,6 +5,7 @@ import Mathlib.Topology.MetricSpace.Sequences
 import Mathlib.Analysis.Complex.HalfPlane
 import Mathlib.Analysis.Complex.ReImTopology
 import Mathlib.Analysis.SpecialFunctions.Pow.Deriv
+import BonnAnalysis.StrongType
 
 noncomputable section
 
@@ -1221,31 +1222,6 @@ lemma lintegral_mul_le_segment_exponent (p₀ p₁ p : ℝ≥0∞) (t s : ℝ≥
       rw [ENNReal.mul_rpow_of_ne_top, ← ENNReal.rpow_mul, ← ENNReal.rpow_mul]
       repeat rw [mul_assoc, mul_inv_cancel (ENNReal.toReal_ne_zero.mpr ⟨hp0', hpt'⟩), mul_one]
       repeat' apply ENNReal.rpow_ne_top_of_nonneg (mul_nonneg (NNReal.coe_nonneg _) ENNReal.toReal_nonneg) (by assumption)
-
-
-/-- An operator has strong type (p, q) if it is bounded as an operator on `L^p → L^q`.
-`HasStrongType T p p' μ ν c` means that `T` has strong type (p, q) w.r.t. measures `μ`, `ν`
-and constant `c`.  -/
-def HasStrongType {E E' α α' : Type*} [NormedAddCommGroup E] [NormedAddCommGroup E']
-    {_x : MeasurableSpace α} {_x' : MeasurableSpace α'} (T : (α → E) → (α' → E'))
-    (p p' : ℝ≥0∞) (μ : Measure α) (ν : Measure α') (c : ℝ≥0) : Prop :=
-  ∀ f : α → E, Memℒp f p μ → AEStronglyMeasurable (T f) ν ∧ snorm (T f) p' ν ≤ c * snorm f p μ
-
--- variable (E p q μ) in
--- /-- The additive subgroup of `α →ₘ[μ] E` consisting of the simple functions in both
--- `L^p` and `L^q`. This is denoted `U` in [Ian Tice]. -/
--- def Lp.simpleFunc2 : AddSubgroup (α →ₘ[μ] E) :=
---   (Lp.simpleFunc E p μ).map (AddSubgroup.subtype _) ⊓
---   (Lp.simpleFunc E q μ).map (AddSubgroup.subtype _)
-
-/- to do: `f ∈ Lp.simpleFunc2 E p q μ` iff
-`snorm f p μ < ∞ ∧ snorm f q μ < ∞ ∧ f is a simple function`. -/
-
--- /-- A normed operator `T` is bounded on `Lp.simpleFunc2 p₀ p₁ q` w.r.t. the `L^p₀`
--- where the codomain uses the `L^q` norm. -/
--- def SBoundedBy (T : (α →ₘ[μ] E₁) → β →ₘ[ν] E₂) (p₀ p₁ q : ℝ≥0∞) (C : ℝ) : Prop :=
---   ∀ (f : α →ₘ[μ] E₁), f ∈ Lp.simpleFunc2 E₁ p₀ p₁ μ →
---   snorm (T f) q ν ≤ ENNReal.ofReal C * snorm f p₀ μ
 
 /-- Riesz-Thorin interpolation theorem -/
 theorem exists_lnorm_le_of_subadditive_of_lbounded {p₀ p₁ q₀ q₁ : ℝ≥0∞} {M₀ M₁ : ℝ≥0}
