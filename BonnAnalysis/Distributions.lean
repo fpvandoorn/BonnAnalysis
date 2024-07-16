@@ -133,6 +133,65 @@ lemma diffAt (φ : 𝓓 k Ω) {x : V} (p : x ∈ Ω) : DifferentiableAt k φ x :
             -- exact ⟨ by exact fun ⦃a⦄ a ↦ trivial , Ω.isOpen , p ⟩
 
 notation  A "°" T => T ∘L A
+lemma zeroCase {φ : ℕ → (V → k)} {φ0 : V → k} :
+  (TendstoUniformly (fun n ↦ iteratedFDeriv k 0 (φ n)) (iteratedFDeriv k 0 φ0) atTop) ↔
+    TendstoUniformly (fun n => (φ n) ) (φ0) atTop := by
+
+        rw [iteratedFDeriv_zero_eq_comp]
+        have myrw : (fun n ↦ iteratedFDeriv k 0 (φ n)) = fun n ↦ (⇑(continuousMultilinearCurryFin0 k V k).symm ∘ (φ n)) := by
+          ext1 n
+          rw [iteratedFDeriv_zero_eq_comp]
+        rw [myrw]
+        constructor
+        · apply UniformContinuous.comp_tendstoUniformly (g:=⇑(continuousMultilinearCurryFin0 k V k)) ?_
+          apply Isometry.uniformContinuous
+          apply LinearIsometryEquiv.isometry
+        · apply UniformContinuous.comp_tendstoUniformly (g:=⇑(continuousMultilinearCurryFin0 k V k).symm) ?_
+          apply Isometry.uniformContinuous
+          apply LinearIsometryEquiv.isometry
+lemma seqImpliesConvergence   {φ : ℕ → (𝓓 k Ω )} {φ0 : 𝓓 k Ω} (hφ : φ ⟶ φ0) {x : V} :
+   Tendsto (fun n => (φ n).φ x) atTop (𝓝 (φ0 x)):= by
+    apply TendstoUniformly.tendsto_at ;
+    apply (zeroCase k).mp
+    exact hφ.2 0
+
+lemma KcontainsSuppOfLimit {α  : ℕ → 𝓓 k Ω} {φ : 𝓓 k Ω } (hφ : α  ⟶ φ)  :
+  (∃ K : Set V, (IsCompact K ∧ (∀ n , tsupport (α  n).φ ⊆ K)) ∧ tsupport φ.φ ⊆ K) :=by
+  obtain ⟨ K , hK ⟩ := hφ.1
+  use K
+  constructor
+  · exact hK
+  · apply closure_minimal ; swap
+    · exact IsCompact.isClosed hK.1
+    · apply Set.compl_subset_compl.mp
+      intro p hp
+      simp
+
+      apply tendsto_nhds_unique (f:= fun n => (α n).φ p) (l:=atTop)
+      apply seqImpliesConvergence
+      exact hφ
+      have : (fun n => (α n).φ p) = (fun n => 0) := by
+        ext1 n ;
+        have : Function.support (α n).φ ⊆ K := by
+          trans tsupport (α n).φ ;
+          exact subset_tsupport (α n).φ ;
+          exact hK.2 n
+        exact Function.nmem_support.mp (Set.compl_subset_compl.mpr this hp)
+      rw [this]
+      apply tendsto_const_nhds
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 variable (k : Type v) [NontriviallyNormedField k]

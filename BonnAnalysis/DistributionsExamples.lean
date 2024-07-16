@@ -47,14 +47,27 @@ class GoodEnoughAutom (k : Type v) (V : Type u)[NontriviallyNormedField k]  [Mea
   --restToΩ : Φ '' Ω ⊆ Ω
   -- inj : Function.Injective Φ
 open GoodEnoughAutom
+open ContinuousLinearEquiv
 variable {V : Type u} {k : Type v} [NontriviallyNormedField k]
   [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V] {Ω : Opens V}
+variable  (W : Type* )  [NormedAddCommGroup W]  [NormedSpace k W]
+def stdIso : (k →L[k] W) ≃ₗᵢ[k] W  := by sorry -- apply LinearIsometryEquiv.mk ; swap   -- stdIso.toLinearEquiv.toLinearMap
+@[simp] def ev_cts  (v : V) :
+  (V →L[k] W) →L[k] W := by
+
+    let std : (k →L[k] W) →L[k] W := ContinuousLinearEquiv.toContinuousLinearMap (stdIso (k:=k) W)
+    let inv : V →L[k] (k →L[k] V) := ContinuousLinearEquiv.toContinuousLinearMap (stdIso (k:=k) V).symm
+    exact std.comp (ContinuousLinearMap.precomp _ (inv v))
+
+def ev_cts'  (v : V) {W : Type* }  [NormedAddCommGroup W]  [NormedSpace k W]  :
+  (V →L[k] W) →L[k] W := ContinuousLinearMap.apply _ _ v
+
+
 open LinearMap
 def toLinearAuto (Φ) [GoodEnoughAutom k V Φ] : (V →L[k] V) := by
   apply ContinuousLinearMap.mk ; swap
   apply IsLinearMap.mk'  (Φ) (isLinear (k :=k) (V:=V))
   sorry
-
 
 
 
@@ -98,7 +111,7 @@ lemma sum_compact_subsets {G : Type*} [AddCommGroup G]  [TopologicalSpace G] [To
 lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {G : Type*} [MeasurableSpace G] (μ : Measure G) {E : Type*} {E' : Type*}  {F : Type*}
   [NormedAddCommGroup F] [NormedAddCommGroup E] [NormedAddCommGroup E']
    [NormedSpace 𝕜 E] [NormedSpace 𝕜 E'] [NormedSpace 𝕜 F] [NormedSpace ℝ F]
-  [AddCommGroup G]  [TopologicalSpace G]  [TopologicalAddGroup G]
+  [AddCommGroup G]  [TopologicalSpace G]  [TopologicalAddGroup G]  [T2Space G]
  (L : E →L[𝕜] E' →L[𝕜] F) {f : G → E} {g : G → E'} (hf : HasCompactSupport f) (hg : HasCompactSupport g) : tsupport (f ⋆[L, μ] g) ⊆ tsupport f + tsupport g:=by
   apply closure_minimal
   · trans support f + support g
@@ -110,7 +123,8 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
       apply sum_compact_subsets
       exact hf
       exact hg
-    sorry
+    -- maybe use that compact subsets of metrizable spaces are closed?
+    exact IsCompact.isClosed this
 
 
 @[simp] def fromAutoOfV (Φ : V → V) [GoodEnoughAutom k V Φ] : 𝓓F k V →L[k] 𝓓F k V := by
@@ -155,7 +169,7 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
         have th : ∀ {n  : ℕ∞} , n ≤ ⊤ := OrderTop.le_top _
         have q := fun l =>  (φ l).φIsSmooth
         let myΦ : (i : Fin l) → V →L[k] V :=  fun _ ↦ toLinearAuto Φ
-        let precompmyΦ: (V [×l]→L[k] k) → (V [×l]→L[k] k) := fun θ ↦ θ.compContinuousLinearMap (myΦ)
+        let precompmyΦ: (V [×l]→L[k] k) →L[k] (V [×l]→L[k] k) := ContinuousMultilinearMap.compContinuousLinearMapL (myΦ)
 
 
         have chainRule {φ0 : 𝓓F k V} : (iteratedFDeriv k l (φ0 ∘ Φ)) =
@@ -170,8 +184,10 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
         have : TendstoUniformly (fun n => iteratedFDeriv k l (φ n ∘ Φ) ) (iteratedFDeriv k l (φ0 ∘ Φ)) atTop := by
           rw [chainRule (φ0 := φ0)]
           rw [this]
+
+
           apply UniformContinuous.comp_tendstoUniformly (g:= precompmyΦ)
-          · sorry -- apply UniformFun.postcomp_uniformContinuous , uniform Inducing?
+          · apply ContinuousLinearMap.uniformContinuous -- apply UniformFun.postcomp_uniformContinuous , uniform Inducing?
           · apply TendstoUniformly.comp
             exact hφ l
 
@@ -208,22 +224,7 @@ instance (v : V) :  (GoodEnoughAutom k V) (shift' v) where
 /--
     SOLVED    Issue: If φ ψ : V → k and are smooth on Ω , how to show that the derivative is additive outside Ω ?
         --/
-lemma zeroCase {φ : ℕ → (V → k)} {φ0 : V → k} :
-  (TendstoUniformly (fun n ↦ iteratedFDeriv k 0 (φ n)) (iteratedFDeriv k 0 φ0) atTop) ↔
-    TendstoUniformly (fun n => (φ n) ) (φ0) atTop := by
 
-        rw [iteratedFDeriv_zero_eq_comp]
-        have myrw : (fun n ↦ iteratedFDeriv k 0 (φ n)) = fun n ↦ (⇑(continuousMultilinearCurryFin0 k V k).symm ∘ (φ n)) := by
-          ext1 n
-          rw [iteratedFDeriv_zero_eq_comp]
-        rw [myrw]
-        constructor
-        · apply UniformContinuous.comp_tendstoUniformly (g:=⇑(continuousMultilinearCurryFin0 k V k)) ?_
-          apply Isometry.uniformContinuous
-          apply LinearIsometryEquiv.isometry
-        · apply UniformContinuous.comp_tendstoUniformly (g:=⇑(continuousMultilinearCurryFin0 k V k).symm) ?_
-          apply Isometry.uniformContinuous
-          apply LinearIsometryEquiv.isometry
 def δ : 𝓓' k Ω := mk k (fun φ => φ 0) (by
   constructor
   · intro x y ; rfl
@@ -232,7 +233,7 @@ def δ : 𝓓' k Ω := mk k (fun φ => φ 0) (by
     intro x a hx
     apply TendstoUniformly.tendsto_at
     have := hx.2 0
-    apply zeroCase.mp
+    apply (zeroCase k).mp
     assumption
     )
 lemma testfunctionIsDiffAt {φ : 𝓓 k Ω} (x : V) : DifferentiableAt k (φ) x := by
@@ -241,7 +242,26 @@ lemma testfunctionIsDiffAt {φ : 𝓓 k Ω} (x : V) : DifferentiableAt k (φ) x 
     exact φ.φIsSmooth
   · exact OrderTop.le_top 1
 def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
-  let f : 𝓓 k Ω → 𝓓 k Ω := fun φ => ⟨ fun x => fderiv k φ x v , by sorry , by sorry , by sorry ⟩
+  have obs {φ : V → k} : tsupport (fun x => fderiv k φ x v) ⊆ tsupport (φ) := by -- ⊆ tsupport (fun x => fderiv k φ) :=
+    trans ; swap
+    · exact tsupport_fderiv_subset k (f:= φ)
+    · apply tsupport_comp_subset rfl (g := fun f => f v)  (f:=fderiv k φ)
+  let f : 𝓓 k Ω → 𝓓 k Ω := fun φ => by
+    use fun x => fderiv k φ x v
+    · have dfh : ContDiff k ⊤ (fun x => fderiv k φ.φ x) := (contDiff_top_iff_fderiv.mp (φ.φIsSmooth )).2
+
+      have evvh : ContDiff k ⊤ (NormedSpace.inclusionInDoubleDual k V v) := by apply ContinuousLinearMap.contDiff
+
+      apply ContDiff.comp  evvh dfh
+
+
+    · apply IsCompact.of_isClosed_subset (φ.φHasCmpctSupport)
+      exact isClosed_tsupport fun x ↦ (fderiv k φ.φ x) v
+      exact obs
+    ·
+          trans
+          · exact obs
+          · exact φ.sprtinΩ
   apply mk ; swap
   · exact f
   · constructor
@@ -278,27 +298,19 @@ def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
         · exact hK.1
         · intro n
           trans (tsupport (α n).φ)
-          · trans ; swap
-            · exact tsupport_fderiv_subset k (f:= (α n).φ)
-            · have : ((f ∘ α) n).φ = (fun q => q v) ∘ fderiv k (α n).φ := rfl
-              rw [this]
-              apply tsupport_comp_subset  (rfl) (fderiv k (α n).φ)
-
-
+          · exact obs
           · exact hK.2 n
       · intro l
         have : TendstoUniformly (fun n ↦ iteratedFDeriv k (l+1) (α  n).φ) (iteratedFDeriv k (l+1) (a).φ) atTop := hx.2 (l+1)
-        let g : (V[×(l+1)]→L[k] k) → (V[×l]→L[k] k)  := fun φ => (ContinuousMultilinearMap.curryLeft φ) v-- evaluation at v
+        let g1 : (V[×(l+1)]→L[k] k) ≃ₗᵢ[k] V →L[k] (V[×l]→L[k] k) := (continuousMultilinearCurryLeftEquiv k (fun _ => V) k).symm
+        let g1 : (V[×(l+1)]→L[k] k) →L[k] V →L[k] (V[×l]→L[k] k)  := ContinuousLinearEquiv.toContinuousLinearMap g1
+        let g : (V[×(l+1)]→L[k] k) →L[k] (V[×l]→L[k] k)  :=  ( ev_cts' v).comp g1 --todo replace by ev_cts
+
         have hxg (ψ : 𝓓 k Ω)  :  iteratedFDeriv k l (f ψ).φ = g ∘ iteratedFDeriv k (l + 1) (ψ).φ := by
           calc
            _ = iteratedFDeriv k l (fun y => fderiv k ψ.φ y v) := rfl
-
-           -- _ = fun z => iteratedFDeriv k (l + 1) ψ.φ ) := by sorry
            _ = fun z => (ContinuousMultilinearMap.curryLeft (iteratedFDeriv k (l + 1) ψ.φ z) v) := by ext1 z ; sorry
-           _ = g ∘ iteratedFDeriv k (l + 1) (ψ).φ := rfl
-
-             -- rw [← iteratedFDeriv_succ_eq_comp_left]
-
+           _ = g ∘ iteratedFDeriv k (l + 1) (ψ).φ := by rfl -- ext1 z ; simp
         rw [hxg]
         have hxg :  (fun (n : ℕ) => iteratedFDeriv k l ((f ∘ α ) n).φ) =
           fun (n : ℕ) => g ∘ (iteratedFDeriv k (l + 1) (α  n).φ) := by
@@ -311,7 +323,7 @@ def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
         rw [← tendstoUniformlyOn_univ ] at this
         rw [← tendstoUniformlyOn_univ ]
         apply UniformContPresUniformConvergence this g
-        sorry
+        apply ContinuousLinearMap.uniformContinuous
 
 
 
@@ -336,7 +348,7 @@ structure LocallyIntegrableFunction where
    hf : MeasureTheory.LocallyIntegrable f
 
 
-def intSm (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun x y => φ y x)) : 𝓓F ℝ V := ⟨ fun y => ∫ x , φ y x , by sorry , by sorry , by sorry⟩
+@[simp] def intSm (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun x y => φ y x)) : 𝓓F ℝ V := ⟨ fun y => ∫ x , φ y x , by sorry , by sorry , by sorry⟩
 -- ContinuousLinearMap.integral_comp_comm PROBLEM: 𝓓F ℝ V is not NormedAddGroup so we cant apply
 -- probably some smoothness condition on φ is missing anyway really Ccinfty(Ω × Ω ) needed?
 lemma FcommWithIntegrals (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun x y => φ y x)) (T : 𝓓'F ℝ V) : T (intSm V φ hφ) =  ∫ x : V ,  T (φ x)  := by
@@ -344,9 +356,6 @@ lemma FcommWithIntegrals (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun
 
   -- have : Integrable φ := by sorry
   -- rw [ContinuousLinearMap.integral_comp_comm T.1]
-
-
-
   sorry
 --def fromCurrying (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun x y => φ y x)) : 𝓓F ℝ (V × V ) := ⟨ fun x => φ x.1 x.2 , by sorry  , by sorry ,   fun ⦃a⦄ a ↦ trivial ⟩ -- todo
 lemma testFunctionIsLocallyIntegrable
@@ -360,7 +369,7 @@ lemma testFunctionIsLocallyIntegrable
 
 
 variable {V : Type u}  [MeasureSpace V]
-   [NormedAddCommGroup V]  [NormedSpace ℝ V] [BorelSpace V] {Ω : Opens V} [OpensMeasurableSpace V]  [IsFiniteMeasureOnCompacts (volume (α := V))]
+   [NormedAddCommGroup V]  [NormedSpace ℝ V] [MeasureTheory.Measure.IsAddHaarMeasure (volume : Measure V)] [BorelSpace V] {Ω : Opens V}
 
 instance : Coe ( 𝓓F ℝ V) (LocallyIntegrableFunction V) where
   coe φ := ⟨ φ , testFunctionIsLocallyIntegrable V φ ⟩
@@ -369,17 +378,60 @@ instance : Coe ( 𝓓F ℝ V) (LocallyIntegrableFunction V) where
 --def intSm (φ : 𝓓 ℝ (squareOpen Ω )) : 𝓓 ℝ Ω := ⟨ fun y => ∫ x , φ ( x, y) , by sorry , by sorry , by sorry⟩
 --lemma FcommWithIntegrals [MeasureSpace Ω] (φ : 𝓓 ℝ (squareOpen Ω )) (T : 𝓓' ℝ Ω) :  ∫ x , T (𝓓kSquareCurry φ x) = T (intSm φ) := by sorry
 --def transport (φ : 𝓓 k Ω) {ψ : V → ℝ} (p : φ = ψ) : 𝓓 k Ω
+notation "|| " f " ||_∞" => MeasureTheory.snormEssSup f volume
 instance  :  CoeFun (LocallyIntegrableFunction V) (fun _ => V → ℝ) where
   coe σ := σ.f
+open MeasureSpace
 @[simp] def Λ (f : LocallyIntegrableFunction V) : 𝓓' ℝ Ω := by
   apply mk ; swap
   · exact fun φ => ∫ v , f v * φ v
-  · sorry
+  · constructor
+    · intro x y ; sorry -- rw [Integral.distrib_add] ; sorry
+    · sorry
+    · constructor
+      intro φ φ₀  hφ
+      obtain ⟨ K , hK ⟩ := hφ.1
+      have := LocallyIntegrable.integrableOn_isCompact f.hf hK.1
+      rw [← tendsto_sub_nhds_zero_iff]
+      simp_rw [ NormedAddCommGroup.tendsto_nhds_zero, eventually_atTop ]
+
+
+--
+     -- let b' :  ℝ≥0 :=  --
+
+
+
+
+
+      --sorry
+      have : ∀ n ,   ‖  ((∫ (v : V), f.f v * (φ n).φ v)  - ∫ (v : V), f.f v * φ₀.φ v) ‖₊
+        ≤  (∫⁻ (v : V),   ‖ (f v) ‖₊ ) * (|| (φ n).φ - φ₀.φ ||_∞) := by
+        sorry
+
+      --rw [show (K = ∅) from ?_] at hK
+
+
+
+
+
+
+      /-
+
+
+      dies gilt wann immer φ → φ₀ in L_∞ :
+      | ∫ v : K, f v ⬝ (φ n - φ_0) d v | ≤ ∫ v : K , | f v | ⬝ | (φ n - φ₀) v  | dv
+      ≤ ∫ v : K , | f v | ⬝ ‖ (φ n - φ₀) v ‖_∞  dv ≤ ∫ v : K , | f v | dv ⬝ ‖ (φ n - φ₀) v ‖_∞ → 0
+      da v
+      -/
+
+
+
+
 --instance : Coe (LocallyIntegrableFunction V) (𝓓 k Ω ) where
 open Convolution
 
 @[simp] def shift (x : V) : 𝓓F ℝ V →L[ℝ] 𝓓F ℝ V := fromAutoOfV (shift' x)
-
+/-
 def convolution𝓓Mult : (𝓓 ℝ Ω)[×2]→L[ℝ] 𝓓 ℝ Ω := by
 
   let c : MultilinearMap ℝ (fun (i : Fin 2) => 𝓓 ℝ Ω) (𝓓 ℝ  Ω) := ⟨
@@ -389,6 +441,7 @@ def convolution𝓓Mult : (𝓓 ℝ Ω)[×2]→L[ℝ] 𝓓 ℝ Ω := by
     ⟩
   use c
   sorry
+-/
 lemma  ConvWithIsUniformContinuous-- [BorelSpace V]
    {k' : Type w}  [MeasureSpace k'] [NormedAddCommGroup k']  [NormedSpace ℝ k']
    {φ : 𝓓F ℝ V} {ψ : ℕ → V → k'} {ψ0 : V → k'} (hψ : TendstoUniformly ψ ψ0 atTop)
@@ -445,6 +498,8 @@ lemma convOfTestFunctionsExists [T2Space V] {φ ψ : 𝓓F ℝ V} : ConvolutionE
         · intro n
           have : tsupport (φ.φ ⋆ (ψ n).φ) ⊆ tsupport φ.φ + tsupport (ψ n).φ := by
             apply tsupport_convolution_subset
+            exact φ.φHasCmpctSupport
+            exact (ψ n).φHasCmpctSupport
           trans
           · exact this
           · apply add_subset_add_left
@@ -455,10 +510,10 @@ lemma convOfTestFunctionsExists [T2Space V] {φ ψ : 𝓓F ℝ V} : ConvolutionE
       · intro l
         induction' l with l hl -- ψ ψ0 hψ --
         · simp
-          apply (zeroCase (φ := fun n => φ ⋆ ψ n)).mpr
-          exact ConvWithIsUniformContinuous (zeroCase.mp (hψ.2 0))
+          apply (zeroCase _).mpr
+          exact ConvWithIsUniformContinuous ((zeroCase ℝ ).mp (hψ.2 0))
         · apply iteratedDerivConv
-          exact (zeroCase.mp (hψ.2 0))
+          exact ((zeroCase ℝ ).mp (hψ.2 0))
 
 
 notation:67 φ " 𝓓⋆ " ψ => convWith φ ψ -- convolution𝓓Mult (tF2 φ ψ)
@@ -507,7 +562,10 @@ theorem convolution𝓓'IsSmooth (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : ∃ �
           · exact (congrFun (convAsLambda ( reflection ψ) (φ )) y).symm
           · simp
             --just use linear transformation x = y-v --help
-            sorry
+            rw [← integral_sub_right_eq_self (g:=y) ]
+            ring_nf
+
+
 
 
             --change
