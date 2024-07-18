@@ -415,14 +415,31 @@ lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
       simp_rw [ NormedAddCommGroup.tendsto_nhds_zero, eventually_atTop ]
 
       have : ∀ (f : V → ℝ) x , ‖ f x ‖₊ ≤ || f ||_∞ := by sorry
+      have {a b : ℝ } : ENNReal.ofReal (‖ a‖ * ‖b‖) = ↑(‖a‖₊ * ‖b‖₊) := by
+        calc
+           ENNReal.ofReal (‖ a‖ * ‖b‖) = ENNReal.ofReal (‖ a * b‖) := by congr ; rw [← norm_mul]
+           _ = ↑(‖ a * b‖₊)  := by exact ofReal_norm_eq_coe_nnnorm (a * b)
+           _ = ↑(‖a‖₊ * ‖b‖₊) := by congr ; exact nnnorm_mul a b
+        -- rw [← show ENNReal.ofNNReal ⟨ ‖a‖₊ * ‖b‖₊ , ?_ ⟩ = ↑(‖a‖₊ * ‖b‖₊) from ?_] -- symm ; rw [ENNReal.coe_mul ‖a‖₊ ‖b‖₊] ;
+        -- sorry
+        -- apply?
 
+
+--(ha :  a ≠ ⊤ ) (hb : b ≠ ⊤ )
       have mainArg : ∀ n ,
          ‖  (∫ (v : V), f.f v * (φ n).φ v)  - ∫ (v : V), f.f v * φ₀.φ v ‖₊
         ≤  ENNReal.toReal (∫⁻ (v : V) in K,   ‖ (f v) ‖₊ ) * ENNReal.toReal (|| (φ n).φ - φ₀.φ ||_∞) := by
         intro n
         have integrable {ψ : V → ℝ} (hψ : tsupport ψ ⊆ K): Integrable (fun v ↦ f.f v * ψ v) volume := by
           have := LocallyIntegrable.integrableOn_isCompact f.hf hK.1
-          sorry
+          have hf : ((fun v ↦ f.f v * ψ v) = fun v => K.indicator f.f v * ψ v) := by sorry
+          rw [hf]
+          apply MeasureTheory.Integrable.bdd_mul
+          · sorry
+          · sorry
+
+
+
         have supportφ₀ := KcontainsSuppOfLimit ℝ Ω hφ hK
         have someArg : (support fun x => f.f x * ((φ n).φ - φ₀.φ) x) ⊆ K := by
           rw [Function.support_mul (f.f) (φ n - φ₀)]
@@ -434,33 +451,42 @@ lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
           · apply Set.union_subset_union
             · trans ; exact subset_tsupport _ ; exact hK.2 n
             · trans ; exact subset_tsupport _ ; exact supportφ₀
+        have someOtherArg : (∫⁻ (v : V) in K , ‖ f.f v ‖₊ * ‖ ((φ n).φ -φ₀.φ) v ‖₊ ).toReal  ≤
+          (∫⁻ (v : V) in K , ‖ f.f v ‖₊ * || ((φ n).φ -φ₀.φ) ||_∞ ).toReal := by
+          have : || (φ n).φ - φ₀.φ ||_∞ ≠ ⊤ := by sorry
+          apply ENNReal.toReal_mono ;
+          · sorry ;
+          · apply MeasureTheory.lintegral_mono_ae ;
+            --rw
+            have {a : V}  (ha : ‖ ((φ n).φ -φ₀.φ) a‖₊   ≤   || ((φ n).φ -φ₀.φ) ||_∞ ) :
+              ↑‖f.f a‖₊ * ↑‖((φ n).φ - φ₀.φ) a‖₊ ≤ ↑‖f.f a‖₊ * || (φ n).φ - φ₀.φ ||_∞ := by
+              calc
+              _ = ENNReal.ofNNReal (‖f.f a‖₊ * ‖((φ n).φ - φ₀.φ) a‖₊) := by rfl
+              _ ≤ ENNReal.ofNNReal (‖f.f a‖₊ * || ((φ n).φ -φ₀.φ) ||_∞.toNNReal) := by apply ENNReal.coe_mono ; apply mul_le_mul_left'  ; refine ENNReal.toNNReal_mono ?_ ha ; exact this
+              _ = ENNReal.ofNNReal (‖f.f a‖₊) * (ENNReal.ofNNReal  || ((φ n).φ -φ₀.φ) ||_∞.toNNReal) := by apply ENNReal.coe_mul
+              _ = _ := by congr; apply ENNReal.coe_toNNReal ; exact this
+            rw [Filter.eventually_iff]
+            apply sets_of_superset
+            · apply MeasureTheory.ae_le_snormEssSup (f:=((φ n).φ -φ₀.φ))
+            · intro x hx
+              apply this
+              trans
+              · exact hx
+              · apply MeasureTheory.snormEssSup_mono_measure
+                sorry
 
-
-
-          -- rw [← mul_tsub]
-
-
+        have fIsMeasureable : Measurable fun a ↦ ↑‖f.f a‖₊ := by sorry
         calc
         ‖  (∫ (v : V), f.f v * (φ n).φ v)  - ∫ (v : V), f.f v * φ₀.φ v‖
           = ‖  ∫ (v : V) , f.f v * (φ n).φ v - f.f v * φ₀.φ v‖  := by congr ; rw [← MeasureTheory.integral_sub] ; exact integrable (hK.2 n) ; exact integrable supportφ₀
         _ = ‖  ∫ (v : V) , f.f v * ((φ n).φ v -φ₀.φ v)‖ := by congr ; ext1 v ; symm ; exact (smul_sub (f.f v) ((φ n).φ v) (φ₀.φ v))
         _ = ‖  ∫ (v : V) in K , (f.f  * ((φ n).φ -φ₀.φ)) v‖ := by apply congrArg ; apply shouldExist (fun v => f.f v * ((φ n).φ -φ₀.φ) v ) K ; exact someArg
-        _ ≤ (∫⁻ (v : V) in K , ENNReal.ofReal ‖ (f.f * ((φ n).φ -φ₀.φ)) v‖ ).toReal   := by apply MeasureTheory.norm_integral_le_lintegral_norm (f.f * ((φ n).φ -φ₀.φ))
-        _ = (∫⁻ (v : V) in K , ‖ f.f v ‖₊ * ‖ ((φ n).φ -φ₀.φ) v ‖₊ ).toReal   := by  congr ; ext v ; sorry
-        _ ≤ ENNReal.toNNReal (∫⁻ (v : V) in K , ‖ f.f v ‖₊ * || ((φ n).φ -φ₀.φ) ||_∞ )   := by sorry
-        _ ≤ ENNReal.toNNReal (∫⁻ (v : V) in K , ‖ f.f v ‖₊ ) * ENNReal.toReal || ((φ n).φ -φ₀.φ) ||_∞    := by sorry
-
-             /-
-
-
-      dies gilt wann immer φ → φ₀ in L_∞ :
-      | ∫ v : K, f v ⬝ (φ n - φ_0) d v | ≤ ∫ v : K , | f v | ⬝ | (φ n - φ₀) v  | dv
-      ≤ ∫ v : K , | f v | ⬝ ‖ (φ n - φ₀) v ‖_∞  dv ≤ ∫ v : K , | f v | dv ⬝ ‖ (φ n - φ₀) v ‖_∞ → 0
-      da v
-      -/
-      -- have : (∫⁻ (v : V) in K,   ‖ (f v) ‖₊ ) < ⊤ := by
-
-      --   sorry
+        _ ≤ (∫⁻ (v : V) in K , ENNReal.ofReal ‖ (f.f v * ((φ n).φ -φ₀.φ) v)‖ ).toReal   := by apply MeasureTheory.norm_integral_le_lintegral_norm (f.f * ((φ n).φ -φ₀.φ))
+        _ = (∫⁻ (v : V) in K , ‖ f.f v ‖₊ * ‖ ((φ n).φ -φ₀.φ) v ‖₊ ).toReal   := by  congr ; ext v ; simp_rw [norm_mul] ; trans ; swap ;  apply ENNReal.coe_mul ; exact this
+        _ ≤ (∫⁻ (v : V) in K , ‖ f.f v ‖₊ * || ((φ n).φ -φ₀.φ) ||_∞ ).toReal   := by exact someOtherArg
+        _ = (∫⁻ (v : V) in K , || ((φ n).φ -φ₀.φ) ||_∞  * ‖ f.f v ‖₊ ).toReal   := by congr ; simp_rw [mul_comm]
+        _ =  ((|| ((φ n).φ -φ₀.φ) ||_∞) * (∫⁻ (v : V) in K , ‖ f.f v ‖₊ )).toReal := by congr ;  apply MeasureTheory.lintegral_const_mul  (|| ((φ n).φ -φ₀.φ) ||_∞) ; exact fIsMeasureable
+        _ = (∫⁻ (v : V) in K , ‖ f.f v ‖₊ ).toReal *  (|| ((φ n).φ -φ₀.φ) ||_∞).toReal   := by rw [ENNReal.toReal_mul , mul_comm]
       have foo {ε} {ψ : V → ℝ} (hε : ε ≥ 0) (p : ∀ x ∈ univ , ‖ ψ x‖  < ε) : || ψ ||_∞.toReal ≤ ε   := by
         have : || ψ ||_∞ ≤ ENNReal.ofReal ε := by
           apply MeasureTheory.snormEssSup_le_of_ae_bound (C:=ε)
@@ -504,7 +530,7 @@ lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
       · let ε' : ℝ := ε / C
         -- have hε' : ε' > 0 ∧
         have hC : 0 < C := pos_iff_ne_zero.mpr h
-        obtain ⟨ a , ha ⟩ :=  hφ ε' (by refine (div_pos_iff_of_pos_right ?hb).mpr hε ; exact hC )
+        obtain ⟨ a , ha ⟩ :=  hφ ε' (by apply (div_pos_iff_of_pos_right ?_).mpr ; exact hε ;   exact hC  )
         use a
 
         intro b hb
