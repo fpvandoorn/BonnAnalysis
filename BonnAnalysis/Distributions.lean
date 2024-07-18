@@ -155,12 +155,9 @@ lemma seqImpliesConvergence   {φ : ℕ → (𝓓 k Ω )} {φ0 : 𝓓 k Ω} (hφ
     apply (zeroCase k).mp
     exact hφ.2 0
 
-lemma KcontainsSuppOfLimit {α  : ℕ → 𝓓 k Ω} {φ : 𝓓 k Ω } (hφ : α  ⟶ φ)  :
-  (∃ K : Set V, (IsCompact K ∧ (∀ n , tsupport (α  n).φ ⊆ K)) ∧ tsupport φ.φ ⊆ K) :=by
-  obtain ⟨ K , hK ⟩ := hφ.1
-  use K
-  constructor
-  · exact hK
+lemma KcontainsSuppOfLimit {α  : ℕ → 𝓓 k Ω} {φ : 𝓓 k Ω } (hφ : α  ⟶ φ)
+  {K : Set V} (hK : IsCompact K ∧ (∀ n , tsupport (α  n).φ ⊆ K)) : tsupport φ.φ ⊆ K :=by
+
   · apply closure_minimal ; swap
     · exact IsCompact.isClosed hK.1
     · apply Set.compl_subset_compl.mp
