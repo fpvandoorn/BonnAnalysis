@@ -16,8 +16,6 @@ open Order Set Filter
 open Filter
 open scoped Topology
 
-
-
 set_option checkBinderAnnotations false
 class SubSequence {X : Type u} (a : ℕ → X) where
    φ : ℕ → ℕ
@@ -48,7 +46,7 @@ lemma subsequencePreservesTop  {φ : ℕ → ℕ}
     push_neg at ass
     specialize ass a
     apply bndOnStrictMono hφ ass
-  simp
+  simp only [mem_map, mem_atTop_sets, ge_iff_le, mem_preimage]
 
   use this.choose
   intro b hb
@@ -81,11 +79,9 @@ variable {X : Type u} [ConvergingSequences X]
 open ConvergingSequences
 scoped notation a " ⟶ " x => seq (a , x)
 @[simp] def nbh (x : X) : Filter X := by
-
-
   use {Y | ∀ a , (a ⟶ x) → Y ∈ map a atTop}
   · simp
-  · simp ;
+  · simp only [mem_map, mem_atTop_sets, ge_iff_le, mem_preimage, mem_setOf_eq] ;
     intro Y Z
     intro ass hYZ b (hb : b ⟶ x)
     specialize ass b hb
@@ -127,7 +123,6 @@ apply mem_of_superset ; swap
 lemma subSeqCnstrction {a : ℕ → X} {Y : Set (X)} (as : Y ∉ map a atTop) :
   ∃ (a' : SubSequence a) , ∀ n , a' n ∉ Y := by
     simp at as
-
     let φ : ℕ → ℕ := by
       intro n
       induction n with
@@ -142,20 +137,15 @@ lemma subSeqCnstrction {a : ℕ → X} {Y : Set (X)} (as : Y ∉ map a atTop) :
           have : φ n ≤ φ b := by
             by_cases h : n = b
             · rw [h] ;
-            · apply le_of_lt
-              apply hb
-              have : n ≤ b := Nat.le_of_lt_succ as'
-              exact Nat.lt_of_le_of_ne this h
-
-          have t2 : φ b < φ (Nat.succ b) := (as (Nat.succ (φ b))).choose_spec.1
-          exact Nat.lt_of_le_of_lt this t2
-
+            · exact le_of_lt (hb <| Nat.lt_of_le_of_ne (Nat.le_of_lt_succ as') h)
+          exact Nat.lt_of_le_of_lt this (as (Nat.succ (φ b))).choose_spec.1
        ⟩
     intro n
     simp
     induction n with
       | zero => exact (as 0).choose_spec.2
       | succ n _ => exact ((as (Nat.succ (φ n))).choose_spec.2)
+
 lemma seqInNhd {a : ℕ → X} {N : Set X} (hN : N ∈ map a atTop) : ∃ n , a n ∈ N := by
     simp at hN
     use hN.choose
