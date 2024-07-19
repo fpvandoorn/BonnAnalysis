@@ -59,7 +59,7 @@ open LinearMap
 def toLinearAuto (Φ) [GoodEnoughAutom k V Φ] : (V →L[k] V) := by
   apply ContinuousLinearMap.mk ; swap
   apply IsLinearMap.mk'  (Φ) (isLinear (k :=k) (V:=V))
-  have : Continuous Φ  := by sorry
+  have : Continuous Φ  := by apply ContDiff.continuous (𝕜 := k) ; exact (isSmooth)
   assumption
 
 
@@ -170,16 +170,6 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
           · apply TendstoUniformly.comp
             exact hφ l
         exact this
-
-
-
-        -- rw [this]
-
-        -- rw [] --
-        -- exact hφ l
-
-
-
 
 @[simp] def reflection' : V → V := fun x => -x
 @[simp] def shift' (x : V) : V → V := fun y => y - x
@@ -386,11 +376,27 @@ lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
   (f : E' → E)  [MeasureSpace E'] (K : Set E') (hK : support f ⊆ K)
   : ∫ (x : E' ) , f x = ∫ (x : E') in K , f x := by sorry
 @[simp] def Λ (f : LocallyIntegrableFunction V) : 𝓓' ℝ Ω := by
+  have integrable {ψ : 𝓓 ℝ Ω} : Integrable (fun v ↦ f.f v * ψ v) volume := by
+          let K := tsupport ψ
+          have hf : ((fun v ↦ f.f v * ψ v) = fun v => ψ v * K.indicator f.f v ) := by sorry
+          rw [hf]
+          apply MeasureTheory.Integrable.bdd_mul
+          · sorry
+          · sorry
+          have : ∃ C, ∀ (x : V), ‖ψ x‖ ≤ C := by sorry
+          exact this
+
   apply mk ; swap
   · exact fun φ => ∫ v , f v * φ v
   · constructor
-    · intro x y ; sorry -- rw [Integral.distrib_add] ; sorry
-    · sorry
+    · intro φ ψ ; rw [← integral_add] ;
+      · congr ;
+        ext v ;
+        apply mul_add ;
+      · apply integrable ;
+      · apply integrable ;
+
+    · intro c φ ; symm ; rw [← integral_smul] ; congr ; ext v ; unfold MeasureTheory.instSMul𝓓
     · constructor
       intro φ φ₀  hφ
       obtain ⟨ K , hK ⟩ := hφ.1
@@ -415,14 +421,6 @@ lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
         ≤  ENNReal.toReal (∫⁻ (v : V) in K,   ‖ (f v) ‖₊ ) * ENNReal.toReal (|| (φ n).φ - φ₀.φ ||_∞) := by
         intro n
         have fIsIntegrableOnK := LocallyIntegrable.integrableOn_isCompact f.hf hK.1
-        have integrable {ψ : V → ℝ} (hψ : tsupport ψ ⊆ K): Integrable (fun v ↦ f.f v * ψ v) volume := by
-          have hf : ((fun v ↦ f.f v * ψ v) = fun v => ψ v * K.indicator f.f v ) := by sorry
-          rw [hf]
-          apply MeasureTheory.Integrable.bdd_mul
-          · sorry
-          · sorry
-          have : ∃ C, ∀ (x : V), ‖ψ x‖ ≤ C := by sorry
-          exact this
 
 
 
@@ -464,7 +462,7 @@ lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
         have fIsMeasureable : Measurable fun a ↦ ENNReal.ofNNReal ‖f.f a‖₊ := by sorry
         calc
         ‖  (∫ (v : V), f.f v * (φ n).φ v)  - ∫ (v : V), f.f v * φ₀.φ v‖
-          = ‖  ∫ (v : V) , f.f v * (φ n).φ v - f.f v * φ₀.φ v‖  := by congr ; rw [← MeasureTheory.integral_sub] ; exact integrable (hK.2 n) ; exact integrable supportφ₀
+          = ‖  ∫ (v : V) , f.f v * (φ n).φ v - f.f v * φ₀.φ v‖  := by congr ; rw [← MeasureTheory.integral_sub] ; exact integrable ; exact integrable
         _ = ‖  ∫ (v : V) , f.f v * ((φ n).φ v -φ₀.φ v)‖ := by congr ; ext1 v ; symm ; exact (smul_sub (f.f v) ((φ n).φ v) (φ₀.φ v))
         _ = ‖  ∫ (v : V) in K , (f.f  * ((φ n).φ -φ₀.φ)) v‖ := by apply congrArg ; apply shouldExist (fun v => f.f v * ((φ n).φ -φ₀.φ) v ) K ; exact someArg
         _ ≤ (∫⁻ (v : V) in K , ENNReal.ofReal ‖ (f.f v * ((φ n).φ -φ₀.φ) v)‖ ).toReal   := by apply MeasureTheory.norm_integral_le_lintegral_norm (f.f * ((φ n).φ -φ₀.φ))

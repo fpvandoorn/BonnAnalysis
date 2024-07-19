@@ -58,7 +58,7 @@ instance : Add (𝓓 k Ω ) where
 instance : Neg (𝓓 k Ω ) where
   neg := fun φ =>
     ⟨ - φ , ContDiff.neg φ.φIsSmooth , by sorry , by sorry ⟩
-instance : AddCommGroup (𝓓 k Ω ) where
+@[simp] instance : AddCommGroup (𝓓 k Ω ) where
   add_assoc := fun φ ψ τ => by ext x ; apply add_assoc
   zero_add := fun φ => by ext x ; apply zero_add
   add_zero := fun φ => by ext x ; apply add_zero
