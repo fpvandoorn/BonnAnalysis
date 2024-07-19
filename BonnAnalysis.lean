@@ -4,3 +4,5 @@ import BonnAnalysis.Examples
 import BonnAnalysis.LorentzSpace
 import BonnAnalysis.Plancherel
 import BonnAnalysis.RealInterpolation
+import BonnAnalysis.StrongType
+import BonnAnalysis.Test
