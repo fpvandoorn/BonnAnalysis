@@ -44,7 +44,7 @@ There are various statements of this in Lean, see \href{https://leanprover-commu
     ~\\
     If $|\phi|$ is constant, everything holds trivially by setting $M_0$ and $M_1$ to be the value of $|\phi|$ at a point. Assume $|\phi|$ non-constant.\\
     \begin{itemize}
-        \item{ \textbf{Case 1}: assume $M_0=M_1=1$, and $\sup_{0 \leq x \leq 1} | \phi(x+iy) | \to 0$ when $|y| \to 0$.\\
+        \item{ \textbf{Case 1}: assume $M_0=M_1=1$, and $\sup_{0 \leq x \leq 1} | \phi(x+iy) | \to 0$ when $|y| \to \infty$.\\
         Let $M$ be the supremum of $|\phi(z)|$ on $\bar{S}$. Since the function is non-constant, we have $M>0$.\\
         Let $\{z_n\}$ be a sequence of points in $S$ such that $|\phi(z_n)|$ converges to $M$.\\
         Since we assumed the absolute value of $\phi$ goes to zero as $|y|$ goes to infinity, all points where $|\phi(z)|>M-\epsilon$ must be in some rectangle around zero, i.e. the sequence ${z_n}$ must be bounded.\\
@@ -145,16 +145,37 @@ As a last step towards proving the theorem, let us recall a consequence of Höld
   \label{lem:hoelder'}
   %\uses{}
   %\lean{}
-  %\leanok
-  Let $(X, \mu)$ be a measure space and $0<p_0<p<p_1\leq \infty$. Assume there is a $t$ such that we can write
+  \leanok
+  Let $(X, \mu)$ be a measure space and $0< p_0 <p_1\leq \infty$, $0 \le p \le \infty$. Assume we have $t \ge 0$ such that
   \[ \frac{1}{p} = \frac{1-t}{p_0} + \frac{t}{p_1} \]
-  Let $f$ be a function in $L^{p_0}(X) \cap L^{p_1}(X)$. Then, $f$ is in $L^p(X)$ and
-  \[ ||f||_{L^p} \leq ||f||^{1-t}_{L^{p_0}} ||f||^t_{L^{p_1}} \]
+  Let $f : X \to \mathbb C$ be a measurable function. Then
+  \[ \| f \|_{L^p} \leq \| f \|^{1-t}_{L^{p_0}} \|f\|^t_{L^{p_1}} \]
+  In particular, the $f$ in $L^{p_0}(X) \cap L^{p_1}(X)$, then $f$ is in $L^p(X)$.
+
   \end{lemma}
     \begin{proof}
     %\uses{} % Put any results used in the proof but not in the statement here
-    % \leanok % uncomment if the lemma has been proven
-    ``Exercise''/ To be filled later/ Possibly already in Mathlib
+    \leanok % uncomment if the lemma has been proven
+    % ``Exercise''/ To be filled later/ Possibly already in Mathlib
+
+    This is just a version of Hölder's inequality, but in order to apply it, we should rule out some trivial cases.
+
+    First note that the assumption guarantees that $0 < p_0 \le p \le p_1 \le \infty$ and $0\le t \le 1$.
+
+    When $t=0$ or $t=1$, the inequality holds trivially. Hence we may assume $t \ne 0$ and $t \ne 1$. In this case $p < p_1 \le \infty$.
+
+    Now we can rearrange the equality into
+    $$ \cfrac{1}{\cfrac{p_0}{(1-t)p}} + \cfrac{1}{\cfrac{p_1}{tp}} = 1.$$
+
+    Using Hölder's inequality, we have
+    \begin{align*}
+      \|f\|_{L^p} &= (\int |f|^p d\mu)^{1/p} \\
+      & = (\int |f|^{(1-t)p} |f|^{tp} d\mu)^{1/p} \\
+      & \le ((\int |f|^{(1-t)p \frac{p_0}{(1-t)p}} d\mu)^{\frac{(1-t)p}{p_0}} (\int |f|^{tp \frac{p_1}{tp}} d\mu)^{\frac{tp}{p_1}})^{1/p} \\
+      & = (\int |f|^{p_0} d\mu)^{\frac{(1-t)}{p_0}} (\int |f|^{p_1} d\mu)^{\frac{tp}{p_1}} \\
+      & = \| f \|^{1-t}_{L^{p_0}} \|f\|^t_{L^{p_1}}
+    \end{align*}
+
   \end{proof}
 
 
