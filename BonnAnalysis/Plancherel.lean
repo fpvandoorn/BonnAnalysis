@@ -23,10 +23,8 @@ lemma fourier_conj {f : V → ℂ} : 𝓕 (conj f) = conj (𝓕 (f ∘ (fun x �
   rw [← integral_conj, ← integral_neg_eq_self]
   apply congrArg (integral volume)
   ext v
-  have : 𝐞 (-⟪v, w⟫_ℝ) • f (-v) = 𝐞 (-⟪v, w⟫_ℝ) * f (-v) := rfl
-  rw [this, starRingEnd_apply, starRingEnd_apply, star_mul']
-  have : 𝐞 (-⟪-v, w⟫_ℝ) • star (f (-v)) = 𝐞 (-⟪-v, w⟫_ℝ) * star (f (-v)) := rfl
-  rw [this]
+  rw [show 𝐞 (-⟪v, w⟫_ℝ) • f (-v) = 𝐞 (-⟪v, w⟫_ℝ) * f (-v) from rfl, starRingEnd_apply, starRingEnd_apply, star_mul']
+  rw [show 𝐞 (-⟪-v, w⟫_ℝ) • star (f (-v)) = 𝐞 (-⟪-v, w⟫_ℝ) * star (f (-v)) from rfl]
   simp
   left
   unfold Real.fourierChar
@@ -55,15 +53,14 @@ lemma fourier_convolution {f g : V → ℂ} (hf : Integrable f volume) (hg : Int
     ext v
     simp
     left
-    exact (@integral_sub_right_eq_self V ℂ _ _ _ volume _ _ _ (fun w ↦ 𝐞 (-⟪w,x⟫_ℝ) • g w) v).symm
+    exact (integral_sub_right_eq_self (fun w ↦ 𝐞 (-⟪w,x⟫_ℝ) • g w) v).symm
   · apply congrArg (integral volume)
     ext v
     rw [← integral_mul_left]
     apply congrArg (integral volume)
     ext w
-    have h1 : 𝐞 (-⟪v, x⟫_ℝ) • f v = 𝐞 (-⟪v, x⟫_ℝ) * f v := rfl
-    have h2 : 𝐞 (-⟪w - v, x⟫_ℝ) • g (w - v) = 𝐞 (-⟪w - v, x⟫_ℝ) * g (w - v) := rfl
-    rw [h1, h2]
+    rw [show  𝐞 (-⟪v, x⟫_ℝ) • f v = 𝐞 (-⟪v, x⟫_ℝ) * f v  from rfl ,
+        show 𝐞 (-⟪w - v, x⟫_ℝ) • g (w - v) = 𝐞 (-⟪w - v, x⟫_ℝ) * g (w - v) from rfl]
     ring
   · apply congrArg (integral volume)
     ext v
@@ -76,9 +73,10 @@ lemma fourier_convolution {f g : V → ℂ} (hf : Integrable f volume) (hg : Int
     rw [← Complex.exp_add]
     apply congrArg (cexp)
     simp
-    have : ⟪w, x⟫_ℝ = ⟪v, x⟫_ℝ + ⟪w - v, x⟫_ℝ := by
-      rw [← InnerProductSpace.add_left, add_sub_cancel]
-    rw [this]
+
+    rw [show ⟪w, x⟫_ℝ = ⟪v, x⟫_ℝ + ⟪w - v, x⟫_ℝ from
+        by rw [← InnerProductSpace.add_left, add_sub_cancel]]
+
     push_cast
     ring
   · apply integral_integral_swap
@@ -99,26 +97,24 @@ lemma fourier_convolution {f g : V → ℂ} (hf : Integrable f volume) (hg : Int
       apply Integrable.const_mul
       exact Integrable.comp_sub_right hg v
       apply AEStronglyMeasurable.mul; swap; exact h
-      have : (fun y ↦ ↑(𝐞 (-⟪y, x⟫_ℝ))) = (Complex.exp ∘ ((- 2 * (π : ℂ) * I) • (fun y ↦ (⟪y, x⟫_ℝ : ℂ)))) := by
-        ext y
-        unfold Real.fourierChar
-        simp[Complex.exp_neg]
-        exact congrArg cexp (by ring)
-      rw [this]
+      rw [show  (fun y ↦ ↑(𝐞 (-⟪y, x⟫_ℝ))) = (Complex.exp ∘ ((- 2 * (π : ℂ) * I) • (fun y ↦ (⟪y, x⟫_ℝ : ℂ)))) from ?_] ; swap
+      ext y
+      unfold Real.fourierChar
+      simp[Complex.exp_neg]
+      exact congrArg cexp (by ring)
       apply aestronglyMeasurable_iff_aemeasurable.2
       apply Measurable.comp_aemeasurable Complex.measurable_exp
       apply AEMeasurable.const_smul (Continuous.aemeasurable ?_)
-      have : (fun y ↦ (⟪y, x⟫_ℝ : ℂ)) = ((fun x ↦ (x : ℂ)) : ℝ → ℂ) ∘ ((fun y ↦ ⟪y, x⟫_ℝ) : V → ℝ) := by
-        ext y; simp
-      rw [this]
+      rw [show  (fun y ↦ (⟪y, x⟫_ℝ : ℂ)) = ((fun x ↦ (x : ℂ)) : ℝ → ℂ) ∘ ((fun y ↦ ⟪y, x⟫_ℝ) : V → ℝ) from ?_] ; swap
+      ext y; simp
       exact Continuous.comp continuous_ofReal (Continuous.inner continuous_id' continuous_const)
     · simp
-      have : (fun x ↦ ∫ (y : V), Complex.abs (f x) * Complex.abs (g (y - x))) = (fun x ↦ ‖f x‖ * ∫ (y : V), Complex.abs (g y)) := by
-        ext x
-        rw [← integral_add_right_eq_self _ x]
-        simp
-        exact integral_mul_left (Complex.abs (f x)) fun a ↦ Complex.abs (g a)
-      rw [this]
+
+      rw [show (fun x ↦ ∫ (y : V), Complex.abs (f x) * Complex.abs (g (y - x))) = (fun x ↦ ‖f x‖ * ∫ (y : V), Complex.abs (g y)) from ?_] ; swap
+      ext x
+      rw [← integral_add_right_eq_self _ x]
+      simp
+      exact integral_mul_left (Complex.abs (f x)) fun a ↦ Complex.abs (g a)
       apply Integrable.mul_const
       apply (integrable_norm_iff ?_).2
       exact hf
@@ -133,11 +129,10 @@ lemma fourier_convolution {f g : V → ℂ} (hf : Integrable f volume) (hg : Int
         apply AEMeasurable.mul_const _ I
         apply AEMeasurable.const_mul
         apply Continuous.aemeasurable
-        have : (fun y ↦ (⟪y, x⟫_ℝ : ℂ)) = ((fun x ↦ (x : ℂ)) : ℝ → ℂ) ∘ ((fun y ↦ ⟪y, x⟫_ℝ) : V → ℝ) := by
-          ext y; simp
-        rw [this]
+        rw [show (fun y ↦ (⟪y, x⟫_ℝ : ℂ)) = ((fun x ↦ (x : ℂ)) : ℝ → ℂ) ∘ ((fun y ↦ ⟪y, x⟫_ℝ) : V → ℝ) from ?_] ; swap
+        ext y; simp
         exact Continuous.comp continuous_ofReal (Continuous.inner continuous_id' continuous_const)
-      exact @AEStronglyMeasurable.snd V V _ _ volume volume _ _ _ _ this
+      exact AEStronglyMeasurable.snd this
       apply AEStronglyMeasurable.mul
       exact AEStronglyMeasurable.fst (Integrable.aestronglyMeasurable hf)
       sorry
@@ -163,8 +158,7 @@ theorem memℒp_fourierIntegralInv {f : V → ℂ} (hf : Integrable f) (h2f : Me
   apply Memℒp.comp_of_map
   simp
   exact h2f
-  have : (fun t ↦ -t) = - (id : V → V) := by ext v; simp
-  rw [this]
+  simp_rw [show (fun t ↦ -t) = - (id : V → V) from by ext v; simp]
   exact AEMeasurable.neg aemeasurable_id
 
 def selfConvolution (f : V → ℂ) := convolution f (conj (fun x ↦ f (-x))) (ContinuousLinearMap.mul ℂ ℂ)
@@ -177,19 +171,16 @@ lemma fourier_selfConvolution {f : V → ℂ}  (hf : Integrable f) :
   unfold selfConvolution
   rw [fourier_convolution, fourier_conj]
   ext x; simp
-  have : ((fun x ↦ f (-x)) ∘ fun x ↦ -x) = f := by ext x; simp
-  rw [this, mul_conj']
+
+  rw [show ((fun x ↦ f (-x)) ∘ fun x ↦ -x) = f from by ext x; simp , mul_conj']
   simp
   exact hf
   apply (integrable_norm_iff ?_).1
-  · have : (fun a ↦ ‖conj (fun x ↦ f (-x)) a‖) = (fun a ↦ ‖f (-a)‖) := by
-      ext a
-      simp
-    rw [this]
+  · rw [show (fun a ↦ ‖conj (fun x ↦ f (-x)) a‖) = (fun a ↦ ‖f (-a)‖) from by ext a ; simp]
     exact Integrable.norm (Integrable.comp_neg hf)
   · apply aestronglyMeasurable_iff_aemeasurable.2
     apply Measurable.comp_aemeasurable (Continuous.measurable continuous_conj)
-    simp
+    --simp
     exact Integrable.aemeasurable (Integrable.comp_neg hf)
 
 
@@ -199,10 +190,10 @@ theorem snorm_fourierIntegral {f : V → ℂ} (hf : Integrable f) (h2f : Memℒp
     snorm (𝓕 f) 2 volume = snorm f 2 volume := by
   have lim1 : Tendsto (fun (c : ℝ) ↦ ∫ v : V, cexp (- c⁻¹ * ‖v‖ ^ 2) * 𝓕 (selfConvolution f) v) atTop
       (𝓝 (∫ v : V, ‖f v‖ ^ 2)) := by
-    have ha : ∀ c, Integrable (fun v : V ↦ cexp (-c⁻¹ * ‖v‖ ^ 2)) volume := by
+    have ha : ∀ c : ℝ , Integrable (fun v : V ↦ cexp (-c⁻¹ * ‖v‖ ^ 2)) volume := by
       sorry
 
-    have : ∀ c, ∫ v : V, cexp (-c⁻¹ * ‖v‖ ^ 2) * 𝓕 (selfConvolution f) v = ∫ v : V, 𝓕 (fun w ↦ cexp (c⁻¹ * ‖w‖ ^ 2)) v * (selfConvolution f v) := by
+    have : ∀ c : ℝ , ∫ v : V, cexp (-c⁻¹ * ‖v‖ ^ 2) * 𝓕 (selfConvolution f) v = ∫ v : V, 𝓕 (fun w ↦ cexp (c⁻¹ * ‖w‖ ^ 2)) v * (selfConvolution f v) := by
       sorry
       --intro c
       --symm
@@ -243,13 +234,13 @@ theorem snorm_fourierIntegralInv {f : V → ℂ} (hf : Integrable f) (h2f : Mem�
       rw [fourierIntegralInv_eq_fourierIntegral_neg]
     · rw [← @lintegral_map' _ _ _ _ _ (fun x ↦ (‖𝓕 f x‖₊ : ENNReal) ^ 2) (fun x ↦ -x) _ (AEMeasurable.neg aemeasurable_id)]
       simp; simp
-      have : (fun x ↦ (‖𝓕 f x‖₊ : ENNReal) ^ 2) = (fun x ↦ x ^ 2) ∘ (fun x ↦ (‖𝓕 f x‖₊ : ENNReal)) := by
-        ext x; simp
-      rw [this]
+
+      rw [show (fun x ↦ (‖𝓕 f x‖₊ : ENNReal) ^ 2) = (fun x ↦ x ^ 2) ∘ (fun x ↦ (‖𝓕 f x‖₊ : ENNReal)) from by
+        ext x; simp]
       apply Measurable.comp_aemeasurable (Measurable.pow_const (fun ⦃t⦄ a ↦ a) 2)
-      have : (fun x ↦ (‖𝓕 f x‖₊ : ENNReal)) = (fun x ↦ (‖x‖₊ : ENNReal)) ∘ (fun x ↦ 𝓕 f x) := by
-        ext x; simp
-      rw [this]
+
+      rw [show (fun x ↦ (‖𝓕 f x‖₊ : ENNReal)) = (fun x ↦ (‖x‖₊ : ENNReal)) ∘ (fun x ↦ 𝓕 f x) from by
+        ext x; simp]
       exact Measurable.comp_aemeasurable (Continuous.measurable <| ENNReal.continuous_coe_iff.2 continuous_nnnorm) <|
         AEStronglyMeasurable.aemeasurable (memℒp_fourierIntegral hf h2f).1
   · exact snorm_fourierIntegral hf h2f
