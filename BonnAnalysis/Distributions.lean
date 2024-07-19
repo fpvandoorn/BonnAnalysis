@@ -205,3 +205,10 @@ open IsSeqCtsLinearMap
   -- (hT2 : IsLinearMap k T) (hT : SeqContinuous' T) := by
   use ⟨ ⟨ T ,hT.isAdd ⟩ , hT.isMul ⟩
   apply continuous_of_SeqContinuous  hT.isSeqCts
+lemma SeqContinuous'OfContinuous  (T : X →L[k] M) : SeqContinuous' T := by
+  constructor
+  intro x x0 hx
+  apply Continuous.seqContinuous
+  exact T.cont
+  apply tendsTo𝓝
+  exact hx
