@@ -681,7 +681,15 @@ lemma DiffContOnCl.const_cpow {a: ℂ} (ha: a ≠ 0) {s: Set ℂ} {f: ℂ → �
     · left; exact ha
 }
 
-lemma DiffContOnCl.id {s: Set ℂ} : DiffContOnCl ℂ id s := DiffContOnCl.mk differentiableOn_id continuousOn_id
+lemma DiffContOnCl.id [NormedSpace ℂ E] {s: Set E} : DiffContOnCl ℂ (fun x : E ↦ x) s := DiffContOnCl.mk differentiableOn_id continuousOn_id
+
+-- needed for fun_prop
+lemma DiffContOnCl.neg' [NormedSpace ℂ E] [NormedSpace ℂ E₂] {f : E → E₂} {s: Set E}
+  (h : DiffContOnCl ℂ f s) : DiffContOnCl ℂ (fun x : E ↦ -(f x)) s := h.neg
+
+attribute [fun_prop] DiffContOnCl
+attribute [fun_prop] DiffContOnCl.smul DiffContOnCl.add diffContOnCl_const DiffContOnCl.sub
+  DiffContOnCl.neg' DiffContOnCl.sub_const DiffContOnCl.const_cpow DiffContOnCl.id
 
 /-- Hadamard's three lines lemma/theorem on the unit strip. -/
 theorem DiffContOnCl.norm_le_pow_mul_pow₀₁ {f : ℂ → ℂ}
@@ -698,19 +706,8 @@ theorem DiffContOnCl.norm_le_pow_mul_pow₀₁ {f : ℂ → ℂ}
       have hsmul : g = fun z ↦ h z • f z := rfl
       have hg: DiffContOnCl ℂ g { z | z.re ∈ Ioo 0 1} := by {
         rw[hsmul]
-        apply DiffContOnCl.smul
-        · simp only [h]
-          apply DiffContOnCl.smul
-          · simp only [p₁]
-            apply DiffContOnCl.const_cpow (by norm_cast; exact ne_of_gt hM₀)
-            simp_rw[sub_eq_add_neg]
-            apply DiffContOnCl.add_const DiffContOnCl.id
-          · simp only [p₂]
-            apply DiffContOnCl.const_cpow (by norm_cast; exact ne_of_gt hM₁)
-            exact DiffContOnCl.neg DiffContOnCl.id
-        · exact hf
+        fun_prop (discharger := norm_cast; positivity)
       }
-
       have h2g:  IsBounded (g '' { z | z.re ∈ Icc 0 1}) := by {
         obtain ⟨R, hR⟩ :=  isBounded_iff_forall_norm_le.mp h2f
         rw[isBounded_iff_forall_norm_le]
