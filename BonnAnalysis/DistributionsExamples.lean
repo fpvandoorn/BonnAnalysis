@@ -27,7 +27,6 @@ open scoped Classical
 open NNReal Topology
 open Filter
 
-
 open scoped Topology
 open TopologicalSpace
 noncomputable section
@@ -101,8 +100,8 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
   apply closure_minimal
   · trans support f + support g
     · apply support_convolution_subset
-    · have a1 := subset_tsupport (f) ;
-      have a2 := subset_tsupport g ;
+    · have a1 := subset_tsupport (f)
+      have a2 := subset_tsupport g
       exact add_subset_add a1 a2
   · have : IsCompact ( tsupport f + tsupport g) := by
       apply sum_compact_subsets
@@ -124,7 +123,7 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
         · apply IsProperMap.isCompact_preimage
           apply (IsProper (k:=k))
           exact (ψ.φHasCmpctSupport)
-      · exact fun ⦃a⦄ a ↦ trivial
+      · exact fun _ _ ↦ trivial
       --ψ.φHasCmpctSupport
   · constructor
     · intro φ ψ
@@ -152,7 +151,6 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
       · intro l
         -- apply TendstoUniformly.comp
         have th : ∀ {n  : ℕ∞} , n ≤ ⊤ := OrderTop.le_top _
-        have q := fun l =>  (φ l).φIsSmooth
         let myΦ : (i : Fin l) → V →L[k] V :=  fun _ ↦ toLinearAuto Φ
         let precompmyΦ: (V [×l]→L[k] k) →L[k] (V [×l]→L[k] k) := ContinuousMultilinearMap.compContinuousLinearMapL (myΦ)
 
@@ -164,18 +162,13 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
         have : (fun n => iteratedFDeriv k l ((φ n).φ ∘ Φ) ) = (fun n => precompmyΦ ∘ iteratedFDeriv k l (φ n).φ ∘ Φ )  := by
            ext1 n
            exact chainRule
-        have hφ' : TendstoUniformly (fun n => (iteratedFDeriv k l (φ n).φ ∘ Φ)) ((iteratedFDeriv k l φ0.φ) ∘ Φ) atTop
-          :=  TendstoUniformly.comp (hφ l) (Φ)
         have : TendstoUniformly (fun n => iteratedFDeriv k l (φ n ∘ Φ) ) (iteratedFDeriv k l (φ0 ∘ Φ)) atTop := by
           rw [chainRule (φ0 := φ0)]
           rw [this]
-
-
           apply UniformContinuous.comp_tendstoUniformly (g:= precompmyΦ)
           · apply ContinuousLinearMap.uniformContinuous -- apply UniformFun.postcomp_uniformContinuous , uniform Inducing?
           · apply TendstoUniformly.comp
             exact hφ l
-
         exact this
 
 
@@ -383,12 +376,10 @@ theorem MeasureTheory.lintegral_indicator {α : Type u_1} {m : MeasurableSpace �
 lemma TendstoUniformly_iff_uniformZeroSeq {φ  : ℕ → V → k} {φ₀ : V → k} : TendstoUniformly φ φ₀ atTop ↔ TendstoUniformly (fun n => φ n - φ₀) 0 atTop := by
           constructor
           · intro hφ
-            rw [show (0 = φ₀ - φ₀) from ?_] ; swap
-            · simp
-            · apply TendstoUniformly.sub hφ
-              rw [← tendstoUniformlyOn_univ ]
-              apply CnstSeqTendstoUniformlyOn
-
+            rw [show (0 = φ₀ - φ₀) from (by simp)]
+            apply TendstoUniformly.sub hφ
+            rw [← tendstoUniformlyOn_univ]
+            apply CnstSeqTendstoUniformlyOn
           · sorry
 lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
   {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
@@ -552,7 +543,7 @@ lemma  ConvWithIsUniformContinuous-- [BorelSpace V]
               it preserve Uniform sequences.
             exact UniformContinuous.comp_tendstoUniformly (g:= fun ψ => φ.φ ⋆ ψ) ?_ this
             -/
-lemma  iteratedDerivConv {V : Type u}  [MeasureSpace V]
+lemma iteratedDerivConv {V : Type u}  [MeasureSpace V]
    [NormedAddCommGroup V]  [NormedSpace ℝ V] [BorelSpace V]
   {k' : Type w}  [MeasureSpace k'] [NormedAddCommGroup k']  [NormedSpace ℝ k']
     {φ : 𝓓F ℝ V}  {ψ : ℕ → V → k'} {ψ0 : V → k'} (hψ : TendstoUniformly ψ ψ0 atTop) {l : ℕ}
@@ -578,7 +569,7 @@ lemma convOfTestFunctionsExists [T2Space V] {φ ψ : 𝓓F ℝ V} : ConvolutionE
   · apply HasCompactSupport.convolution
     · exact φ.φHasCmpctSupport
     · exact ψ.φHasCmpctSupport
-  · exact fun ⦃a⦄ a ↦ trivial
+  · exact fun _ _ ↦ trivial
   · constructor
     · intro ψ₁ ψ₂ ; ext z ; simp ; apply ConvolutionExistsAt.distrib_add ; exact convOfTestFunctionsExists z ; exact convOfTestFunctionsExists z --help
     · intro c ψ ; ext z ; simp ; exact congrFun (convolution_smul (𝕜 := ℝ ) (F:= ℝ ) (G:= V) (f:=φ.φ) (g:= ψ.φ) ) z

@@ -13,7 +13,7 @@ import Mathlib
 -- noncomputable section
 --open FourierTransform MeasureTheory Real
 
-
+set_option profiler true
 namespace MeasureTheory
 open MeasureTheory
 universe u v
@@ -26,7 +26,6 @@ open NNReal Topology
 open scoped Topology
 open TopologicalSpace
 noncomputable section
-
 
 variable {V : Type u} (k : Type v)
   [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] (Ω : Opens V) --{ΩisOpen : IsOpen Ω}
