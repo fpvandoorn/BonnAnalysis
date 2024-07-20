@@ -51,7 +51,7 @@ variable {V : Type u} {k : Type v} [NontriviallyNormedField k]
   [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V] {Ω : Opens V}
 variable  (W : Type* )  [NormedAddCommGroup W]  [NormedSpace k W]
 
-def ev_cts  (v : V) {W : Type* }  [NormedAddCommGroup W]  [NormedSpace k W]  :
+@[simp] def ev_cts  (v : V) {W : Type* }  [NormedAddCommGroup W]  [NormedSpace k W]  :
   (V →L[k] W) →L[k] W := ContinuousLinearMap.apply _ _ v
 
 
@@ -220,44 +220,23 @@ lemma testfunctionIsDiffAt {φ : 𝓓 k Ω} (x : V) : DifferentiableAt k (φ) x 
   · exact OrderTop.le_top 1
 def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
   have crypto {l} {ψ : 𝓓 k Ω} :
+  /-
+   iteratedFDeriv 𝕜 (n + 1) f =
+    (⇑(continuousMultilinearCurryRightEquiv' 𝕜 n E F) ∘ iteratedFDeriv 𝕜 n fun y ↦ fderiv 𝕜 f y)
+  -/
     iteratedFDeriv k l (fun y => fderiv k ψ.φ y v)  =
-      fun z => (ContinuousMultilinearMap.curryLeft (iteratedFDeriv k (l + 1) ψ.φ z) v) := by
+       (fun f => ( ev_cts v).compContinuousMultilinearMap f) ∘ fun z =>  (iteratedFDeriv k (l + 1) (ψ).φ z).curryRight  := by
             ext1 z ;
+            simp_rw [iteratedFDeriv_succ_eq_comp_right]
             ext1 w
-            rw [iteratedFDeriv_succ_eq_comp_right]
-            apply congrFun
-            apply congrArg
-            apply congrFun
-  --           have: ∀ f , iteratedFDeriv k l (fun y ↦ (fderiv k ψ.φ y) v) z =
-  -- ((⇑(continuousMultilinearCurryRightEquiv' k l V k) ∘ iteratedFDeriv k l fun y ↦ fderiv k ψ.φ y) z).curryLeft v
-
-            --rw [ContinuousMultilinearMap.curry_uncurryRight]
-            have: ⇑(continuousMultilinearCurryRightEquiv' k l V k) = ContinuousMultilinearMap.uncurryRight (Ei := fun _ => V):= rfl
-
-            -- have : (fun f ↦ f.curryLeft v) ∘ ContinuousMultilinearMap.uncurryRight (Ei := fun _ => V) = fun f => f v := by rfl
-            have : (iteratedFDeriv k l fun y ↦ fderiv k ψ.φ y v) =
-              (fun f => f.curryLeft v)
-              ∘ (⇑(continuousMultilinearCurryRightEquiv' k l V k) ∘ iteratedFDeriv k l fun y ↦ fderiv k ψ.φ y)  := by
-              rw [this]
-              ext x z
-              simp
-
-
-
-
-              sorry
+            simp only [ev_cts, Nat.succ_eq_add_one, Function.comp_apply,
+              ContinuousLinearMap.compContinuousMultilinearMap_coe, ContinuousLinearMap.apply_apply,
+              ContinuousMultilinearMap.curryRight_apply,
+              continuousMultilinearCurryRightEquiv_apply', Fin.init_snoc, Fin.snoc_last]
+            have : (iteratedFDeriv k l (fun y ↦ (fderiv k ψ.φ y) v) z) w =
+              ((iteratedFDeriv k l (fderiv k ψ.φ) z) w) v := by sorry
             exact this
-  --           have : (iteratedFDeriv k l fun y ↦ (fderiv k ψ.φ y) v) =
-  -- (fun f => ContinuousMultilinearMap.curryLeft f v)
-  --   ∘ (((fun f => ContinuousMultilinearMap.uncurryRight f) ∘ iteratedFDeriv k l fun y ↦ fderiv k ψ.φ y) ) := by sorry
-            -- have := Eq.symm (iteratedFDeriv_succ_apply_right
-            --    (𝕜 := k) (n:=l) (f:=ψ.φ) (m := Fin.cons v w) (x:=z))
-            -- simp at this
-            -- unfold ContinuousMultilinearMap.curryLeft
-            -- simp
 
-            -- rw [this]
-            -- simp
 
   have obs {φ : V → k} : tsupport (fun x => fderiv k φ x v) ⊆ tsupport (φ) := by -- ⊆ tsupport (fun x => fderiv k φ) :=
     trans ; swap
@@ -319,16 +298,17 @@ def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
           · exact hK.2 n
       · intro l
         have : TendstoUniformly (fun n ↦ iteratedFDeriv k (l+1) (α  n).φ) (iteratedFDeriv k (l+1) (a).φ) atTop := hx.2 (l+1)
-        let g1 : (V[×(l+1)]→L[k] k) ≃ₗᵢ[k] V →L[k] (V[×l]→L[k] k) := (continuousMultilinearCurryLeftEquiv k (fun _ => V) k).symm
-        let g1 : (V[×(l+1)]→L[k] k) →L[k] V →L[k] (V[×l]→L[k] k)  := ContinuousLinearEquiv.toContinuousLinearMap g1
-        let g : (V[×(l+1)]→L[k] k) →L[k] (V[×l]→L[k] k)  :=  ( ev_cts v).comp g1 --todo replace by ev_cts
+        let g1 : (V[×(l+1)]→L[k] k) ≃ₗᵢ[k] (V[×l]→L[k] V →L[k] k) := (continuousMultilinearCurryRightEquiv k (fun _ => V) k).symm
+        let g1 : (V[×(l+1)]→L[k] k) →L[k] (V[×l]→L[k] V →L[k] k)  := ContinuousLinearEquiv.toContinuousLinearMap g1
+        let precomp_ev_v : (V[×l]→L[k] V →L[k] k) →L[k] (V[×l]→L[k] k) :=ContinuousLinearMap.compContinuousMultilinearMapL k (fun _ => V) (V →L[k] k) k  ( ev_cts v)
+        let g : (V[×(l+1)]→L[k] k) →L[k] (V[×l]→L[k] k)  :=  precomp_ev_v.comp g1
     --     have step (f : V → k ) (z : V) : iteratedFDeriv k l (fderiv k f) z =
     -- ContinuousMultilinearMap.curryLeft (iteratedFDeriv k (l + 1) f z) := congrFun (fderiv_iteratedFDeriv (𝕜 := k) (f:= f)) z
         have hxg (ψ : 𝓓 k Ω)  :  iteratedFDeriv k l (f ψ).φ = g ∘ iteratedFDeriv k (l + 1) (ψ).φ := by
           calc
            _ = iteratedFDeriv k l (fun y => fderiv k ψ.φ y v) := rfl
-           _ = fun z => (ContinuousMultilinearMap.curryLeft (iteratedFDeriv k (l + 1) ψ.φ z) v) := crypto --exact?
-           _ = g ∘ iteratedFDeriv k (l + 1) (ψ).φ := by rfl -- ext1 z ; simp
+           --_ = fun z => (ContinuousMultilinearMap.curryRight v (iteratedFDeriv k (l + 1) ψ.φ z)) := crypto
+           _ = g ∘ iteratedFDeriv k (l + 1) (ψ).φ := crypto -- ext1 z ; simp
 
 
 
@@ -343,12 +323,18 @@ def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
 
         rw [hxg]
 
-        rw [← tendstoUniformlyOn_univ ] at this
-        rw [← tendstoUniformlyOn_univ ]
-        apply UniformContPresUniformConvergence this g
-        apply ContinuousLinearMap.uniformContinuous
+        --rw [← tendstoUniformlyOn_univ ] at this
+        --rw [← tendstoUniformlyOn_univ ]
+        have hg : UniformContinuous g.1 := by apply ContinuousLinearMap.uniformContinuous
+        refine UniformContinuous.comp_tendstoUniformly hg ?_
+        exact this
 
-/-
+
+
+
+
+
+
 
 
 example (v : V) (φ : 𝓓 k Ω ) (T : 𝓓' k Ω ): (fderiv𝓓 v ° T) φ = T (fderiv𝓓 v φ) := by rfl
