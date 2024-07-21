@@ -51,7 +51,7 @@ class GoodEnoughAutom   (V : Type u)  [MeasurableSpace V] [NormedAddCommGroup V]
 open GoodEnoughAutom
 open ContinuousLinearEquiv
 variable  {V : Type u}  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V]
-@[simp] def reflection' : V →ᴬ[k] V := (ContinuousLinearMap.neg.neg (ContinuousLinearMap.id k V)).toContinuousAffineMap
+@[simp] def reflection' : V →L[k] V := (ContinuousLinearMap.neg.neg (ContinuousLinearMap.id k V))
 @[simp] def shift' (x : V) : V →ᴬ[k] V := by
   apply ContinuousAffineMap.mk ; swap ;
   apply AffineMap.mk ; swap ;
@@ -60,7 +60,7 @@ variable  {V : Type u}  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace
   · exact (LinearMap.id);
   · sorry
 
-instance : (GoodEnoughAutom k V) (reflection' k) where
+instance : (GoodEnoughAutom k V) (reflection' k).toContinuousAffineMap where
 
   IsProper := by sorry
   --restToΩ := by sorry
@@ -136,16 +136,17 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
     -- maybe use that compact subsets of metrizable spaces are closed?
     exact IsCompact.isClosed this
 
-
 @[simp] def fromLinearAutoOfV (Φ : V →L[k] V) [GoodEnoughAutom k V Φ.toContinuousAffineMap] : 𝓓F k V →L[k] 𝓓F k V := by
+@[simp] def fromAutoWithCond  (Φ : V →ᴬ[k] V)  [GoodEnoughAutom k V Φ] : 𝓓F k V →L[k] 𝓓F k V := by
+
   apply mk ; swap
   ·   intro ψ
       use ψ ∘ Φ
-      · exact ContDiff.comp ψ.φIsSmooth (ContinuousLinearMap.contDiff Φ )
+      · exact ContDiff.comp ψ.φIsSmooth (ContinuousAffineMap.contDiff  Φ )
       · apply IsCompact.of_isClosed_subset ; swap
         exact isClosed_tsupport (ψ.φ ∘ Φ)
         swap
-        · exact supportfromAutoOfV (k:=k) Φ.toContinuousAffineMap ψ
+        · exact supportfromAutoOfV (k:=k)  Φ.toContinuousAffineMap ψ
         · apply IsProperMap.isCompact_preimage
           apply (IsProper (k:=k))
           exact (ψ.φHasCmpctSupport)
@@ -163,14 +164,14 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
       obtain ⟨ ⟨ K , hK⟩  ,hφ ⟩ := hφ
       apply tendsTo𝓝
       constructor
-      · use Φ.toContinuousAffineMap ⁻¹' K
+      · use Φ ⁻¹' K
         constructor
         · apply IsProperMap.isCompact_preimage
           apply (IsProper (k:=k))
           exact hK.1
         · intro n
           trans
-          · exact supportfromAutoOfV (k:=k) Φ.toContinuousAffineMap (φ n)
+          · exact supportfromAutoOfV (k:=k) Φ (φ n)
           · apply Set.monotone_preimage
             exact hK.2 n
 
@@ -199,19 +200,15 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
 lemma affineAsUnderlyingLinearTransition {Φ : V →ᴬ[k] V} {v : V} : Φ v = (Φ.linear v) + Φ 0 := by  rw [show Φ v = Φ (v + 0) from by simp only [add_zero]] ; apply Φ.map_vadd'
 @[simp] def fromTransition (x : V) : 𝓓F k V →L[k] 𝓓F k V := by
   apply mk ; swap
-  ·   intro ψ
-      use ψ ∘ (fun v => v + x)
-      sorry
-      sorry
-      sorry
+  ·   exact  precompWithAffine (shift' k x)
   · sorry
 
 instance {Φ : V →ᴬ[k] V} [GoodEnoughAutom k V Φ] : GoodEnoughAutom k V ( Φ.contLinear.toContinuousAffineMap) where
   IsProper := by sorry
 @[simp] def fromAutoOfV (Φ : V →ᴬ[k] V) [GoodEnoughAutom k V Φ] : 𝓓F k V →L[k] 𝓓F k V :=
-  (fromLinearAutoOfV Φ.contLinear).comp (fromTransition (Φ 0))
-lemma fromAutoOfVIsPrecompWithφ {ψ : 𝓓F k V} (Φ : V →ᴬ[k] V) [GoodEnoughAutom k V Φ]  :  (fromAutoOfV Φ ψ).φ = ψ ∘ Φ := by
-  ext x ; simp ; rw [← affineAsUnderlyingLinearTransition ]
+  (fromLinearAutoOfV Φ.contLinear).comp (fromTransition (-Φ 0))
+@[simp] lemma fromAutoOfVIsPrecompWithφ  (Φ : V →ᴬ[k] V)  [GoodEnoughAutom k V Φ]  (ψ : 𝓓F k V) :  ψ ∘ Φ = fromAutoOfV Φ ψ  := by
+  symm ; ext x ; simp ; rw [← affineAsUnderlyingLinearTransition ]
 
 
 
@@ -363,10 +360,10 @@ example (v : V) (φ : 𝓓 k Ω ) (T : 𝓓' k Ω ): (fderiv𝓓 v ° T) φ = T 
 
 
 
-@[simp] def reflection  : 𝓓F k V →L[k] (𝓓F k V) := fromAutoOfV (reflection' k)
+@[simp] def reflection  : 𝓓F k V →L[k] (𝓓F k V) := fromLinearAutoOfV (reflection' k)
 
 
-notation:67 ψ "ʳ" => reflection ψ
+-- notation:67 ψ "ʳ" => reflection ψ
 notation "|| " f " ||_∞" => MeasureTheory.snormEssSup f volume
 lemma EssSupTestFunction [MeasureSpace V] (φ : 𝓓 k Ω) : || φ.φ ||_∞ < ⊤ := by sorry
 ---------- the rest deals with real numbers
@@ -602,7 +599,7 @@ lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
 
 open Convolution
 
-@[simp] def shift (x : V) : 𝓓F ℝ V →L[ℝ] 𝓓F ℝ V := fromAutoOfV (shift' ℝ x)
+@[simp] def shift (x : V) : 𝓓F ℝ V →L[ℝ] 𝓓F ℝ V := fromTransition x
 --lemma tsupportShift {v : V} {ψ : 𝓓F ℝ V} : tsupport (shift v ψ) ⊆ {x - v | x : tsupport ψ } := by
 
 lemma  ConvWithIsUniformContinuous-- [BorelSpace V]
@@ -686,12 +683,19 @@ notation:67 φ " 𝓓⋆ " ψ => convWith φ ψ -- convolution𝓓Mult (tF2 φ �
 --@[simp] def convWith (φ : 𝓓 ℝ Ω ) : 𝓓 ℝ Ω →L[ℝ] 𝓓 ℝ Ω := ContinuousMultilinearMap.toContinuousLinearMap convolution𝓓Mult (tF2 φ 0) 1
 notation:67 T " °⋆ " φ => ( convWith  (reflection φ) ) ° T
 
-example  (φ : 𝓓F ℝ V ) (T : 𝓓' ℝ (Full V) ) : ∀ ψ, (T °⋆ φ) ψ = T ( φʳ 𝓓⋆ ψ) := fun _ => rfl
-lemma convAsLambda (φ ψ : 𝓓F ℝ V) : (φ 𝓓⋆ ψ) = fun x => Λ (φ : LocallyIntegrableFunction V) (shift x (reflection ψ)) := by
+example  (φ : 𝓓F ℝ V ) (T : 𝓓' ℝ (Full V) ) : ∀ ψ, (T °⋆ φ) ψ = T ( reflection φ 𝓓⋆ ψ) := fun _ => rfl
+lemma convAsLambda (φ ψ : 𝓓F ℝ V) : (φ 𝓓⋆ ψ) = fun x => Λ (φ : LocallyIntegrableFunction V) (shift  x (reflection ψ)) := by
   simp
   unfold convolution
   simp_rw [mul_comm]
   congr
+
+  ext x ;
+  simp only [ContinuousLinearMap.lsmul_apply, smul_eq_mul]
+  congr
+  ext v
+  rw [neg_add_eq_sub]
+
 
 theorem integral_congr {f g : V → ℝ} (p : ∀ x , f x = g x) : ∫ x , f x = ∫ x , g x := by congr ; ext x ; exact p x
 
@@ -701,7 +705,7 @@ open Measure.IsAddHaarMeasure
 lemma shift_comm_fderiv {ψ : 𝓓F ℝ V} {v : V}  {l : ℕ} :
    iteratedFDeriv ℝ l (shift v ψ) =  (iteratedFDeriv ℝ l ψ) ∘ (shift' (k := ℝ) v)  := by
     trans iteratedFDeriv ℝ l (ψ ∘ shift' ℝ v)
-    · apply congrArg ; apply fromAutoOfVIsPrecompWithφ (shift' ℝ v) (ψ := ψ)
+    · sorry
     · ext1 x ;  sorry --shift' v is transition --
 theorem  shiftIsContinuous {ζ : 𝓓F ℝ V} : Continuous (fun v => shift v ζ) := by
   apply SeqContinuous.continuous
@@ -723,12 +727,10 @@ theorem  shiftIsContinuous {ζ : 𝓓F ℝ V} : Continuous (fun v => shift v ζ)
   apply add_compact_subsets ; exact hK'.1 ; exact ζ.φHasCmpctSupport
   intro n
   trans
-  · apply le_of_eq ; apply congrArg tsupport ; apply fromAutoOfVIsPrecompWithφ (shift' ℝ (x n)) (ψ := ζ) ;
-  · trans
-    · exact supportfromAutoOfV (Φ := shift' ℝ (x n)) ζ
-    · sorry
+  · exact supportfromAutoOfV (Φ := shift' ℝ (x n)) ζ
+  · sorry
   intro l
-  have : (fun n ↦ iteratedFDeriv ℝ l (((fun v ↦ (shift v) ζ) ∘ x) n).φ)  =
+  have : (fun n ↦ iteratedFDeriv ℝ l (((fun v ↦  (shift' ℝ v § ζ) ) ∘ x) n).φ)  =
     (fun n ↦ iteratedFDeriv ℝ l  ζ ∘ shift' ℝ (x n))
     := by
       trans (fun n ↦ iteratedFDeriv ℝ l ( shift (x n) ζ ))
@@ -750,10 +752,11 @@ def convolutionAsFunction (T : 𝓓'F ℝ V ) (ψ : 𝓓F ℝ V )  :  LocallyInt
   let ψ'f := fun x =>T (shift x (reflection ψ))
   use ψ'f
   apply Continuous.locallyIntegrable ;
-  rw [show ψ'f = T ∘ (fun v => shift v (reflection ψ)) from rfl] ;
+  rw [show ψ'f = T ∘ (fun v => shift  v (reflection ψ)) from rfl] ;
   apply Continuous.comp T.cont ;
   apply shiftIsContinuous
 notation T " ** " ψ => convolutionAsFunction T ψ
+
 theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) = Λ (T ** ψ) := by
     ext φ
     symm
@@ -769,10 +772,11 @@ theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) 
         exact T.map_smul (φ.φ x) _
 
     ·
-        let biφ : V → 𝓓F ℝ V := fun x => φ x • (shift x) (reflection ψ)
+        let biφ : V → 𝓓F ℝ V := fun x => φ x • (shift x (reflection ψ))
+
         have biφcalc {x y : V} := calc
-              biφ x y = φ x * ψ (- (y - x)) := rfl
-              _ = φ x * ψ (x - y) := by congr ; simp only [neg_sub]
+              biφ x y = φ x * ψ (- (y - x)) := by rfl
+              _ = φ x * (ψ (x-y)) := by rw [neg_sub ]
         have sub_compact : IsCompact (tsupport φ.φ - tsupport ψ.φ) :=
              sub_compact_subsets (φ.φHasCmpctSupport) (ψ.φHasCmpctSupport)
         have hbiφ : HasCompactSupport (fun x y => biφ y x) := by
@@ -790,10 +794,10 @@ theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) 
               · intro y hy
                 simp only [instAddCommGroup𝓓, fromAutoOfV, mk, ContinuousLinearMap.coe_mk',
                   LinearMap.coe_mk, AddHom.coe_mk, mem_support, ne_eq] at hy
-                have hy := (Function.support_nonempty_iff (f:= φ.φ * ((shift y) ψ).φ)).mpr hy
+                have hy := Function.support_nonempty_iff (f:= φ.φ * ((shift y ψ).φ)).mpr hy
                 obtain ⟨ x , hx ⟩ := hy
                 have hx1 : x ∈ support φ.φ := by apply support_mul_subset_left ; exact hx
-                have hx2 : x ∈ support ((shift y) ψ) := by apply support_mul_subset_right ; exact hx --
+                have hx2 : x ∈ support (shift y ψ) := by apply support_mul_subset_right ; exact hx --
                 constructor
                 constructor
                 exact hx1
@@ -813,7 +817,7 @@ theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) 
             rw [← MeasureTheory.integral_sub_left_eq_self _ _ y ]
             congr
             ext x
-            simp only [sub_sub_cancel, neg_sub]
+            simp only [neg_sub, sub_add_cancel]
             symm
             exact biφcalc
 theorem convolution𝓓'IsSmooth (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : ContDiff ℝ ⊤ (T ** ψ) := by
