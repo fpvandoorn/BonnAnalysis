@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - master
+      - gh-actions
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -19,6 +20,11 @@ jobs:
         if: always()
         run: |
           ! (find BonnAnalysis -name "*.lean" -type f -exec grep -E -H -n '^.{101,}$' {} \; | grep -v -E 'https?://')
+
+      - name: Don't 'import Mathlib', use precise imports
+        if: always()
+        run: |
+          ! (find BonnAnalysis -name "*.lean" -type f -print0 | xargs -0 grep -E -n '^import Mathlib$')
 
   build_project:
     runs-on: ubuntu-latest
@@ -51,6 +57,8 @@ jobs:
             .lake/build/doc/Std
             .lake/build/doc/Mathlib
             .lake/build/doc/declarations
+            .lake/build/doc/find
+            .lake/build/doc/*.*
             !.lake/build/doc/declarations/declaration-data-BonnAnalysis*
           key: MathlibDoc-${{ hashFiles('lake-manifest.json') }}
           restore-keys: MathlibDoc-
@@ -78,15 +86,18 @@ jobs:
             leanblueprint web
             cp -r blueprint/web docs/blueprint
 
-      - name: Remove lake files from documentation
-        run: |
-          find .lake/build/doc -name "*.trace" -delete
-          find .lake/build/doc -name "*.hash" -delete
+      - name: Check declarations
+        run: ~/.elan/bin/lake exe checkdecls blueprint/lean_decls
 
       - name: Copy documentation to `docs/docs`
         run: |
           sudo chown -R runner docs
           cp -r .lake/build/doc docs/docs
+
+      - name: Remove lake files from documentation in `docs/docs`
+        run: |
+          find docs/docs -name "*.trace" -delete
+          find docs/docs -name "*.hash" -delete
 
       - name: Bundle dependencies
         uses: ruby/setup-ruby@v1
@@ -113,5 +124,5 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v1
 
-      - name: Make sure the cache works
-        run: mv docs/docs .lake/build/doc
+      # - name: Make sure the cache works
+      #   run: mv docs/docs .lake/build/doc
