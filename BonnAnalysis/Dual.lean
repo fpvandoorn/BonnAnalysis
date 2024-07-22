@@ -260,9 +260,7 @@ lemma q_ne_zero : q ≠ 0 := right_ne_zero hpq.out
 
 lemma q_ne_zero' (hqᵢ : q ≠ ∞) : q.toReal ≠ 0 := toReal_ne_zero.mpr ⟨q_ne_zero (p := p), hqᵢ⟩
 
-lemma q_gt_zero : q > 0 := by
-  calc q ≥ 1 := hq.out
-       _ > 0 := p_gt_zero
+lemma q_gt_zero : q > 0 := p_gt_zero
 
 lemma q_gt_zero' (hqᵢ : q ≠ ∞) : q.toReal > 0 := (toReal_pos_iff_ne_top q).mpr hqᵢ
 
