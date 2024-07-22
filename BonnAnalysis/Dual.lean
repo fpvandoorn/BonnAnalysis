@@ -642,9 +642,9 @@ def conj_q_lt_top (hqᵢ : q ≠ ∞) (g : Lp ℝ q μ) : Lp ℝ p μ :=
 @[simp]
 theorem snorm_of_conj_q_lt_top (hqᵢ : q ≠ ∞) (g : Lp ℝ q μ)
     : snorm (conj_q_lt_top (p := p) hqᵢ g) p μ = (snorm g q μ) ^ (q.toReal - 1) := by
-  apply _root_.trans; show _ = snorm (conj_q_lt_top' g) p μ; swap
-  · exact snorm_of_conj_q_lt_top' hqᵢ g
+  apply _root_.trans
   · exact snorm_congr_ae (coeFn_toLp _ )
+  · exact snorm_of_conj_q_lt_top' hqᵢ g
 
 @[simp]
 theorem norm_of_conj_q_lt_top (hqᵢ : q ≠ ∞) (g : Lp ℝ q μ)
@@ -662,7 +662,7 @@ end conj_q_lt_top'
 section normalized_conj_q_lt_top'
 
 def normalized_conj_q_lt_top' {q : ℝ≥0∞} (g : Lp ℝ q μ) : α → ℝ :=
-  fun x => (conj_q_lt_top' g x) * (rpow' (1 - q.toReal) ‖g‖₊)
+  fun x ↦ (conj_q_lt_top' g x) * (rpow' (1 - q.toReal) ‖g‖₊)
 
 @[measurability]
 theorem normalized_conj_q_lt_top'_ae_measurable (g : Lp ℝ q μ)
@@ -680,14 +680,8 @@ theorem normalized_conj_q_lt_top'_aestrongly_measurable (g : Lp ℝ q μ)
 theorem snorm'_normalized_conj_q_lt_top' {g : Lp ℝ q μ} (hqᵢ : q ≠ ∞) (hg : ‖g‖₊ ≠ 0)
     : snorm' (normalized_conj_q_lt_top' g) p.toReal μ = 1 := by
   unfold normalized_conj_q_lt_top'
-  rw [rpow', snorm'_mul_const p_gt_zero',
-     snorm'_of_conj_q_lt_top' hqᵢ,
-     NNReal.rpow_eq_pow,
-     coe_rpow,
-     coe_nnnorm,
-     ←snorm_eq_snorm',
-     norm_def,
-     ←neg_sub q.toReal]
+  rw [rpow', snorm'_mul_const p_gt_zero', snorm'_of_conj_q_lt_top' hqᵢ, NNReal.rpow_eq_pow,
+     coe_rpow, coe_nnnorm, ← snorm_eq_snorm', norm_def, ← neg_sub q.toReal]
   case hp_ne_zero => exact q_ne_zero (p := p)
   case hp_ne_top => exact hqᵢ
 
@@ -696,7 +690,7 @@ theorem snorm'_normalized_conj_q_lt_top' {g : Lp ℝ q μ} (hqᵢ : q ≠ ∞) (
 
   have y_pos : y > 0 := by
     calc _ = q.toReal - 1 := by rw [hy]
-         _ > 1 - 1        := by gcongr; apply q_gt_one' (p := p) hqᵢ
+         _ > 1 - 1        := by gcongr; exact q_gt_one' (p := p) hqᵢ
          _ = 0            := by ring
 
   have y_nneg : y ≥ 0 := by linarith[y_pos]
@@ -711,12 +705,11 @@ theorem snorm'_normalized_conj_q_lt_top' {g : Lp ℝ q μ} (hqᵢ : q ≠ ∞) (
 
   have x_rpow_y_ne_top : x^y ≠ ∞ := ENNReal.rpow_ne_top_of_nonneg y_nneg x_ne_top
 
-  rw [←ENNReal.coe_toNNReal (a := x ^ y) x_rpow_y_ne_top,
+  rw [← ENNReal.coe_toNNReal (a := x ^ y) x_rpow_y_ne_top,
      ENNReal.toReal_rpow,
      ENNReal.nnnorm_of_toReal_eq_toNNReal]
   norm_cast
-  rw [←ENNReal.toNNReal_mul,
-     ←ENNReal.one_toNNReal]
+  rw [← ENNReal.toNNReal_mul, ← ENNReal.one_toNNReal]
   congr
   rw [←ENNReal.rpow_add]
   . simp
@@ -733,10 +726,9 @@ theorem snorm_normalized_conj_q_lt_top' (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (h
 
 theorem Memℒp_normalized_conj_q_lt_top' (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖₊ ≠ 0)
     : Memℒp (normalized_conj_q_lt_top' g) p μ := by
-  constructor
-  . exact normalized_conj_q_lt_top'_aestrongly_measurable g
-  . rw [snorm_normalized_conj_q_lt_top' hqᵢ hg]
-    trivial
+  refine ⟨normalized_conj_q_lt_top'_aestrongly_measurable g, ?_⟩
+  rw [snorm_normalized_conj_q_lt_top' hqᵢ hg]
+  trivial
 
 def normalized_conj_q_lt_top (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖₊ ≠ 0) : Lp ℝ p μ :=
   toLp (normalized_conj_q_lt_top' g) (Memℒp_normalized_conj_q_lt_top' hqᵢ hg)
@@ -745,7 +737,6 @@ def normalized_conj_q_lt_top (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖
 theorem snorm_normalized_conj_q_lt_top (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖₊ ≠ 0)
     : snorm (normalized_conj_q_lt_top (p := p) hqᵢ hg) p μ = 1 := by
   apply _root_.trans
-  show _ = snorm (normalized_conj_q_lt_top' g) p μ;
   · exact snorm_congr_ae (coeFn_toLp _)
   · exact snorm_normalized_conj_q_lt_top' hqᵢ hg
 
