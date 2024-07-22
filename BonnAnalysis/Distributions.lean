@@ -131,7 +131,7 @@ lemma diffAt (φ : 𝓓 k Ω) {x : V} (p : x ∈ Ω) : DifferentiableAt k φ x :
             -- use Ω
             -- exact ⟨ by exact fun ⦃a⦄ a ↦ trivial , Ω.isOpen , p ⟩
 
-notation  A "°" T => T ∘L A
+
 lemma zeroCase {φ : ℕ → (V → k)} {φ0 : V → k} :
   (TendstoUniformly (fun n ↦ iteratedFDeriv k 0 (φ n)) (iteratedFDeriv k 0 φ0) atTop) ↔
     TendstoUniformly (fun n => (φ n) ) (φ0) atTop := by

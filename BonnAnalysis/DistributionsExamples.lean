@@ -51,23 +51,39 @@ class GoodEnoughAutom   (V : Type u)  [MeasurableSpace V] [NormedAddCommGroup V]
 open GoodEnoughAutom
 open ContinuousLinearEquiv
 variable  {V : Type u}  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V]
-@[simp] def reflection' : V →L[k] V := (ContinuousLinearMap.neg.neg (ContinuousLinearMap.id k V))
+@[simp] def reflection' : V →ᴬ[k] V := (ContinuousLinearMap.neg.neg (ContinuousLinearMap.id k V)).toContinuousAffineMap
 @[simp] def shift' (x : V) : V →ᴬ[k] V := by
   apply ContinuousAffineMap.mk ; swap ;
-  apply AffineMap.mk ; swap ;
-  · exact fun y => y - x ;
-  · sorry ;
-  · exact (LinearMap.id);
-  · sorry
+  refine AffineMap.mk (fun y => y - x ) (LinearMap.id (R:=k) (M:=V)) ?_
+  intro p v ; simp ; exact add_sub_assoc v p x
+  apply Continuous.sub
+  exact continuous_id'
+  exact continuous_const
+lemma properNessOfHomeo  {X : Type*} {Y : Type*} [TopologicalSpace X] [TopologicalSpace Y]
+  (e : ContinuousMap X Y) (f : ContinuousMap Y X) (hf : ∀ x , (f ∘ e) x = x) (hf2 : ∀ x , e ( f x) = x):
+  IsProperMap e := Homeomorph.isProperMap (by use ⟨ e , f , hf  , hf2⟩ ; continuity ; continuity)
 
-instance : (GoodEnoughAutom k V) (reflection' k).toContinuousAffineMap where
+instance : (GoodEnoughAutom k V) (reflection' k) where
 
-  IsProper := by sorry
-  --restToΩ := by sorry
---  inj := by sorry
+  IsProper := by
+    have : ∀ (x : V), (⇑(reflection' k).toContinuousMap ∘ ⇑(reflection' k).toContinuousMap) x = x := by
+      intro x ; simp only [reflection', ContinuousAffineMap.toContinuousMap_coe,
+      ContinuousMap.coe_coe, ContinuousLinearMap.coe_toContinuousAffineMap, comp_apply,
+      ContinuousLinearMap.neg_apply, ContinuousLinearMap.coe_id', id_eq, _root_.map_neg, neg_neg]
+    apply properNessOfHomeo (reflection' k).toContinuousMap (reflection' k).toContinuousMap
+    exact this
+    exact this
 
 instance (v : V) :  (GoodEnoughAutom k V) (shift' k v) where
-  IsProper := by sorry
+  IsProper := by
+
+    apply properNessOfHomeo (shift' k v).toContinuousMap (shift' k (-v)).toContinuousMap
+    · intro x ; simp only [shift', sub_neg_eq_add, ContinuousAffineMap.toContinuousMap_coe,
+      ContinuousMap.coe_coe, ContinuousAffineMap.coe_mk, AffineMap.coe_mk, comp_apply,
+      sub_add_cancel]
+    · intro x ; simp only [shift', ContinuousAffineMap.toContinuousMap_coe, sub_neg_eq_add,
+      ContinuousMap.coe_coe, ContinuousAffineMap.coe_mk, AffineMap.coe_mk, add_sub_cancel_right]
+
 variable {V : Type u} {k : Type v} [NontriviallyNormedField k]
   [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V] {Ω : Opens V}
 variable  (W : Type* )  [NormedAddCommGroup W]  [NormedSpace k W]
@@ -136,8 +152,35 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
     -- maybe use that compact subsets of metrizable spaces are closed?
     exact IsCompact.isClosed this
 
-@[simp] def fromLinearAutoOfV (Φ : V →L[k] V) [GoodEnoughAutom k V Φ.toContinuousAffineMap] : 𝓓F k V →L[k] 𝓓F k V := by
-@[simp] def fromAutoWithCond  (Φ : V →ᴬ[k] V)  [GoodEnoughAutom k V Φ] : 𝓓F k V →L[k] 𝓓F k V := by
+-- lemma affineAsUnderlyingLinearTransition {Φ : V →ᴬ[k] V} {v : V} : Φ v = (Φ.linear v) + Φ 0 := by  rw [show Φ v = Φ (v + 0) from by simp only [add_zero]] ; apply Φ.map_vadd'
+-- def precompmyΦ (Φ : V →ᴬ[k] V) (l : ℕ) : (V [×l]→L[k] k) →L[k] (V [×l]→L[k] k) := ContinuousMultilinearMap.compContinuousLinearMapL  fun _ ↦ Φ.contLinear
+def precompmyΦ (Φ : V →ᴬ[k] V) (l : ℕ) : (V [×l]→L[k] k) →L[k] (V [×l]→L[k] k) := ContinuousMultilinearMap.compContinuousLinearMapL (fun _ ↦ Φ.contLinear)
+
+lemma affineAsUnderlyingLinearTransition {Φ : V →ᴬ[k] V} {v : V} : Φ v = (Φ.linear v) + Φ 0 := by  rw [show Φ v = Φ (v + 0) from by simp only [add_zero]] ; apply Φ.map_vadd'
+-- This is a version of iteratedFDeriv_comp_right for continuous affine maps.
+theorem ContinuousAffineMap.iteratedFDeriv_comp_right {l} {φ0 : 𝓓F k V} (Φ : V →ᴬ[k] V) {x} : (iteratedFDeriv k l (φ0 ∘ Φ)) x =
+          (precompmyΦ Φ l) (iteratedFDeriv k l (φ0).φ (Φ x) ) := by
+          let φ0' : V → k := (φ0.φ ).comp ((shift' k (- Φ 0)))
+          have : φ0 ∘ Φ =  φ0' ∘ Φ.contLinear := by sorry
+          rw [this]
+          ext1 y
+          rw [ContinuousLinearMap.iteratedFDeriv_comp_right (i:=l) (Φ.contLinear) ?_ _ (OrderTop.le_top _)]
+          · have lol : ((iteratedFDeriv k l φ0' (Φ.contLinear x)).compContinuousLinearMap fun x ↦ Φ.contLinear) =
+            ⇑(precompmyΦ Φ l) (iteratedFDeriv k l φ0' (Φ.contLinear x)) := by unfold precompmyΦ ; rw [ContinuousMultilinearMap.compContinuousLinearMapL_apply]
+            rw [lol]
+            simp
+            apply congrFun
+            apply congrArg
+            apply congrArg
+            sorry
+          · have : ContDiff k ⊤ ⇑(shift' k (-Φ 0)) := by apply ContinuousAffineMap.contDiff
+
+            refine ContDiff.comp φ0.φIsSmooth (this)
+
+theorem chainRule {l} {φ0 : 𝓓F k V} (Φ : V →ᴬ[k] V) : (iteratedFDeriv k l (φ0 ∘ Φ)) =
+          (precompmyΦ Φ l ∘ (iteratedFDeriv k l (φ0).φ ∘ Φ )) := by ext1 x ; exact ContinuousAffineMap.iteratedFDeriv_comp_right Φ
+
+@[simp] def fromAutoOfV  (Φ : V →ᴬ[k] V)  [GoodEnoughAutom k V Φ] : 𝓓F k V →L[k] 𝓓F k V := by
 
   apply mk ; swap
   ·   intro ψ
@@ -146,7 +189,7 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
       · apply IsCompact.of_isClosed_subset ; swap
         exact isClosed_tsupport (ψ.φ ∘ Φ)
         swap
-        · exact supportfromAutoOfV (k:=k)  Φ.toContinuousAffineMap ψ
+        · exact supportfromAutoOfV (k:=k)  Φ ψ
         · apply IsProperMap.isCompact_preimage
           apply (IsProper (k:=k))
           exact (ψ.φHasCmpctSupport)
@@ -177,41 +220,23 @@ lemma tsupport_convolution_subset {𝕜 : Type*}[NontriviallyNormedField 𝕜] {
 
       · intro l
         -- apply TendstoUniformly.comp
-        have th : ∀ {n  : ℕ∞} , n ≤ ⊤ := OrderTop.le_top _
-        let myΦ : (i : Fin l) → V →L[k] V :=  fun _ ↦ Φ
-        let precompmyΦ: (V [×l]→L[k] k) →L[k] (V [×l]→L[k] k) := ContinuousMultilinearMap.compContinuousLinearMapL (myΦ)
 
 
-        have chainRule {φ0 : 𝓓F k V} : (iteratedFDeriv k l (φ0 ∘ Φ)) =
-          (precompmyΦ ∘ (iteratedFDeriv k l (φ0).φ ∘ Φ )) := by
-          ext1 x
-          exact ContinuousLinearMap.iteratedFDeriv_comp_right (Φ) ((φ0).φIsSmooth) x th
-        have : (fun n => iteratedFDeriv k l ((φ n).φ ∘ Φ) ) = (fun n => precompmyΦ ∘ iteratedFDeriv k l (φ n).φ ∘ Φ )  := by
+
+
+
+
+        have : (fun n => iteratedFDeriv k l ((φ n).φ ∘ Φ) ) = (fun n => precompmyΦ Φ l ∘ iteratedFDeriv k l (φ n).φ ∘ Φ )  := by
            ext1 n
-           exact chainRule
+           apply chainRule
         have : TendstoUniformly (fun n => iteratedFDeriv k l (φ n ∘ Φ) ) (iteratedFDeriv k l (φ0 ∘ Φ)) atTop := by
           rw [chainRule (φ0 := φ0)]
           rw [this]
-          apply UniformContinuous.comp_tendstoUniformly (g:= precompmyΦ)
+          apply UniformContinuous.comp_tendstoUniformly (g:= precompmyΦ Φ l)
           · apply ContinuousLinearMap.uniformContinuous -- apply UniformFun.postcomp_uniformContinuous , uniform Inducing?
           · apply TendstoUniformly.comp
             exact hφ l
         exact this
-lemma affineAsUnderlyingLinearTransition {Φ : V →ᴬ[k] V} {v : V} : Φ v = (Φ.linear v) + Φ 0 := by  rw [show Φ v = Φ (v + 0) from by simp only [add_zero]] ; apply Φ.map_vadd'
-@[simp] def fromTransition (x : V) : 𝓓F k V →L[k] 𝓓F k V := by
-  apply mk ; swap
-  ·   exact  precompWithAffine (shift' k x)
-  · sorry
-
-instance {Φ : V →ᴬ[k] V} [GoodEnoughAutom k V Φ] : GoodEnoughAutom k V ( Φ.contLinear.toContinuousAffineMap) where
-  IsProper := by sorry
-@[simp] def fromAutoOfV (Φ : V →ᴬ[k] V) [GoodEnoughAutom k V Φ] : 𝓓F k V →L[k] 𝓓F k V :=
-  (fromLinearAutoOfV Φ.contLinear).comp (fromTransition (-Φ 0))
-@[simp] lemma fromAutoOfVIsPrecompWithφ  (Φ : V →ᴬ[k] V)  [GoodEnoughAutom k V Φ]  (ψ : 𝓓F k V) :  ψ ∘ Φ = fromAutoOfV Φ ψ  := by
-  symm ; ext x ; simp ; rw [← affineAsUnderlyingLinearTransition ]
-
-
-
 
   --restToΩ := by sorry
  -- inj := by sorry
@@ -237,6 +262,8 @@ lemma testfunctionIsDiffAt {φ : 𝓓 k Ω} (x : V) : DifferentiableAt k (φ) x 
   · apply contDiff_iff_contDiffAt.mp
     exact φ.φIsSmooth
   · exact OrderTop.le_top 1
+
+
 def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
   have crypto {l} {ψ : 𝓓 k Ω} :
   /-
@@ -252,10 +279,20 @@ def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
               ContinuousLinearMap.compContinuousMultilinearMap_coe, ContinuousLinearMap.apply_apply,
               ContinuousMultilinearMap.curryRight_apply,
               continuousMultilinearCurryRightEquiv_apply', Fin.init_snoc, Fin.snoc_last]
-            have : (iteratedFDeriv k l (fun y ↦ (fderiv k ψ.φ y) v) z) w =
-              ((iteratedFDeriv k l (fderiv k ψ.φ) z) w) v := by sorry
-            exact this
 
+            calc
+                  _ = (iteratedFDeriv k l ((⇑(ev_cts (W:=k) v)).comp (fderiv k ψ)) z) w := by rfl
+                  _ = (ev_cts v).compContinuousMultilinearMap (iteratedFDeriv k l (fderiv k ψ) z) w := ?_
+                  _ = ((ev_cts v).toFun.comp ((iteratedFDeriv k l (fderiv k ψ) z))) w  := by rfl
+                  _ = ((iteratedFDeriv k l (fderiv k ψ) z) w) v := by rfl
+            · apply congrFun
+              rw [ContinuousLinearMap.iteratedFDeriv_comp_left (f:= fderiv k ψ) (ev_cts (W:= k) v) (i:=l)  ]
+              · apply ContDiff.fderiv_right
+                · exact ψ.φIsSmooth
+                · apply OrderTop.le_top
+
+
+              · exact (OrderTop.le_top _)
 
   have obs {φ : V → k} : tsupport (fun x => fderiv k φ x v) ⊆ tsupport (φ) := by -- ⊆ tsupport (fun x => fderiv k φ) :=
     trans ; swap
@@ -349,21 +386,14 @@ def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
         exact this
 
 
+example (v : V) (φ : 𝓓 k Ω ) (T : 𝓓' k Ω ): (fderiv𝓓 v ** T) φ = T (fderiv𝓓 v φ) := by rfl
 
 
 
+@[simp] def reflection  : 𝓓F k V →L[k] (𝓓F k V) := fromAutoOfV (reflection' k)
 
 
-
-
-example (v : V) (φ : 𝓓 k Ω ) (T : 𝓓' k Ω ): (fderiv𝓓 v ° T) φ = T (fderiv𝓓 v φ) := by rfl
-
-
-
-@[simp] def reflection  : 𝓓F k V →L[k] (𝓓F k V) := fromLinearAutoOfV (reflection' k)
-
-
--- notation:67 ψ "ʳ" => reflection ψ
+-- notation:67 ψ "ʳ" => ψʳ
 notation "|| " f " ||_∞" => MeasureTheory.snormEssSup f volume
 lemma EssSupTestFunction [MeasureSpace V] (φ : 𝓓 k Ω) : || φ.φ ||_∞ < ⊤ := by sorry
 ---------- the rest deals with real numbers
@@ -599,7 +629,7 @@ lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
 
 open Convolution
 
-@[simp] def shift (x : V) : 𝓓F ℝ V →L[ℝ] 𝓓F ℝ V := fromTransition x
+@[simp] def shift (x : V) : 𝓓F ℝ V →L[ℝ] 𝓓F ℝ V := fromAutoOfV (shift' ℝ x)
 --lemma tsupportShift {v : V} {ψ : 𝓓F ℝ V} : tsupport (shift v ψ) ⊆ {x - v | x : tsupport ψ } := by
 
 lemma  ConvWithIsUniformContinuous-- [BorelSpace V]
@@ -681,14 +711,16 @@ lemma convOfTestFunctionsExists [T2Space V] {φ ψ : 𝓓F ℝ V} : ConvolutionE
 
 notation:67 φ " 𝓓⋆ " ψ => convWith φ ψ -- convolution𝓓Mult (tF2 φ ψ)
 --@[simp] def convWith (φ : 𝓓 ℝ Ω ) : 𝓓 ℝ Ω →L[ℝ] 𝓓 ℝ Ω := ContinuousMultilinearMap.toContinuousLinearMap convolution𝓓Mult (tF2 φ 0) 1
-notation:67 T " °⋆ " φ => ( convWith  (reflection φ) ) ° T
-
-example  (φ : 𝓓F ℝ V ) (T : 𝓓' ℝ (Full V) ) : ∀ ψ, (T °⋆ φ) ψ = T ( reflection φ 𝓓⋆ ψ) := fun _ => rfl
-lemma convAsLambda (φ ψ : 𝓓F ℝ V) : (φ 𝓓⋆ ψ) = fun x => Λ (φ : LocallyIntegrableFunction V) (shift  x (reflection ψ)) := by
+postfix:200 "ʳ" => reflection
+open ContinuousLinearMap
+notation  A "**" T => T ∘L A
+notation:67 T " °⋆ " φ  =>  convWith (φʳ) ** T
+example  (φ : 𝓓F ℝ V ) (T : 𝓓' ℝ (Full V) ) : ∀ ψ, (T °⋆ φ) ψ = T ( φʳ 𝓓⋆ ψ) := fun _ => rfl
+lemma convAsLambda (φ ψ : 𝓓F ℝ V) : (φ 𝓓⋆ ψ) = fun x => Λ (φ : LocallyIntegrableFunction V) (shift  x (ψʳ)) := by
   simp
   unfold convolution
   simp_rw [mul_comm]
-  congr
+
 
   ext x ;
   simp only [ContinuousLinearMap.lsmul_apply, smul_eq_mul]
@@ -705,8 +737,8 @@ open Measure.IsAddHaarMeasure
 lemma shift_comm_fderiv {ψ : 𝓓F ℝ V} {v : V}  {l : ℕ} :
    iteratedFDeriv ℝ l (shift v ψ) =  (iteratedFDeriv ℝ l ψ) ∘ (shift' (k := ℝ) v)  := by
     trans iteratedFDeriv ℝ l (ψ ∘ shift' ℝ v)
-    · sorry
-    · ext1 x ;  sorry --shift' v is transition --
+    · rfl
+    · ext1 x ; apply ContinuousAffineMap.iteratedFDeriv_comp_right
 theorem  shiftIsContinuous {ζ : 𝓓F ℝ V} : Continuous (fun v => shift v ζ) := by
   apply SeqContinuous.continuous
   intro x x0 hx
@@ -728,9 +760,27 @@ theorem  shiftIsContinuous {ζ : 𝓓F ℝ V} : Continuous (fun v => shift v ζ)
   intro n
   trans
   · exact supportfromAutoOfV (Φ := shift' ℝ (x n)) ζ
-  · sorry
+  · rw [show ⇑(shift' ℝ (x n)) ⁻¹' tsupport ζ.φ = {x n} + tsupport ζ.φ  from ?_]
+    apply Set.add_subset_add_right
+    refine singleton_subset_iff.mpr ?_
+    exact hK'.2 n
+    ext y ;
+    rw [Set.singleton_add]
+    constructor
+    · intro hy
+      simp at hy
+      simp
+      rw [neg_add_eq_sub]
+      exact hy
+    · intro hy
+      obtain ⟨ z , hz ⟩ := hy
+      simp only [shift', ContinuousAffineMap.coe_mk, AffineMap.coe_mk, mem_preimage]
+      rw [show y - x n = z from ?_]
+      exact hz.1
+      rw [← hz.2]
+      simp only [add_sub_cancel_left]
   intro l
-  have : (fun n ↦ iteratedFDeriv ℝ l (((fun v ↦  (shift' ℝ v § ζ) ) ∘ x) n).φ)  =
+  have : (fun n ↦ iteratedFDeriv ℝ l (((fun v ↦  (shift v ζ) ) ∘ x) n).φ)  =
     (fun n ↦ iteratedFDeriv ℝ l  ζ ∘ shift' ℝ (x n))
     := by
       trans (fun n ↦ iteratedFDeriv ℝ l ( shift (x n) ζ ))
@@ -746,33 +796,46 @@ theorem  shiftIsContinuous {ζ : 𝓓F ℝ V} : Continuous (fun v => shift v ζ)
       exact ζ.φHasCmpctSupport
     · apply ContDiff.continuous_iteratedFDeriv ( OrderTop.le_top _) (ζ.φIsSmooth)
      -- on compact subset continuous is uniformly continuous
-  · sorry
+  · rw [Metric.tendstoUniformly_iff]
+    have {x_1 } {b} : dist (x_1 - x0 + x b) x_1 = ‖ (x b) - x0‖ := by sorry
+    simp
+    simp_rw [this]
+    have : ∀ (ε : ℝ), 0 < ε → ∃ a, ∀ (b : ℕ), a ≤ b → ‖(x b) - x0‖ < ε := by
+      rw [← tendsto_sub_nhds_zero_iff] at hx
+      simp_rw [ NormedAddCommGroup.tendsto_nhds_zero, eventually_atTop ] at hx
+      exact hx
+    intro ε hε
+    obtain ⟨ a , ha ⟩ := this ε hε
+    use a
+    intro b hb _
+    exact ha b hb
+
+
+
 
 def convolutionAsFunction (T : 𝓓'F ℝ V ) (ψ : 𝓓F ℝ V )  :  LocallyIntegrableFunction V := by
-  let ψ'f := fun x =>T (shift x (reflection ψ))
+  let ψ'f := fun x =>T (shift x (ψʳ))
   use ψ'f
   apply Continuous.locallyIntegrable ;
-  rw [show ψ'f = T ∘ (fun v => shift  v (reflection ψ)) from rfl] ;
+  rw [show ψ'f = T ∘ (fun v => shift  v (ψʳ)) from rfl] ;
   apply Continuous.comp T.cont ;
   apply shiftIsContinuous
-notation T " ** " ψ => convolutionAsFunction T ψ
+notation T " *f " ψ => convolutionAsFunction T ψ
 
-theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) = Λ (T ** ψ) := by
+theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) = Λ (T *f ψ) := by
     ext φ
     symm
     trans
-    have : Λ (T ** ψ) φ = ∫ x , φ x  * T (shift x (reflection ψ))  := by
-        apply integral_congr ; intro x; rfl
+    have : Λ (T *f ψ) φ = ∫ x , φ x  * T (shift x (ψʳ))  := by
+        congr ;
     exact this
     trans
-    ·
-        apply integral_congr
+    ·   apply integral_congr
         intro x
         symm
         exact T.map_smul (φ.φ x) _
 
-    ·
-        let biφ : V → 𝓓F ℝ V := fun x => φ x • (shift x (reflection ψ))
+    ·   let biφ : V → 𝓓F ℝ V := fun x => φ x • (shift x (ψʳ))
 
         have biφcalc {x y : V} := calc
               biφ x y = φ x * ψ (- (y - x)) := by rfl
@@ -811,7 +874,7 @@ theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) 
           congr
           ext y
           trans ; swap
-          · exact (congrFun (convAsLambda ( reflection ψ) (φ )) y).symm
+          · exact (congrFun (convAsLambda ( ψʳ) (φ )) y).symm
           · simp
             symm
             rw [← MeasureTheory.integral_sub_left_eq_self _ _ y ]
@@ -820,7 +883,7 @@ theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) 
             simp only [neg_sub, sub_add_cancel]
             symm
             exact biφcalc
-theorem convolution𝓓'IsSmooth (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : ContDiff ℝ ⊤ (T ** ψ) := by
+theorem convolution𝓓'IsSmooth (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : ContDiff ℝ ⊤ (T *f ψ) := by
   -- have SeqContℕψ'  : Tendsto (ψ'f ∘ x) atTop (𝓝 (ψ'f x0)) := by
   --     apply (SeqContinuous'OfContinuous ℝ T).seqCont
 
@@ -835,7 +898,7 @@ theorem convolution𝓓'IsSmooth (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : ContD
   --sorry --help
 
 
-  · let ζ := reflection ψ
+  · let ζ := ψʳ
 
     sorry
 -- #lint
