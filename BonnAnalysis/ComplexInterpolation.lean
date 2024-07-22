@@ -364,8 +364,7 @@ lemma perturb_bound (f: ℂ → ℂ) (ε : ℝ) (z : ℂ) : Complex.abs (perturb
 lemma bound_factor_le_one {ε : ℝ} (hε: ε > 0) {z : ℂ} (hz: z.re ∈ Icc 0 1) : Real.exp (ε * ((z.re)^2 - 1 - (z.im)^2)) ≤ 1 := by
   simp at hz
   rw [Real.exp_le_one_iff, mul_nonpos_iff]
-  left
-  refine ⟨le_of_lt hε, ?_⟩
+  refine Or.inl ⟨le_of_lt hε, ?_⟩
   calc
   z.re ^ 2 - 1 - z.im ^ 2 ≤  z.re ^ 2 - 1 := by simp; exact sq_nonneg z.im
   _ ≤ 0 := by
@@ -405,8 +404,7 @@ lemma perturb_bound_left {f: ℂ → ℂ} (h₀f : ∀ y : ℝ, ‖f (I * y)‖ 
   simp at hb
   have : (ε * (-1 - y ^ 2)).exp ≤ 1 := by{
     rw [Real.exp_le_one_iff, mul_nonpos_iff]
-    left
-    refine ⟨le_of_lt hε, ?_⟩
+    refine Or.inl ⟨le_of_lt hε, ?_⟩
     simp
     calc
     -1 ≤ 0 := by norm_num
@@ -490,8 +488,7 @@ lemma perturb_vanish_infty {f:ℂ → ℂ} (h2f : IsBounded (f '' { z | z.re ∈
         rw [add_comm]
         have hre : ε * (z.re ^ 2 - 1) ≤ 0 := by{
           rw [mul_nonpos_iff]
-          left
-          exact ⟨le_of_lt hε, by simp; rw [_root_.abs_of_nonneg hz₁]; exact hz₂⟩
+          exact Or.inl ⟨le_of_lt hε, by simp; rw [_root_.abs_of_nonneg hz₁]; exact hz₂⟩
         }
 
         calc
@@ -724,8 +721,7 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
         rw [this]
         simp only [le_add_iff_nonneg_left, ge_iff_le]
         rw [mul_nonneg_iff]
-        left
-        exact ⟨hs, by simp; exact le_of_lt hab⟩
+        exact Or.inl ⟨hs, by simp; exact le_of_lt hab⟩
       }
 
       -- Essentially same as above with minor tweaks
@@ -737,8 +733,7 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
         rw [this]
         simp
         rw [mul_nonpos_iff]
-        left
-        exact ⟨ht, by simp; exact le_of_lt hab⟩
+        exact Or.inl ⟨ht, by simp; exact le_of_lt hab⟩
       }
 
       let g : ℂ → ℂ := fun z ↦ f (a + z * (b-a))
@@ -803,14 +798,10 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
 
       let t':= (x-a)/(b-a)
       let s':= 1 - t'
-      have ht' : 0 ≤ t' := by {
+      have ht' : 0 ≤ t' := by
         simp only [t']
         rw [div_nonneg_iff]
-        left
-        constructor
-        · simp [hax]
-        · simp; exact le_of_lt hab
-      }
+        refine Or.inl ⟨by simp [hax], by simp; exact le_of_lt hab⟩
 
       have hs' : 0 ≤ s' := by {
         simp only [s', t']
@@ -835,7 +826,7 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
       }
       simp only [s'] at hgoal
       rw [← ht'₁]
-      assumption
+      exact hgoal
     }
 
 -- the following work proves that Lp norm of a function can be approximated by simple functions with Lq norm ≤ 1
@@ -877,8 +868,7 @@ def SimpleFunc.toLpSimpLe1 (q : ℝ≥0) (hq : q ≠ 0) (f : SimpleFunc α ℝ�
       rw [this]
       apply Set.Finite.image _
       have : (range fun x ↦ ((f x) : ℝ)) = toReal '' (range fun x ↦ f x) := by apply Set.range_comp toReal
-      rw [this]
-      apply Set.Finite.image _ f.finite_range'
+      exact this ▸ Set.Finite.image _ f.finite_range'
   }
   property := by simp [snorm, snorm', hq]; exact h
 
@@ -909,7 +899,7 @@ lemma snorm_eq_lintegral_rpow_nnnorm' (f : α → E) (p : ℝ≥0) (hp : p ≠ 0
 lemma ae_lt_top_of_LpNorm_ne_top {f : α → ℝ≥0∞} {p : ℝ≥0} (hp : p ≠ 0) (hf : Measurable f) (h' : (∫⁻ (a : α), f a ^ (p : ℝ) ∂μ) ^ (p : ℝ)⁻¹ ≠ ⊤) : ∀ᵐ (a : α) ∂μ, f a < ⊤ := by
   have : {a | f a < ⊤} = {a | (f a) ^ (p : ℝ) < ⊤} := by
     ext _
-    apply (ENNReal.rpow_lt_top_iff_of_pos (by norm_num; exact hp.bot_lt)).symm
+    exact (ENNReal.rpow_lt_top_iff_of_pos (by norm_num; exact hp.bot_lt)).symm
   rw [Filter.Eventually, this]
   apply ae_lt_top (hf.pow_const _)
   rw [← lt_top_iff_ne_top] at h'
