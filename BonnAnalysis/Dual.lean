@@ -419,7 +419,7 @@ theorem ennreal_rpow_of_nnreal' (x : ℝ≥0) (y : ℝ) (hynneg : y ≥ 0)
     : ENNReal.rpow x y = ofNNReal (NNReal.rpow x y) := by
   apply (ENNReal.toNNReal_eq_toNNReal_iff' _ _).mp <;> simp
   . rw [←ENNReal.toNNReal_rpow, ENNReal.toNNReal_coe]
-  . intro _; assumption
+  . exact fun _ ↦ hynneg
 
 theorem measurable_rpow'_const (c : ℝ) : Measurable (rpow' c) :=
   Measurable.pow (f := fun x => x) (g := fun _ => c) measurable_id measurable_const
@@ -437,8 +437,8 @@ theorem rpow_div_eq_one_iff (x : ℝ≥0∞) (y : ℝ) (hy : y > 0) : x^(1/y) = 
   rw [rpow_eq_one_iff x (1/y) this]
 
 lemma toNNReal_of_norm_eq_nnnorm (x : ℝ) : ‖x‖.toNNReal = ‖x‖₊ := by
-  calc _ = ‖‖x‖‖₊ := by apply toNNReal_eq_nnnorm_of_nonneg; apply norm_nonneg
-       _ = _ := by simp
+  calc _ = ‖‖x‖‖₊ := toNNReal_eq_nnnorm_of_nonneg (norm_nonneg _)
+       _ = _ := nnnorm_norm x
 
 theorem mul_of_ae_eq {f f' g g' : α → ℝ≥0∞} (hf : f =ᵐ[μ] f') (hg : g =ᵐ[μ] g')
     : f * g =ᵐ[μ] f' * g' := by
