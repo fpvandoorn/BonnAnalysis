@@ -110,8 +110,7 @@ lemma mul_eq_add (hpq : p.IsConjExponent q) : p * q = p + q := by
   . simp [hpq.right_ne_zero]
   induction q
   . simp [hpq.left_ne_zero]
-  norm_cast
-  exact hpq.toNNReal coe_ne_top coe_ne_top |>.mul_eq_add
+  exact_mod_cast hpq.toNNReal coe_ne_top coe_ne_top |>.mul_eq_add
 
 lemma induction
     (P : (p q : ℝ≥0∞) → (p.IsConjExponent q) → Prop)
@@ -158,7 +157,8 @@ lemma _root_.ENNReal.lintegral_mul_le_one_top (μ : Measure α) {f g : α → �
 
 lemma _root_.ENNReal.lintegral_norm_mul_le_one_top (μ : Measure α) {f : α → E₁} {g : α → E₂}
     (hf : AEMeasurable f μ) : ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ ≤ snorm f 1 μ * snorm g ⊤ μ := by
-      simp [snorm, snorm', snormEssSup]
+      simp only [snorm, one_ne_zero, ↓reduceIte, one_ne_top, snorm', one_toReal, rpow_one, ne_eq,
+        not_false_eq_true, div_self, top_ne_zero, snormEssSup]
       exact lintegral_mul_le_one_top _ hf.ennnorm
 
 theorem lintegral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : α → E₁} {g : α → E₂}
@@ -213,7 +213,7 @@ def rpow' (y : ℝ) (x : ℝ≥0∞) : ℝ≥0∞ := ENNReal.rpow x y
 theorem rpow'_eq_rpow (x : ℝ≥0∞) (y : ℝ) : rpow' y x = x^y := rfl
 
 theorem measurable_rpow'_const (c : ℝ) : Measurable (rpow' c) := by
-  apply Measurable.pow (f := fun x => x) (g := fun _ => c) <;> measurability
+  apply Measurable.pow (f := fun x => x) (g := fun _ => c) <;> fun_prop
 
 end ENNReal
 
@@ -274,22 +274,15 @@ lemma q_ge_zero' : q.toReal ≥ 0 := p_ge_zero'
 
 lemma q_gt_one : q > 1 := (left_ne_top_iff hpq.out).mp p_ne_top
 
-lemma q_gt_one' (hqᵢ : q ≠ ∞) : q.toReal > 1 := by
-  rw [←ENNReal.one_toReal]
-  apply (ENNReal.toReal_lt_toReal _ _).mpr
-  . show q > 1
-    apply q_gt_one (q := q) (p := p)
-  . exact Ne.symm top_ne_one
-  . exact hqᵢ
+lemma q_gt_one' (hqᵢ : q ≠ ∞) : q.toReal > 1 :=
+  ENNReal.one_toReal ▸ (ENNReal.toReal_lt_toReal (Ne.symm top_ne_one) hqᵢ).mpr
+    (q_gt_one (q := q) (p := p))
 
 lemma q_ge_one : q ≥ 1 := by apply le_of_lt; exact q_gt_one (p := p)
 
-lemma q_ge_one' (hqᵢ : q ≠ ∞) : q.toReal ≥ 1 := by
-  rw [← ENNReal.one_toReal]
-  apply (ENNReal.toReal_le_toReal _ _).mpr
-  . exact q_ge_one (q := q) (p := p)
-  . exact Ne.symm top_ne_one
-  . exact hqᵢ
+lemma q_ge_one' (hqᵢ : q ≠ ∞) : q.toReal ≥ 1 :=
+  ENNReal.one_toReal ▸ (ENNReal.toReal_le_toReal (Ne.symm top_ne_one) hqᵢ).mpr
+    (q_ge_one (q := q) (p := p))
 
 lemma q_sub_one_pos' (hqᵢ : q ≠ ∞) : q.toReal - 1 > 0 :=
   sub_pos.mpr (q_gt_one' (q := q) (p := p) hqᵢ)
@@ -308,13 +301,11 @@ lemma q_div_p_ne_top (hqᵢ : q ≠ ∞) : q / p ≠ ∞ := by
   by_contra!
   have := (@ENNReal.div_eq_top q p).mp this
   contrapose! this
-  constructor
-  . intro _; exact (p_ne_zero (q := q))
-  . intro _; contradiction
+  exact ⟨fun _ ↦ p_ne_zero (q := q), fun _ ↦ by contradiction⟩
 
 lemma q_div_p_add_one : q / p + 1 = q := by
-  calc _ = q / p + p / p := by rw [ENNReal.div_self (p_ne_zero (q := q)) p_ne_top];
-       _ = (q + p) / p := by rw [← ENNReal.add_div]
+  calc _ = q / p + p / p := by rw [ENNReal.div_self (p_ne_zero (q := q)) p_ne_top]
+       _ = (q + p) / p := ENNReal.div_add_div_same
        _ = (p + q) / p := by rw [add_comm]
        _ = (p * q) / p := by rw [p_add_q]
        _ = (p * q) / (p * 1) := by rw [mul_one]
@@ -484,9 +475,8 @@ theorem integral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : Lp E�
     : ∫ a, ‖L (f a) (g a)‖ ∂μ ≤ ‖L‖ * ‖f‖ * ‖g‖ := by
 
   have : AEStronglyMeasurable (fun x => L (f x) (g x)) μ :=
-    by apply L.aestronglyMeasurable_comp₂
-       apply (Lp.memℒp f).aestronglyMeasurable
-       apply (Lp.memℒp g).aestronglyMeasurable
+    L.aestronglyMeasurable_comp₂ (Lp.memℒp f).aestronglyMeasurable (Lp.memℒp g).aestronglyMeasurable
+
   rw [integral_norm_eq_lintegral_nnnorm this]
 
   have : (‖L‖₊ * (snorm f p μ) * (snorm g q μ)).toReal = ‖L‖ * ‖f‖ * ‖g‖ := by
@@ -495,9 +485,9 @@ theorem integral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : Lp E�
   rw [←this]
 
   have : ∫⁻ (a : α), ↑‖(L (f a)) (g a)‖₊ ∂μ ≤ ↑‖L‖₊ * snorm (f) p μ * snorm (g) q μ := by
-    apply lintegral_mul_le L hpq μ
-    . exact aestronglyMeasurable_iff_aemeasurable.mp (Lp.memℒp f).aestronglyMeasurable
-    . exact aestronglyMeasurable_iff_aemeasurable.mp (Lp.memℒp g).aestronglyMeasurable
+    apply lintegral_mul_le L hpq μ (aestronglyMeasurable_iff_aemeasurable.mp
+      (Lp.memℒp f).aestronglyMeasurable) (aestronglyMeasurable_iff_aemeasurable.mp
+        (Lp.memℒp g).aestronglyMeasurable)
 
   gcongr
   apply mul_ne_top; apply mul_ne_top
@@ -699,9 +689,7 @@ theorem normalized_conj_q_lt_top'_aestrongly_measurable (g : Lp ℝ q μ)
 theorem snorm'_normalized_conj_q_lt_top' {g : Lp ℝ q μ} (hqᵢ : q ≠ ∞) (hg : ‖g‖₊ ≠ 0)
     : snorm' (normalized_conj_q_lt_top' g) p.toReal μ = 1 := by
   unfold normalized_conj_q_lt_top'
-  unfold rpow'
-
-  rw [snorm'_mul_const p_gt_zero',
+  rw [rpow', snorm'_mul_const p_gt_zero',
      snorm'_of_conj_q_lt_top' hqᵢ,
      NNReal.rpow_eq_pow,
      coe_rpow,
@@ -722,13 +710,13 @@ theorem snorm'_normalized_conj_q_lt_top' {g : Lp ℝ q μ} (hqᵢ : q ≠ ∞) (
 
   have y_nneg : y ≥ 0 := by linarith[y_pos]
 
-  have x_ne_top : x ≠ ∞ := by rw [←hx]; exact snorm_ne_top g
+  have x_ne_top : x ≠ ∞ := hx ▸ snorm_ne_top g
 
   have x_ne_zero : x ≠ 0 := by
     calc _ = snorm g q μ            := by rw [hx]
          _ = (snorm g q μ).toNNReal := by symm; apply ENNReal.coe_toNNReal; rw [hx]; exact x_ne_top
          _ = ‖g‖₊                   := by rw [nnnorm_def]
-         _ ≠ 0                      := by apply ENNReal.coe_ne_zero.mpr; exact hg
+         _ ≠ 0                      := ENNReal.coe_ne_zero.mpr hg
 
   have x_rpow_y_ne_top : x^y ≠ ∞ := ENNReal.rpow_ne_top_of_nonneg y_nneg x_ne_top
 
@@ -748,9 +736,9 @@ theorem snorm'_normalized_conj_q_lt_top' {g : Lp ℝ q μ} (hqᵢ : q ≠ ∞) (
 theorem snorm_normalized_conj_q_lt_top' (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖₊ ≠ 0)
     : snorm (normalized_conj_q_lt_top' g) p μ = 1 := by
   rw [snorm_eq_snorm']
-  exact snorm'_normalized_conj_q_lt_top' hqᵢ hg
-  exact p_ne_zero (q := q)
-  exact p_ne_top (p := p)
+  · exact snorm'_normalized_conj_q_lt_top' hqᵢ hg
+  · exact p_ne_zero (q := q)
+  · exact p_ne_top (p := p)
 
 theorem Memℒp_normalized_conj_q_lt_top' (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖₊ ≠ 0)
     : Memℒp (normalized_conj_q_lt_top' g) p μ := by
@@ -766,9 +754,9 @@ def normalized_conj_q_lt_top (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖
 theorem snorm_normalized_conj_q_lt_top (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖₊ ≠ 0)
     : snorm (normalized_conj_q_lt_top (p := p) hqᵢ hg) p μ = 1 := by
   apply _root_.trans
-  show _ = snorm (normalized_conj_q_lt_top' g) p μ; swap
-  · exact snorm_normalized_conj_q_lt_top' hqᵢ hg
+  show _ = snorm (normalized_conj_q_lt_top' g) p μ;
   · exact snorm_congr_ae (coeFn_toLp _)
+  · exact snorm_normalized_conj_q_lt_top' hqᵢ hg
 
 @[simp]
 theorem norm_of_normalized_conj_q_lt_top (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖₊ ≠ 0)
@@ -797,9 +785,9 @@ theorem snorm_eq_sup_q_gt_top (g : Lp ℝ q μ) (hqᵢ : q ≠ ∞) :
       rcases hx with ⟨f, hf, rfl⟩
       dsimp at hf
       dsimp only
-      calc _ ≤ ∫ x, ‖f x * g x‖ ∂μ             := by apply norm_integral_le_integral_norm
-           _ = ∫ x, ‖(mul ℝ ℝ) (f x) (g x)‖ ∂μ := by simp
-           _ ≤ ‖(mul ℝ ℝ)‖ * ‖f‖ * ‖g‖         := by apply integral_mul_le; exact hpq.out
+      calc _ ≤ ∫ x, ‖f x * g x‖ ∂μ             := norm_integral_le_integral_norm _
+           _ = ∫ x, ‖(mul ℝ ℝ) (f x) (g x)‖ ∂μ := rfl
+           _ ≤ ‖(mul ℝ ℝ)‖ * ‖f‖ * ‖g‖         := integral_mul_le _ hpq.out _
            _ = ‖f‖ * ‖g‖                       := by simp
            _ ≤ 1 * ‖g‖                         := by gcongr
            _ = ‖g‖                             := by simp
@@ -811,14 +799,13 @@ theorem snorm_eq_sup_q_gt_top (g : Lp ℝ q μ) (hqᵢ : q ≠ ∞) :
       . dsimp only
         exact int_normalized_conj_q_lt_top_mul_self (p := p) hqᵢ (?_ : ‖g‖₊ ≠ 0)
 
-  . apply Real.sSup_le; swap; apply norm_nonneg
-    intro x hx
+  . refine Real.sSup_le (fun x hx ↦ ?_) (norm_nonneg _)
     rcases hx with ⟨f, hf, rfl⟩
     simp at hf; dsimp only
 
-    calc _ ≤ ∫ x, ‖f x * g x‖ ∂μ             := by apply norm_integral_le_integral_norm
+    calc _ ≤ ∫ x, ‖f x * g x‖ ∂μ             := norm_integral_le_integral_norm _
          _ = ∫ x, ‖(mul ℝ ℝ) (f x) (g x)‖ ∂μ := by simp only [norm_mul, norm_eq_abs, mul_apply']
-         _ ≤ ‖(mul ℝ ℝ)‖ * ‖f‖ * ‖g‖         := by apply integral_mul_le; exact hpq.out
+         _ ≤ ‖(mul ℝ ℝ)‖ * ‖f‖ * ‖g‖         := integral_mul_le _ hpq.out _
          _ = ‖f‖ * ‖g‖                       := by rw [opNorm_mul, one_mul]
          _ ≤ 1 * ‖g‖                         := by gcongr
          _ = ‖g‖                             := by rw [one_mul]
