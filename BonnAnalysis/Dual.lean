@@ -143,17 +143,17 @@ Note that the hard case already exists as `ENNReal.lintegral_mul_le_Lp_mul_Lq`. 
 lemma _root_.ContinuousLinearMap.le_opNNNorm₂ (L : E₁ →L[𝕜] E₂ →L[𝕜] E₃) (x : E₁) (y : E₂) :
     ‖L x y‖₊ ≤ ‖L‖₊ * ‖x‖₊ * ‖y‖₊ := L.le_opNorm₂ x y
 
-lemma _root_.ENNReal.lintegral_mul_le_one_top (μ : Measure α) {f g : α → ℝ≥0∞} (hf : AEMeasurable f μ) :
-  ∫⁻ (a : α), (f * g) a ∂μ ≤ (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
-    calc ∫⁻ (a : α), (f * g) a ∂μ = ∫⁻ (a : α), (f * g) a ∂μ := rfl
-    _ ≤ ∫⁻ (a : α), f a * (essSup g μ) ∂μ := by
-      apply MeasureTheory.lintegral_mono_ae
-      rw [Filter.eventually_iff, ← Filter.exists_mem_subset_iff]
-      use {a | g a ≤ essSup g μ}
-      rw [← Filter.eventually_iff]
-      exact ⟨ae_le_essSup _, by simp; intro _ ha; exact ENNReal.mul_left_mono ha⟩
-    _ = (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
-      rw [lintegral_mul_const'' _ hf]
+lemma _root_.ENNReal.lintegral_mul_le_one_top (μ : Measure α) {f g : α → ℝ≥0∞}
+  (hf : AEMeasurable f μ) : ∫⁻ (a : α), (f * g) a ∂μ ≤ (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
+  calc ∫⁻ (a : α), (f * g) a ∂μ = ∫⁻ (a : α), (f * g) a ∂μ := rfl
+  _ ≤ ∫⁻ (a : α), f a * (essSup g μ) ∂μ := by
+    apply MeasureTheory.lintegral_mono_ae
+    rw [Filter.eventually_iff, ← Filter.exists_mem_subset_iff]
+    use {a | g a ≤ essSup g μ}
+    rw [← Filter.eventually_iff]
+    exact ⟨ae_le_essSup _, fun _ ha ↦ ENNReal.mul_left_mono ha⟩
+  _ = (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
+    rw [lintegral_mul_const'' _ hf]
 
 lemma _root_.ENNReal.lintegral_norm_mul_le_one_top (μ : Measure α) {f : α → E₁} {g : α → E₂}
     (hf : AEMeasurable f μ) : ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ ≤ snorm f 1 μ * snorm g ⊤ μ := by
@@ -178,9 +178,7 @@ theorem lintegral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : α �
         simp only [Pi.mul_apply, coe_mul, implies_true]
       _ ≤ snorm f p μ * snorm g q μ := by
         simp only [coe_mul, snorm, coe_eq_zero, coe_ne_top, ↓reduceIte, coe_toReal, mul_ite, mul_zero, ite_mul, zero_mul, hpq.ne_zero, hpq.symm.ne_zero, snorm']
-        apply ENNReal.lintegral_mul_le_Lp_mul_Lq _ (NNReal.isConjExponent_coe.mpr hpq)
-        . apply hf.ennnorm
-        . apply hg.ennnorm
+        exact ENNReal.lintegral_mul_le_Lp_mul_Lq _ (NNReal.isConjExponent_coe.mpr hpq) hf.ennnorm hg.ennnorm
   case one => exact lintegral_norm_mul_le_one_top _ hf
   case infty =>
     calc
