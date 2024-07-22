@@ -399,10 +399,7 @@ theorem Real.self_mul_sign (x : ℝ) : x * x.sign = |x| := by
   . rw [hx₁, Real.sign_zero, mul_zero, abs_zero]
   . by_cases hx₂ : x > 0
     . rw [Real.sign_of_pos hx₂, mul_one, abs_of_pos hx₂]
-    . have hx₃ : x < 0 := by
-        apply lt_of_le_of_ne
-        linarith
-        exact hx₁
+    . have hx₃ : x < 0 := lt_of_le_of_ne (by linarith) hx₁
       rw [Real.sign_of_neg hx₃, mul_neg_one, abs_of_neg hx₃]
 
 theorem rpow_of_nnnorm_of_sign (x y : ℝ) (hypos : y > 0)
