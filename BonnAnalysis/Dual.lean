@@ -310,7 +310,7 @@ lemma q_div_p_add_one : q / p + 1 = q := by
 
 lemma q_div_p_add_one' (hqᵢ : q ≠ ∞) : q.toReal / p.toReal + 1 = q.toReal := by
   calc _ = (q / p).toReal + 1 := by rw [toReal_div]
-       _ = (q / p + 1).toReal := by rw [toReal_add]; simp; exact q_div_p_ne_top hqᵢ; simp
+       _ = (q / p + 1).toReal := by rw [toReal_add, one_toReal]; apply q_div_p_ne_top hqᵢ; simp
        _ = q.toReal := by rw [q_div_p_add_one]
 
 lemma q_div_p_add_one'' (hqᵢ : q ≠ ∞) : q.toReal / p.toReal = q.toReal - 1 := by
@@ -335,8 +335,8 @@ theorem snorm'_mul_const {p : ℝ} (hp : p > 0) (f : α → ℝ) (c : ℝ) :
     pattern (_ * _) ^ _
     rw [ENNReal.mul_rpow_of_ne_top]
     rfl
-    apply coe_ne_top
-    apply coe_ne_top
+    · exact coe_ne_top
+    · exact coe_ne_top
 
   rw [lintegral_mul_const']
   case neg.hr => simp_all
@@ -351,8 +351,7 @@ theorem snorm'_mul_const {p : ℝ} (hp : p > 0) (f : α → ℝ) (c : ℝ) :
   apply ENNReal.rpow_rpow_inv
   linarith
 
-theorem nnnorm_toReal_eq_abs (x : ℝ) : ‖x‖₊.toReal = |x| := by
-  rw [coe_nnnorm, norm_eq_abs]
+theorem nnnorm_toReal_eq_abs (x : ℝ) : ‖x‖₊.toReal = |x| := by rw [coe_nnnorm, norm_eq_abs]
 
 def step' : ℝ → ℝ := Set.piecewise {x | x ≤ 0} 0 1
 
