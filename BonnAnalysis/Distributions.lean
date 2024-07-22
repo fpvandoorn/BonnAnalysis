@@ -179,7 +179,22 @@ lemma KcontainsSuppOfLimit {α  : ℕ → 𝓓 k Ω} {φ : 𝓓 k Ω } (hφ : α
 
 
 
+lemma testFunctionIsBnd {ψ : 𝓓 k Ω} : ∃ C, ∀ (x : V), ‖ψ x‖ ≤ C := by
+  apply Continuous.bounded_above_of_compact_support ; apply ContDiff.continuous (𝕜:=k ) (ψ.φIsSmooth) ;
+  exact ψ.φHasCmpctSupport
+notation "|| " f " ||_∞" => MeasureTheory.snormEssSup f volume
 
+lemma EssSupTestFunction [MeasureSpace V] (φ : 𝓓 k Ω) : || φ.φ ||_∞ < ⊤ := by
+  obtain ⟨ C , hC ⟩ := testFunctionIsBnd (ψ := φ)
+  apply MeasureTheory.snormEssSup_lt_top_of_ae_nnnorm_bound ; swap
+  · exact ‖ C ‖₊
+  apply ae_of_all
+  intro x
+  · have : ‖φ.φ x‖ ≤ ‖C‖ := by
+      trans
+      · exact hC x ;
+      · apply le_abs_self
+    exact this
 
 
 
