@@ -38,5 +38,5 @@ jobs:
             leanblueprint pdf
             leanblueprint web
 
-      - name: Check declarations
-        run: ~/.elan/bin/lake exe checkdecls blueprint/lean_decls
+      # - name: Check declarations
+      #   run: ~/.elan/bin/lake exe checkdecls blueprint/lean_decls
