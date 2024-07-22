@@ -689,9 +689,9 @@ theorem DiffContOnCl.norm_le_pow_mul_pow₀₁ {f : ℂ → ℂ}
 
         have h₂ : Complex.abs (↑M₁ ^ (-(I * ↑y) + (- 1))) = M₁⁻¹  := by{
           rw [Complex.abs_cpow_eq_rpow_re_of_pos hM₁]
-          simp
-          norm_cast
-          simp
+          simp only [add_re, neg_re, mul_re, I_re, ofReal_re, zero_mul, I_im, ofReal_im, mul_zero,
+            sub_self, neg_zero, one_re, zero_add]
+          exact Real.rpow_neg_one M₁
         }
 
         rw [h₁, h₂]
@@ -738,10 +738,7 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
     {x y t s : ℝ} (ht : 0 ≤ t) (hs : 0 ≤ s) (hx : x = t * a + s * b) (hts : t + s = 1) :
     ‖f (x + I * y)‖ ≤ M₀ ^ (1-((t-1)*a+s*b)/(b-a)) * M₁ ^ (((t-1)*a+s*b)/(b-a)) := by{
 
-      have hb_sub_a: b - a ≠ 0 := by {
-        apply ne_of_gt
-        simp [hab]
-      }
+      have hb_sub_a: b - a ≠ 0 := ne_of_gt (by simp [hab])
 
       have hts'' : s = 1-t := eq_sub_of_add_eq (add_comm t s ▸ hts)
 
@@ -751,12 +748,10 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
         ring_nf
         have : -(s * a) + s * b = s * (b-a) := by ring
         rw [this]
-        simp
+        simp only [le_add_iff_nonneg_left, ge_iff_le]
         rw [mul_nonneg_iff]
         left
-        constructor
-        · exact hs
-        · simp; exact le_of_lt hab
+        exact ⟨hs, by simp; exact le_of_lt hab⟩
       }
 
       -- Essentially same as above with minor tweaks
@@ -769,9 +764,7 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
         simp
         rw [mul_nonpos_iff]
         left
-        constructor
-        · exact ht
-        · simp; exact le_of_lt hab
+        exact ⟨ht, by simp; exact le_of_lt hab⟩
       }
 
       let g : ℂ → ℂ := fun z ↦ f (a + z * (b-a))
@@ -779,17 +772,12 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
         let h : ℂ → ℂ := fun z ↦ a + z *(b-a)
         have hcomp: g = f ∘ h := rfl
         rw [hcomp]
-        apply DiffContOnCl.comp (s:={ z | z.re ∈ Ioo a b})
-        · exact hf
+        apply DiffContOnCl.comp (s:={ z | z.re ∈ Ioo a b}) hf ?_ ?_
         · simp [h]
-          apply DiffContOnCl.const_add
           have : (fun (x:ℂ) ↦ x * (↑b - ↑a) ) = (fun (x:ℂ) ↦ x • ((b:ℂ) - (a:ℂ))) := rfl
-          rw [this]
-          apply DiffContOnCl.smul_const
-          exact DiffContOnCl.id
+          exact DiffContOnCl.const_add (this ▸ DiffContOnCl.smul_const DiffContOnCl.id _) _
         · simp [h, MapsTo]
-          intro z hz₀ hz₁
-          constructor
+          refine fun z hz₀ hz₁ ↦ ⟨?_, ?_⟩
           · apply Real.mul_pos hz₀
             simp [hab]
           · calc
