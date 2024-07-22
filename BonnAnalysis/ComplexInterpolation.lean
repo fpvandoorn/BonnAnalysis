@@ -1133,7 +1133,8 @@ lemma lintegral_mul_le_segment_exponent {p₀ p₁ p : ℝ≥0∞} {s t : ℝ≥
     one_mul, le_refl]
 
   rcases eq_or_ne p ⊤ with hpt | hpt'
-  . simp [hpt, add_eq_zero, hs0', ht0'] at hp
+  . simp only [hpt, inv_top, add_eq_zero, ENNReal.div_eq_zero_iff, ENNReal.coe_eq_zero, hs0',
+    false_or, ht0'] at hp
     exact False.elim <| ne_top_of_lt hp₀₁ hp.1
 
   . calc snorm f p μ = (∫⁻ (a : α), ↑‖f a‖₊ ^ p.toReal ∂μ) ^ p.toReal⁻¹ := by simp [snorm, hp0', hpt', snorm']
