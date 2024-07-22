@@ -523,8 +523,7 @@ theorem int_conj_q_lt_top'_mul_self (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ}
     rw [mul_assoc, mul_comm, mul_assoc]
     congr
     rfl
-    rw [Real.self_mul_sign]
-    rw [←nnnorm_toReal_eq_abs]
+    rw [Real.self_mul_sign, ← nnnorm_toReal_eq_abs]
     rfl
 
   sorry
