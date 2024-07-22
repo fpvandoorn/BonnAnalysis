@@ -52,16 +52,13 @@ lemma pow_bound₀ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex
     have := (Real.rpow_le_rpow_iff_left hM (z.re-1) 0).mpr
     simp only [tsub_le_iff_right, zero_add, sub_nonneg, Real.rpow_zero] at this
     apply this
-    left
-    exact ⟨h, by simp [hz.2]⟩
+    exact Or.inl ⟨h, by simp [hz.2]⟩
   · right
     have : M^(-1:ℝ) = M⁻¹ := by apply Real.rpow_neg_one
     rw [← this]
     have := (Real.rpow_le_rpow_iff_left hM (z.re-1) (-1:ℝ)).mpr
     simp at this
-    apply this
-    right
-    exact ⟨by simp only [ge_iff_le, not_le] at h; exact le_of_lt h, hz.1⟩
+    exact this (Or.inr ⟨by simp only [ge_iff_le, not_le] at h; exact le_of_lt h, hz.1⟩)
 
 -- very similar proof to the previous one
 lemma pow_bound₁ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex.abs (M^(-z)) ≤ max 1 (1/M) := by{
@@ -75,16 +72,13 @@ lemma pow_bound₁ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex
     have := (Real.rpow_le_rpow_iff_left hM (-z.re) 0).mpr
     simp at this
     apply this
-    left
-    exact ⟨h, by simp [hz.1]⟩
+    exact Or.inl ⟨h, by simp [hz.1]⟩
   · right
     have : M^(-1:ℝ) = M⁻¹ := by apply Real.rpow_neg_one
     rw [← this]
     have := (Real.rpow_le_rpow_iff_left hM (-z.re) (-1:ℝ)).mpr
     simp at this
-    apply this
-    right
-    exact ⟨by simp at h; exact le_of_lt h, hz.2⟩
+    exact this (Or.inr ⟨by simp at h; exact le_of_lt h, hz.2⟩)
 }
 
 lemma abs_fun_nonempty (f : ℂ → ℂ) :
@@ -301,9 +295,9 @@ theorem DiffContOnCl.norm_le_pow_mul_pow''' {f : ℂ → ℂ}
               tauto
             }
             by_cases hc: z'.re = 0
-            · left; assumption
+            · exact Or.inl ‹_›
             · right
-              specialize h (lt_of_le_of_ne this.1 (Ne.symm hc) )
+              specialize h (lt_of_le_of_ne this.1 (Ne.symm hc))
               exact eq_of_le_of_le this.2 h
           }
           simp [IsMaxOn, IsMaxFilter] at hmax
@@ -341,23 +335,16 @@ theorem DiffContOnCl.norm_le_pow_mul_pow''' {f : ℂ → ℂ}
 
 def bump (ε: ℝ) : ℂ → ℂ := fun z ↦ exp (ε * (z^2 -1))
 
-lemma bump_diffcontoncl (ε : ℝ) : DiffContOnCl ℂ (bump ε) { z | z.re ∈ Ioo 0 1} := by{
-  refine Differentiable.diffContOnCl ?h
+lemma bump_diffcontoncl (ε : ℝ) : DiffContOnCl ℂ (bump ε) { z | z.re ∈ Ioo 0 1} := by
+  refine Differentiable.diffContOnCl ?_
   have h' : bump ε =  exp ∘ (fun z ↦ ε * (z^2 -1) ) := rfl
-  rw [h']
-  apply Differentiable.comp
-  · exact differentiable_exp
-  · simp
-}
+  exact (h') ▸ Differentiable.comp differentiable_exp (by simp)
 
 def perturb (f: ℂ → ℂ) (ε : ℝ) : ℂ → ℂ := fun z ↦ (f z) • (bump ε z)
 
-lemma perturb_diffcontoncl {f: ℂ → ℂ} (hf : DiffContOnCl ℂ f { z | z.re ∈ Ioo 0 1}) (ε : ℝ) : DiffContOnCl ℂ (perturb f ε) { z | z.re ∈ Ioo 0 1} := by{
-  apply DiffContOnCl.smul
-  · exact hf
-  · exact bump_diffcontoncl ε
-}
-
+lemma perturb_diffcontoncl {f: ℂ → ℂ} (hf : DiffContOnCl ℂ f { z | z.re ∈ Ioo 0 1}) (ε : ℝ) :
+    DiffContOnCl ℂ (perturb f ε) { z | z.re ∈ Ioo 0 1} :=
+  DiffContOnCl.smul hf (bump_diffcontoncl ε)
 
 lemma perturb_bound (f: ℂ → ℂ) (ε : ℝ) (z : ℂ) : Complex.abs (perturb f ε z) ≤ Complex.abs (f z) * Real.exp (ε * ((z.re)^2 - 1 - (z.im)^2)) := by{
   simp [perturb, bump]
@@ -374,26 +361,20 @@ lemma perturb_bound (f: ℂ → ℂ) (ε : ℝ) (z : ℂ) : Complex.abs (perturb
   ring
 }
 
-lemma bound_factor_le_one {ε : ℝ} (hε: ε > 0) {z : ℂ} (hz: z.re ∈ Icc 0 1) : Real.exp (ε * ((z.re)^2 - 1 - (z.im)^2)) ≤ 1 := by{
+lemma bound_factor_le_one {ε : ℝ} (hε: ε > 0) {z : ℂ} (hz: z.re ∈ Icc 0 1) : Real.exp (ε * ((z.re)^2 - 1 - (z.im)^2)) ≤ 1 := by
   simp at hz
-  rw [Real.exp_le_one_iff]
-  rw [mul_nonpos_iff]
+  rw [Real.exp_le_one_iff, mul_nonpos_iff]
   left
-  constructor
-  · exact le_of_lt hε
-  · calc
-    z.re ^ 2 - 1 - z.im ^ 2 ≤  z.re ^ 2 - 1 := by{ simp; exact sq_nonneg z.im}
-    _ ≤ 0 := by {
-      simp
-      rw [abs_le]
-      constructor
-      · calc
-        -1 ≤ 0 := by norm_num
-        _ ≤ z.re := hz.1
-      · exact hz.2
-    }
-}
-
+  refine ⟨le_of_lt hε, ?_⟩
+  calc
+  z.re ^ 2 - 1 - z.im ^ 2 ≤  z.re ^ 2 - 1 := by simp; exact sq_nonneg z.im
+  _ ≤ 0 := by
+    simp
+    rw [abs_le]
+    refine ⟨?_, hz.2⟩
+    · calc
+      -1 ≤ 0 := by norm_num
+      _ ≤ z.re := hz.1
 
 lemma perturb_isbounded {f: ℂ → ℂ} (h2f : IsBounded (f '' { z | z.re ∈ Icc 0 1})) {ε : ℝ} (hε: ε>0) : IsBounded ((perturb f ε) '' { z | z.re ∈ Icc 0 1}) := by{
   rw [isBounded_iff_forall_norm_le]
@@ -423,15 +404,13 @@ lemma perturb_bound_left {f: ℂ → ℂ} (h₀f : ∀ y : ℝ, ‖f (I * y)‖ 
   have hb := perturb_bound f ε (I*y)
   simp at hb
   have : (ε * (-1 - y ^ 2)).exp ≤ 1 := by{
-    rw [Real.exp_le_one_iff]
-    rw [mul_nonpos_iff]
+    rw [Real.exp_le_one_iff, mul_nonpos_iff]
     left
-    constructor
-    · exact le_of_lt hε
-    · simp
-      calc
-      -1 ≤ 0 := by norm_num
-      _ ≤ y^2 := sq_nonneg y
+    refine ⟨le_of_lt hε, ?_⟩
+    simp
+    calc
+    -1 ≤ 0 := by norm_num
+    _ ≤ y^2 := sq_nonneg y
   }
   calc
   Complex.abs (perturb f ε (I * ↑y)) ≤ Complex.abs (f (I * ↑y)) * (ε * (-1 - y ^ 2)).exp := hb
@@ -448,10 +427,7 @@ lemma perturb_bound_right {f: ℂ → ℂ} (h₁f : ∀ y : ℝ, ‖f (1 + I * y
     rw [Real.exp_le_one_iff]
     simp
     rw [mul_nonneg_iff]
-    left
-    constructor
-    · exact le_of_lt hε
-    · exact sq_nonneg y
+    exact Or.inl ⟨le_of_lt hε, sq_nonneg y⟩
   }
   calc
   Complex.abs (perturb f ε (1 + I * ↑y)) ≤ Complex.abs (f (1 + I * ↑y)) * (-(ε * y ^ 2)).exp := hb
@@ -515,9 +491,7 @@ lemma perturb_vanish_infty {f:ℂ → ℂ} (h2f : IsBounded (f '' { z | z.re ∈
         have hre : ε * (z.re ^ 2 - 1) ≤ 0 := by{
           rw [mul_nonpos_iff]
           left
-          constructor
-          · exact le_of_lt hε
-          · simp; rw [_root_.abs_of_nonneg hz₁]; exact hz₂
+          exact ⟨le_of_lt hε, by simp; rw [_root_.abs_of_nonneg hz₁]; exact hz₂⟩
         }
 
         calc
