@@ -7,7 +7,6 @@ import BonnAnalysis.StrongType
 noncomputable section
 
 open FourierTransform MeasureTheory Real
-
 namespace MeasureTheory
 
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]
@@ -34,7 +33,6 @@ theorem snorm_fourierIntegral {f : V → E} (hf : Integrable f) (h2f : Memℒp f
 theorem snorm_fourierIntegralInv {f : V → E} (hf : Integrable f) (h2f : Memℒp f 2) :
     snorm (𝓕⁻ f) 2 volume = snorm f 2 volume := sorry
 
-
 scoped[MeasureTheory] notation:25 α " →₁₂[" μ "] " E =>
     ((α →₁[μ] E) ⊓ (α →₂[μ] E) : AddSubgroup (α →ₘ[μ] E))
 
@@ -47,7 +45,7 @@ instance : NormedAddCommGroup (V →₁₂[volume] E) :=
         simp [snorm_congr_ae (AEEqFun.coeFn_add f g),
               snorm_add_le ((Lp.mem_Lp_iff_memℒp.1 hf).1) ((Lp.mem_Lp_iff_memℒp.1 hg).1)])
       ((Lp.mem_Lp_iff_snorm_lt_top.1 hf).ne) ((Lp.mem_Lp_iff_snorm_lt_top.1 hg).ne)
-    neg' := by simp[snorm_congr_ae (AEEqFun.coeFn_neg _)]
+    neg' := by simp [snorm_congr_ae (AEEqFun.coeFn_neg _)]
     eq_zero_of_map_eq_zero' := by
       intro ⟨f, _, hf⟩ h
       simp [ENNReal.toReal_eq_zero_iff] at h
@@ -59,7 +57,6 @@ instance : NormedAddCommGroup (V →₁₂[volume] E) :=
   }
 
 instance : NormedSpace ℝ (V →₁₂[volume] E) := sorry
-
 
 /- The Fourier integral as a continuous linear map `L^1(V, E) ∩ L^2(V, E) → L^2(V, E)`. -/
 def fourierIntegralL2OfL12Fun : (V →₁₂[volume] E) → (V →₂[volume] E) :=
@@ -73,8 +70,6 @@ def fourierIntegralL2OfL12 : (V →₁₂[volume] E) →L[ℝ] (V →₂[volume]
     bound := sorry
   }
   IsBoundedLinearMap.toContinuousLinearMap this-/
-
-
 
 /- The Fourier integral as a continuous linear map `L^2(V, E) → L^2(V, E)`. -/
 def fourierIntegralL2 : (V →₂[volume] E) →L[ℝ] (V →₂[volume] E) :=

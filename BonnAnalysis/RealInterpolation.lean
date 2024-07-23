@@ -16,7 +16,6 @@ variable {α β E E₁ E₂ E₃ : Type*} {m : MeasurableSpace α} {n : Measurab
   [MeasurableSpace E₃] [BorelSpace E₃]
   {f : α → E} {t : ℝ}
 
-
 namespace MeasureTheory
 
 /-- The `t`-truncation of a function `f`. -/
