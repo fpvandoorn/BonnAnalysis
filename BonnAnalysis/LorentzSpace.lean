@@ -201,5 +201,4 @@ def Lorentz {α} (E : Type*) {m : MeasurableSpace α} [NormedAddCommGroup E] (p 
   add_mem' {f g} hf hg := by sorry
   neg_mem' {f} hf := by sorry
 
-
 end MeasureTheory
