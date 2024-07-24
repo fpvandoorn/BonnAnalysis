@@ -38,7 +38,8 @@ variable  {V : Type u}  [MeasureSpace V]
    [NormedAddCommGroup V]  [NormedSpace ℝ V] --[ProperSpace V]
     [MeasureTheory.Measure.IsAddHaarMeasure (volume : Measure V)] [BorelSpace V] {Ω : Opens V} [T2Space V]  [SecondCountableTopology V] [LocallyCompactSpace V]
  [BorelSpace V]
-    {k' : Type u}   [NormedAddCommGroup k']  [NormedSpace ℝ k']  {L : ℝ  →L[ℝ ] k' →L[ℝ] k'}
+    {k' : Type u}   [NormedAddCommGroup k']  [NormedSpace ℝ k']
+    {L : ℝ  →L[ℝ ] k' →L[ℝ] k'}
    {φ : 𝓓F ℝ V} {ψ : ℕ → V → k'} {ψ0 : V → k'} (hψ : TendstoUniformly (fun n => (ψ n)) ψ0 atTop)
 lemma TendstoUniformly_iff_uniformZeroSeq {k : Type v} [UniformSpace k] [AddGroup k] [UniformAddGroup k] {φ  : ℕ → V → k} {φ₀ : V → k} : TendstoUniformly φ φ₀ atTop ↔ TendstoUniformly (fun n => φ n - φ₀) 0 atTop := by
           constructor
@@ -57,17 +58,17 @@ lemma TendstoUniformly_iff_uniformZeroSeq {k : Type v} [UniformSpace k] [AddGrou
             rw [show 0 + φ₀ = φ₀ from (by simp)] at this
             exact this
 
-lemma convolutionWithConstFunc {φ : V → ℝ} (c : k') : (φ ⋆[L] (fun _ => c)) = fun _ => L (∫ v , φ v) c := by
+lemma convolutionWithConstFunc {φ : V → ℝ} (c : ℝ) : (φ ⋆ (fun _ => c)) = fun _ => (∫ v , φ v) * c := by
   unfold convolution
   ext x
   symm ;
-  trans (∫ (v : V), L (φ v) c)
+  trans (∫ (v : V), c*  (φ v) )
   · symm ; rw [mul_comm] ; exact  (integral_smul c φ)
   · simp only [smul_eq_mul, ContinuousLinearMap.lsmul_apply] ; simp_rw [mul_comm] ;
 
-lemma zeroSeqUniformly {a : ℕ → (V → ℝ)} {α : ℕ → V → ENNReal} {C : ℝ≥0}
+lemma zeroSeqUniformly {a : ℕ → (V → k')} {α : ℕ → V → ENNReal} {C : ℝ≥0}
   (ha : ∀ n x , ‖ a n x‖ ≤ (α n x).toReal * C )
-  (hα : TendstoUniformly (fun n x => (α n x).toReal) 0 atTop) : TendstoUniformly a (fun _ => 0) atTop := by
+  (hα : TendstoUniformly (fun n x => (α n x).toReal) 0 atTop) : TendstoUniformly a 0 atTop := by
 
       rw [ TendstoUniformly_iff_uniformZeroSeq]
       rw [Metric.tendstoUniformly_iff] at hα
@@ -132,7 +133,7 @@ lemma EssSupNormSub {φ : ℕ → V → k'} {φ₀ : V → k' } (hφ : TendstoUn
 class ContCompactSupp (f : V → k') where
   cont : Continuous f
   hsupp : HasCompactSupport f
-  cdiff : ContDiff ℝ 1 f
+
 open ContCompactSupp
 
 lemma convOfCtsCmpctSupportExists {φ : LocallyIntegrableFunction V} {ψ : V → k' } [ContCompactSupp ψ]  : ConvolutionExists φ.f ψ L := by
@@ -148,14 +149,14 @@ lemma norm_convolution_le {x} {φ : V → ℝ} {ψ : V → k'}  : ‖ (φ ⋆[L]
         unfold convolution
         calc
           ‖ (φ ⋆[L] ψ) x‖ ≤ (∫⁻ (a : V), ENNReal.ofReal ‖ L (φ a) (ψ (x - a))‖).toReal := by apply MeasureTheory.norm_integral_le_lintegral_norm
-          _ ≤ ∫ (t : V),  ‖L (φ t) (ψ (x-t))‖ := ?_
+          _ = ∫ (t : V),  ‖L (φ t) (ψ (x-t))‖ := ?_
           _ = ∫ (t : V),  ‖φ t‖ * ‖ψ (x-t)‖ := by sorry -- simp_rw [norm_mul]
       --∫ (t : V),  ‖φ t‖ * ‖ψ (x-t)‖ =  ∫ (t : V), ((ContinuousLinearMap.lsmul ℝ ℝ) ((fun x ↦ ‖φ x‖) t)) ((fun x ↦ ‖ψ x‖) (x - t)) := by rfl
         · rw [← MeasureTheory.integral_toReal]
-          · apply le_of_eq ; congr ; ext a ; rw [ENNReal.toReal_ofReal_eq_iff] ; exact norm_nonneg (φ a * ψ (x - a))
-          · apply AEMeasurable.ennreal_ofReal ; apply AEMeasurable.norm ; apply AEMeasurable.mul  ;
-            · apply MeasureTheory.AEStronglyMeasurable.aemeasurable ; exact testFunctionMeasurable
-            · sorry
+          · congr ; ext a ; rw [ENNReal.toReal_ofReal_eq_iff] ; exact norm_nonneg _
+          · apply AEMeasurable.ennreal_ofReal ;  -- I DONT KNOW HOW TO FIX THIS, because k' is not a measurable space in general (we want things like V →L[ℝ] ℝ) -- apply AEMeasurable.norm ; apply AEMeasurable.mul  ;
+            · sorry -- apply MeasureTheory.AEStronglyMeasurable.aemeasurable ; exact testFunctionMeasurable
+
             -- · rw [show (fun a ↦ ψ.φ (x - a)) = (fun a ↦ (ψʳ).φ (a - x)) from ?_ ]
             --   apply MeasureTheory.AEStronglyMeasurable.aemeasurable ; exact testFunctionMeasurable (φ := (shift x) (ψʳ ))
             --   ext a ;
@@ -192,14 +193,16 @@ lemma  ConvWithIsUniformContinuous [∀ n , ContCompactSupp (ψ n)] [ContCompact
         · apply convOfCtsCmpctSupportExists (φ := (φ : LocallyIntegrableFunction V))
         · apply convOfCtsCmpctSupportExists  (φ := (φ : LocallyIntegrableFunction V))   --(ψ := (-1) • φ0)
         · simp only [instAddCommGroup𝓓, instNeg𝓓, neg_smul, one_smul] ; ext x ; sorry
-      · have : ∀ n x , ‖ (φ.φ ⋆[L] (ψ n - ψ0)) x‖ ≤ || ψ n - ψ0 ||_∞.toReal * (⟨ ∫  v , ‖ φ v‖ , by apply integral_nonneg ; intro _ ; apply norm_nonneg  ⟩ : ℝ≥0).1  := by
+      · let C : ℝ≥0 := by sorry
+        have : ∀ n x , ‖ (φ.φ ⋆[L] (ψ n - ψ0)) x‖ ≤ || ψ n - ψ0 ||_∞.toReal * C.1  := by
           intro n x
 
           calc
-            ‖ (φ.φ ⋆[L] (ψ n - ψ0)) x‖  ≤ _ := norm_convolution_le (φ := φ) (ψ := ψ n - ψ0)
+            ‖ (φ.φ ⋆[L] (ψ n - ψ0)) x‖  ≤ ((fun x => ‖φ.φ x‖) ⋆ (fun x => ‖ (ψ n - ψ0) x‖ )) x := norm_convolution_le (φ := φ) (ψ := ψ n - ψ0)
             _ ≤  ((fun x => ‖φ.φ x‖) ⋆ (fun _ => || ψ n - ψ0 ||_∞.toReal )) x  := ?_
-            _ ≤  (∫  v , ‖ φ v‖) * || ψ n - ψ0 ||_∞.toReal := by apply le_of_eq ; apply congrFun ; apply convolutionWithConstFunc
+            _ =  (∫  v , ‖ φ v‖) * || ψ n - ψ0 ||_∞.toReal := by apply congrFun ; apply convolutionWithConstFunc
             _ ≤   || ψ n - ψ0 ||_∞.toReal * (∫ v , ‖ φ v‖)  := by rw [mul_comm]
+            _ ≤ _ := by sorry -- (⟨ ∫  v , ‖ φ v‖ , by apply integral_nonneg ; intro _ ; apply norm_nonneg  ⟩ : ℝ≥0).1
           apply convolution_mono_right_of_nonneg
           · apply HasCompactSupport.convolutionExists_left_of_continuous_right ;
             · refine (hasCompactSupport_comp_left (g:= fun x => ‖x‖) (f:= φ.φ) ?_).mpr ?_ ;
@@ -211,7 +214,9 @@ lemma  ConvWithIsUniformContinuous [∀ n , ContCompactSupp (ψ n)] [ContCompact
           · sorry
           · intro _ ; apply ENNReal.toReal_nonneg
 
-        refine zeroSeqUniformly (α := fun n x => || ψ n - ψ0 ||_∞ )  this ?_
+
+        apply zeroSeqUniformly this
+
         rw [← tendstoUniformlyOn_univ]
         apply Filter.Tendsto.tendstoUniformlyOn_const
         apply NormedAddCommGroup.tendsto_nhds_zero.mpr
@@ -221,16 +226,10 @@ lemma  ConvWithIsUniformContinuous [∀ n , ContCompactSupp (ψ n)] [ContCompact
 
         exact EssSupNormSub (φ := ψ) (φ₀:= ψ0) hψ
 
-
-         /-
-             I want to use somehow that (φ ⋆ _) is uniformly continuous (what is domain / codomain) to deduce that
-              it preserve Uniform sequences.
-            exact UniformContinuous.comp_tendstoUniformly (g:= fun ψ => φ.φ ⋆ ψ) ?_ this
-            -/
 instance [ContCompactSupp ψ0]: ContCompactSupp (fderiv ℝ ψ0) where
   cont := by sorry
   hsupp := by sorry
-  cdiff := by sorry
+
 lemma fderiv_convolution [ ContCompactSupp ψ0] {φ : LocallyIntegrableFunction V} :
    fderiv ℝ (φ.f ⋆[L] ψ0) = φ.f ⋆[ContinuousLinearMap.precompR V L] (fderiv ℝ ψ0) := by sorry -- apply HasCompactSupport.hasFDerivAt_convolution_right ;
 open ContinuousMultilinearMap
