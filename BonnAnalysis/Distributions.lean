@@ -154,8 +154,9 @@ lemma seqImpliesConvergence   {φ : ℕ → (𝓓 k Ω )} {φ0 : 𝓓 k Ω} (hφ
     apply (zeroCase k).mp
     exact hφ.2 0
 
-lemma KcontainsSuppOfLimit {α  : ℕ → 𝓓 k Ω} {φ : 𝓓 k Ω } (hφ : α  ⟶ φ)
-  {K : Set V} (hK : IsCompact K ∧ (∀ n , tsupport (α  n).φ ⊆ K)) : tsupport φ.φ ⊆ K :=by
+
+lemma KcontainsSuppOfLimit' {k : Type* } [TopologicalSpace k] [T2Space k] [Zero k] {α  : ℕ → V → k} {φ : V → k } (hφ : ∀ p , Tendsto (fun n => α n p) atTop (𝓝 (φ p))   )
+  {K : Set V} (hK : IsCompact K ∧ (∀ n , tsupport (α  n) ⊆ K)) : tsupport φ ⊆ K :=by
 
   · apply closure_minimal ; swap
     · exact IsCompact.isClosed hK.1
@@ -163,21 +164,24 @@ lemma KcontainsSuppOfLimit {α  : ℕ → 𝓓 k Ω} {φ : 𝓓 k Ω } (hφ : α
       intro p hp
       simp
 
-      apply tendsto_nhds_unique (f:= fun n => (α n).φ p) (l:=atTop)
-      apply seqImpliesConvergence
-      exact hφ
-      have : (fun n => (α n).φ p) = (fun n => 0) := by
+      apply tendsto_nhds_unique (f:= fun n => (α n) p) (l:=atTop)
+
+      exact hφ _
+      have : (fun n => (α n) p) = (fun n => 0) := by
         ext1 n ;
-        have : Function.support (α n).φ ⊆ K := by
-          trans tsupport (α n).φ ;
-          exact subset_tsupport (α n).φ ;
+        have : Function.support (α n) ⊆ K := by
+          trans tsupport (α n) ;
+          exact subset_tsupport (α n) ;
           exact hK.2 n
         exact Function.nmem_support.mp (Set.compl_subset_compl.mpr this hp)
       rw [this]
       apply tendsto_const_nhds
-
-
-
+lemma  KcontainsSuppOfLimit {α  : ℕ → 𝓓 k Ω} {φ : 𝓓 k Ω } (hφ : α  ⟶ φ)
+  {K : Set V} (hK : IsCompact K ∧ (∀ n , tsupport (α  n).φ ⊆ K)) : tsupport φ.φ ⊆ K :=by
+  apply KcontainsSuppOfLimit'
+  apply seqImpliesConvergence
+  exact hφ
+  exact hK
 
 lemma testFunctionIsBnd {ψ : 𝓓 k Ω} : ∃ C, ∀ (x : V), ‖ψ x‖ ≤ C := by
   apply Continuous.bounded_above_of_compact_support ; apply ContDiff.continuous (𝕜:=k ) (ψ.φIsSmooth) ;

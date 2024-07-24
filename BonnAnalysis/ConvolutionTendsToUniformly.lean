@@ -229,6 +229,18 @@ lemma  ConvWithIsUniformContinuous [∀ n , ContCompactSupp (ψ n)] [ContCompact
 instance [ContCompactSupp ψ0]: ContCompactSupp (fderiv ℝ ψ0) where
   cont := by sorry
   hsupp := by sorry
+def ContCompactLimit  [∀ n , ContCompactSupp (ψ n)] : ContCompactSupp ψ0 where
+  cont := by sorry
+  hsupp := by
+    apply IsCompact.of_isClosed_subset ;
+    · sorry
+    · sorry
+    · apply KcontainsSuppOfLimit'
+      intro p
+      apply TendstoUniformly.tendsto_at hψ
+      constructor
+
+
 
 lemma fderiv_convolution [ ContCompactSupp ψ0] {φ : LocallyIntegrableFunction V} :
    fderiv ℝ (φ.f ⋆[L] ψ0) = φ.f ⋆[ContinuousLinearMap.precompR V L] (fderiv ℝ ψ0) := by sorry -- apply HasCompactSupport.hasFDerivAt_convolution_right ;
