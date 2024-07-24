@@ -29,7 +29,7 @@ noncomputable section
 
 variable {V : Type u} (k : Type v)
   [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] (Ω : Opens V) --{ΩisOpen : IsOpen Ω}
-/--
+/-
 structure HasCompactSupportIn (φ : V → k)  : Prop where
   hasCmpctSprt :  HasCompactSupport φ
   sprtinΩ  : tsupport φ ⊆ Ω
@@ -55,7 +55,7 @@ instance : Add (𝓓 k Ω ) where
     φ + ψ ,
     ContDiff.add φ.φIsSmooth ψ.φIsSmooth,
     HasCompactSupport.add φ.φHasCmpctSupport ψ.φHasCmpctSupport  , by sorry ⟩
-instance : Neg (𝓓 k Ω ) where
+@[simp] instance : Neg (𝓓 k Ω ) where
   neg := fun φ =>
     ⟨ - φ , ContDiff.neg φ.φIsSmooth , by sorry , by sorry ⟩
 @[simp] instance : AddCommGroup (𝓓 k Ω ) where
@@ -226,3 +226,31 @@ lemma SeqContinuous'OfContinuous  (T : X →L[k] M) : SeqContinuous' T := by
   exact T.cont
   apply tendsTo𝓝
   exact hx
+def Full (V : Type u) [TopologicalSpace V] : Opens V := ⟨ univ , isOpen_univ ⟩
+
+abbrev 𝓓F  (k : Type v) (V : Type u) [NontriviallyNormedField k]
+  [NormedAddCommGroup V]  [NormedSpace k V]  := 𝓓 k (⊤:Opens V)
+abbrev 𝓓'F  (k : Type v) (V : Type u) [NontriviallyNormedField k]
+ [NormedAddCommGroup V]  [NormedSpace k V]  := 𝓓' k (Full V)
+
+
+
+variable  (V : Type u) [MeasureSpace V] [NormedAddCommGroup V]  [NormedSpace ℝ V] [T2Space V]
+  [MeasureSpace V] [OpensMeasurableSpace V] {Ω : Opens V} [OpensMeasurableSpace V]  [IsFiniteMeasureOnCompacts (volume (α := V))] --[IsFiniteMeasureOnCompacts (volume V)]
+structure LocallyIntegrableFunction where
+   f : V → ℝ
+   hf : MeasureTheory.LocallyIntegrable f
+
+lemma testFunctionIsLocallyIntegrable
+  (φ : 𝓓 ℝ Ω  ) : MeasureTheory.LocallyIntegrable φ := by
+    apply MeasureTheory.Integrable.locallyIntegrable
+    apply Continuous.integrable_of_hasCompactSupport
+    exact ContDiff.continuous (𝕜:=ℝ) φ.φIsSmooth
+    exact φ.φHasCmpctSupport
+instance : Coe ( 𝓓F ℝ V) (LocallyIntegrableFunction V) where
+  coe φ := ⟨ φ , testFunctionIsLocallyIntegrable V φ ⟩
+
+
+
+instance  :  CoeFun (LocallyIntegrableFunction V) (fun _ => V → ℝ) where
+  coe σ := σ.f

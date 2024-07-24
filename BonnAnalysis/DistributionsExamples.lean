@@ -10,6 +10,7 @@ import Mathlib.Topology.UniformSpace.UniformConvergence
 import Mathlib.Data.Set.Pointwise.Basic
 import BonnAnalysis.UniformConvergenceSequences
 import BonnAnalysis.Distributions
+import BonnAnalysis.ConvolutionTendsToUniformly
 import Mathlib
 
 import Mathlib.Analysis.Convolution
@@ -33,12 +34,7 @@ open scoped Topology
 open TopologicalSpace
 noncomputable section
 open Function
-def Full (V : Type u) [TopologicalSpace V] : Opens V := ⟨ univ , isOpen_univ ⟩
 
-abbrev 𝓓F  (k : Type v) (V : Type u) [NontriviallyNormedField k]
-  [NormedAddCommGroup V]  [NormedSpace k V]  := 𝓓 k (⊤:Opens V)
-abbrev 𝓓'F  (k : Type v) (V : Type u) [NontriviallyNormedField k]
- [NormedAddCommGroup V]  [NormedSpace k V]  := 𝓓' k (Full V)
 variable (k : Type v) [NontriviallyNormedField k]
 
 open ContinuousLinearEquiv
@@ -228,9 +224,11 @@ theorem ContinuousAffineMap.iteratedFDeriv_comp_right {l} {φ0 : 𝓓F k V} (Φ 
             apply congrFun
             apply congrArg
             apply congrArg
-            rw [iteratedFDerivTransition (-Φ 0) (Φ.linear x) _ (φ0 := φ0.φ)]
-            congr
-            symm ; rw [affineAsUnderlyingLinearTransition] ; simp only [sub_neg_eq_add]
+            rw [affineAsUnderlyingLinearTransition]
+            rw [show Φ.linear x + Φ 0 = Φ.linear x - (- Φ 0) from ?_]
+            rw [iteratedFDerivTransition]
+
+            simp only [sub_neg_eq_add]
           · have : ContDiff k ⊤ ⇑(shift' k (-Φ 0)) := by apply ContinuousAffineMap.contDiff
 
             refine ContDiff.comp φ0.φIsSmooth (this)
@@ -444,6 +442,7 @@ example (v : V) (φ : 𝓓 k Ω ) (T : 𝓓' k Ω ): (fderiv𝓓 v ** T) φ = T 
 
 
 @[simp] def reflection  : 𝓓F k V →L[k] (𝓓F k V) := fromEndoOfV (reflection' k) (reflectionIsProper _)
+postfix:200 "ʳ" => reflection
 
 
 -- notation:67 ψ "ʳ" => ψʳ
@@ -454,12 +453,8 @@ example (v : V) (φ : 𝓓 k Ω ) (T : 𝓓' k Ω ): (fderiv𝓓 v ** T) φ = T 
 
 --rw [Metric.tendstoUniformly_iff]
 ---------- the rest deals with real numbers
-variable  (V : Type u) [MeasureSpace V] [NormedAddCommGroup V]  [NormedSpace ℝ V]
+variable  (V : Type u) [MeasureSpace V] [NormedAddCommGroup V]  [NormedSpace ℝ V] [T2Space V]
   [MeasureSpace V] [OpensMeasurableSpace V] {Ω : Opens V} [OpensMeasurableSpace V]  [IsFiniteMeasureOnCompacts (volume (α := V))] --[IsFiniteMeasureOnCompacts (volume V)]
-
-structure LocallyIntegrableFunction where
-   f : V → ℝ
-   hf : MeasureTheory.LocallyIntegrable f
 
 
 @[simp] def intSm (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun x y => φ y x)) : 𝓓F ℝ V := ⟨ fun y => ∫ x , φ x y , by sorry , by sorry , by sorry⟩
@@ -471,58 +466,84 @@ lemma FcommWithIntegrals (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun
 
 
 
-lemma testFunctionIsLocallyIntegrable
-  (φ : 𝓓 ℝ Ω  ) : MeasureTheory.LocallyIntegrable φ := by
-    apply MeasureTheory.Integrable.locallyIntegrable
-    apply Continuous.integrable_of_hasCompactSupport
-    exact ContDiff.continuous (𝕜:=ℝ) φ.φIsSmooth
-    exact φ.φHasCmpctSupport
 
-
+lemma convOfTestFunctionsExists {φ ψ : 𝓓F ℝ V} : ConvolutionExists φ.φ ψ.φ (ContinuousLinearMap.lsmul ℝ ℝ) :=
+  convOfCtsCmpctSupportExists (ContDiff.continuous (𝕜:=ℝ ) (ψ.φIsSmooth)) ψ.φHasCmpctSupport
 
 open MeasureSpace
 
 variable {V : Type u}  [MeasureSpace V]
    [NormedAddCommGroup V]  [NormedSpace ℝ V] [ProperSpace V] [MeasureTheory.Measure.IsAddHaarMeasure (volume : Measure V)] [BorelSpace V] {Ω : Opens V} [T2Space V]  [SecondCountableTopology V] [LocallyCompactSpace V]
 
-instance : Coe ( 𝓓F ℝ V) (LocallyIntegrableFunction V) where
-  coe φ := ⟨ φ , testFunctionIsLocallyIntegrable V φ ⟩
 
 
 
 
-instance  :  CoeFun (LocallyIntegrableFunction V) (fun _ => V → ℝ) where
-  coe σ := σ.f
 
+/-
+The next two lemmas look similar and are proven similarly. If I have time I try to generalize.
+-/
+-- lemma zeroSeq'  {R : Type*} [AddCommGroup R] [TopologicalSpace R] [TopologicalAddGroup R] [SeminormedAddGroup R] [Module ℝ R]
+--    {a : ℕ → R} {α : ℕ → R} {C : ℝ≥0}
+--   (ha : ∀ n , ‖ a n‖ ≤ C * ‖ α n‖ )
+--   (hα : ∀ ε > 0 , ∃ a, ∀ n ≥ a, ‖ α n‖ < ε) : Tendsto a atTop (𝓝 0) := by
 
-lemma TendstoUniformly_iff_uniformZeroSeq {φ  : ℕ → V → k} {φ₀ : V → k} : TendstoUniformly φ φ₀ atTop ↔ TendstoUniformly (fun n => φ n - φ₀) 0 atTop := by
-          constructor
-          · intro hφ
-            rw [show (0 = φ₀ - φ₀) from (by simp)]
-            apply TendstoUniformly.sub hφ
-            rw [← tendstoUniformlyOn_univ]
-            apply CnstSeqTendstoUniformlyOn
-          · intro hφ
-            rw [show (φ = (fun n => φ n - φ₀ + φ₀)) from (by simp)]
-            -- rw [show (φ₀ = 0 + φ₀) from (by simp)]
-            have : TendstoUniformly (fun n ↦ (φ n - φ₀) + φ₀) ( 0 + φ₀) atTop := by
-              apply TendstoUniformly.add hφ ;
-              · rw [← tendstoUniformlyOn_univ]
-                apply CnstSeqTendstoUniformlyOn φ₀ atTop ;
-            rw [show 0 + φ₀ = φ₀ from (by simp)] at this
-            exact this
+lemma zeroSeq {a : ℕ → ℝ} {α : ℕ → ENNReal} {C : ℝ≥0}
+  (ha : ∀ n , ‖ a n‖ ≤ (α n).toReal * C )
+  (hα : ∀ ε > 0 , ∃ a, ∀ n ≥ a, (α n).toReal < ε) : Tendsto a atTop (𝓝 0) := by
+      rw [← tendsto_sub_nhds_zero_iff]
+      simp_rw [ NormedAddCommGroup.tendsto_nhds_zero, eventually_atTop ]
+      intro ε hε
+
+      by_cases h : C = 0
+      · use 0 ; intro b hb ;
+        apply LE.le.trans_lt
+        · simp ; exact ha b
+        · have : ‖(α b).toReal‖ * C   < ε := by
+            rw [h] ;
+            simp
+            exact hε
+          rw [show  ‖(α b).toReal‖ = (α b).toReal from NNReal.norm_eq _] at this
+          exact this
+      · let ε' : ℝ := ε / C
+        -- have hε' : ε' > 0 ∧
+        have hC : 0 < C := pos_iff_ne_zero.mpr h
+        obtain ⟨ m , hm ⟩ :=  hα ε' (by apply (div_pos_iff_of_pos_right ?_).mpr ; exact hε ;   exact hC  )
+        use m
+
+        intro b hb
+        specialize hm b hb
+        apply LE.le.trans_lt
+        · simp ; exact ha b
+        · rw [show (ε = ε' * C ) from ?_]
+          · apply (mul_lt_mul_right ?_ ).mpr
+
+            exact hm
+            exact hC
+          · refine Eq.symm (IsUnit.div_mul_cancel ?q _)
+            exact (Ne.isUnit (coe_ne_zero.mpr h))
+
 
 lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
   {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
   (f : E' → E)  [MeasureSpace E'] (K : Set E') (hK1 : MeasurableSet K) (hK : support f ⊆ K)
   : ∫ (x : E' ) , f x = ∫ (x : E') in K , f x := by symm ; rw [← MeasureTheory.integral_indicator _] ; congr ; rw [Set.indicator_eq_self] ; exact hK ; exact hK1
 
+lemma testFunctionMeasurable {φ : 𝓓 ℝ Ω} : AEStronglyMeasurable φ.φ volume := by apply Continuous.aestronglyMeasurable ; apply ContDiff.continuous (𝕜:=ℝ ) (φ.φIsSmooth)
 @[simp] def Λ (f : LocallyIntegrableFunction V) : 𝓓' ℝ Ω := by
   have fIsIntegrableOnK {K : Set V} (hK : IsCompact K) := LocallyIntegrable.integrableOn_isCompact f.hf hK
   have fIsIntegrableOnK' {K : Set V} (hK : IsCompact K) : ∫⁻ (a : V) in K, ↑‖f.f a‖₊ ≠ ⊤ := by apply LT.lt.ne_top ; exact (fIsIntegrableOnK hK).2
   have integrable {ψ : 𝓓 ℝ Ω} : Integrable (fun v ↦ ψ v * f.f v) volume := by
           let K := tsupport ψ
-          have hf : ((fun v ↦  ψ v  * f.f v  ) = fun v => ψ v *  K.indicator f.f v  ) := by sorry
+
+          have hf : ((fun v ↦  ψ v  * f.f v  ) = fun v => ψ v *  K.indicator f.f v  ) := by
+           have hsψ : support ψ ⊆ K := subset_tsupport ψ.φ
+           nth_rw 2 [← Set.indicator_eq_self.mpr hsψ]
+           rw [← Set.indicator_mul]
+           refine Eq.symm ( Set.indicator_eq_self.mpr ?_)
+           trans
+           · refine Function.support_mul_subset_left _ _
+           · exact hsψ
           rw [hf]
           apply MeasureTheory.Integrable.bdd_mul
           · have hK := ψ.φHasCmpctSupport ;
@@ -531,7 +552,7 @@ lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
             · exact hK ;
             · apply IsCompact.measurableSet ;
               exact hK
-          · apply Continuous.aestronglyMeasurable ; apply ContDiff.continuous (𝕜:=ℝ ) (ψ.φIsSmooth)
+          · exact testFunctionMeasurable (φ := ψ)
 
           apply testFunctionIsBnd
 
@@ -550,19 +571,13 @@ lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
       intro φ φ₀  hφ
       obtain ⟨ K , hK ⟩ := hφ.1
 
-      rw [← tendsto_sub_nhds_zero_iff]
-      simp_rw [ NormedAddCommGroup.tendsto_nhds_zero, eventually_atTop ]
+
       have {a b : ℝ } : ENNReal.ofReal (‖ a‖ * ‖b‖) = ↑(‖a‖₊ * ‖b‖₊) := by
         calc
            ENNReal.ofReal (‖ a‖ * ‖b‖) = ENNReal.ofReal (‖ a * b‖) := by congr ; rw [← norm_mul]
            _ = ↑(‖ a * b‖₊)  := by exact ofReal_norm_eq_coe_nnnorm (a * b)
            _ = ↑(‖a‖₊ * ‖b‖₊) := by congr ; exact nnnorm_mul a b
-        -- rw [← show ENNReal.ofNNReal ⟨ ‖a‖₊ * ‖b‖₊ , ?_ ⟩ = ↑(‖a‖₊ * ‖b‖₊) from ?_] -- symm ; rw [ENNReal.coe_mul ‖a‖₊ ‖b‖₊] ;
-        -- sorry
-        -- apply?
 
-
---(ha :  a ≠ ⊤ ) (hb : b ≠ ⊤ )
       have mainArg : ∀ n ,
          ‖  (∫ (v : V), (φ n).φ v * f.f v)  - ∫ (v : V), φ₀.φ v * f.f v  ‖₊
         ≤  ENNReal.toReal (|| (φ n).φ - φ₀.φ ||_∞)  * ENNReal.toReal (∫⁻ (v : V) in K,   ‖ (f v) ‖₊ ) := by
@@ -625,90 +640,19 @@ lemma shouldExist  {E' : Type*} [NormedAddCommGroup E'] [NormedSpace ℝ E']
         _ ≤ (∫⁻ (v : V) in K ,  || ((φ n).φ -φ₀.φ) ||_∞ * ‖ f.f v ‖₊).toReal   := by exact someOtherArg
         _ =  ((|| ((φ n).φ -φ₀.φ) ||_∞) * (∫⁻ (v : V) in K , ‖ f.f v ‖₊ )).toReal := by congr ;  apply MeasureTheory.lintegral_const_mul''  (|| ((φ n).φ -φ₀.φ) ||_∞) ; apply AEMeasurable.restrict ; exact fIsMeasureable
         _ = (|| ((φ n).φ -φ₀.φ) ||_∞).toReal * (∫⁻ (v : V) in K , ‖ f.f v ‖₊ ).toReal   := by rw [ENNReal.toReal_mul]
-      have foo {ε} {ψ : V → ℝ} (hε : ε ≥ 0) (p : ∀ x ∈ univ , ‖ ψ x‖  < ε) : || ψ ||_∞.toReal ≤ ε   := by
-        have : || ψ ||_∞ ≤ ENNReal.ofReal ε := by
-          apply MeasureTheory.snormEssSup_le_of_ae_bound (C:=ε)
-          apply ae_of_all volume
-          intro a
-          apply le_of_lt
-          exact p a trivial
-        refine ENNReal.toReal_le_of_le_ofReal hε  this
-      have hφ : ∀ ε > 0 , ∃ a, ∀ n ≥ a, || (φ n).φ - φ₀.φ ||_∞.toReal < ε := by
-        have : ∀ ε > 0 , ∃ a, ∀ n ≥ a,  ∀ x ∈ univ , ‖((φ n).φ - φ₀.φ) x‖ < ε := by
-          simp_rw [← eventually_atTop  ]
 
-          have : TendstoUniformly (fun n => (φ n).φ ) φ₀.φ atTop := by apply (zeroCase _).mp ; exact hφ.2 0
-          have : TendstoUniformly (fun n => (φ n).φ - φ₀.φ) 0 atTop := by apply TendstoUniformly_iff_uniformZeroSeq.mp this
-
-          apply SeminormedAddGroup.tendstoUniformlyOn_zero.mp (tendstoUniformlyOn_univ.mpr this)
-        intro ε hε
-        obtain ⟨ a , ha ⟩ := this (ε / 2) (half_pos hε ) -- hε
-        use a
-        intro n hn
-        apply LE.le.trans_lt
-        · exact foo (ε := ε / 2) (ψ := (φ n).φ - φ₀.φ) (le_of_lt (half_pos hε)) (ha n hn)
-        · exact div_two_lt_of_pos hε
+      have : TendstoUniformly (fun n => (φ n) ) φ₀ atTop := by apply (zeroCase _).mp ; exact hφ.2 0
         --
-
-      intro ε hε
       let C : ℝ≥0 := ENNReal.toNNReal (∫⁻ (v : V) in K,   ‖ (f v) ‖₊ )
-      by_cases h : C = 0
-      · use 0 ; intro b hb ;
-        apply LE.le.trans_lt
-        · exact mainArg b
-        · have : (|| (φ b).φ - φ₀.φ ||_∞.toReal) * C  < ε := by
-            rw [h] ;
-            simp
-            exact hε
-          exact this
-      · let ε' : ℝ := ε / C
-        -- have hε' : ε' > 0 ∧
-        have hC : 0 < C := pos_iff_ne_zero.mpr h
-        obtain ⟨ a , ha ⟩ :=  hφ ε' (by apply (div_pos_iff_of_pos_right ?_).mpr ; exact hε ;   exact hC  )
-        use a
+      rw [← tendsto_sub_nhds_zero_iff]
+      exact zeroSeq mainArg (EssSupNormSub this)
 
-        intro b hb
-        specialize ha b hb
-        apply LE.le.trans_lt
-        · exact mainArg b
-        · rw [show (ε = ε' * C) from ?_]
-          · apply (mul_lt_mul_right ?_ ).mpr
-            exact ha
-            exact hC
-          · refine Eq.symm (IsUnit.div_mul_cancel ?q _)
-            exact (Ne.isUnit (coe_ne_zero.mpr h))
 
 open Convolution
 
 @[simp] def shift (x : V) : 𝓓F ℝ V →L[ℝ] 𝓓F ℝ V := fromEndoOfV (shift' ℝ x) (shiftIsProper ℝ x)
 --lemma tsupportShift {v : V} {ψ : 𝓓F ℝ V} : tsupport (shift v ψ) ⊆ {x - v | x : tsupport ψ } := by
-
-lemma  ConvWithIsUniformContinuous-- [BorelSpace V]
-   {k' : Type w}  [MeasureSpace k'] [NormedAddCommGroup k']  [NormedSpace ℝ k']
-   {φ : 𝓓F ℝ V} {ψ : ℕ → V → k'} {ψ0 : V → k'} (hψ : TendstoUniformly ψ ψ0 atTop)
-    {L : ℝ  →L[ℝ ] k' →L[ℝ] ℝ} :
-    TendstoUniformly (β := ℝ) (fun n => (φ.φ ⋆[L] (ψ n))) ((φ.φ ⋆[L] ψ0)) atTop := by
-      apply TendstoUniformly_iff_uniformZeroSeq.mpr
-      --exact UniformContinuous.comp_tendstoUniformly (g:= fun ψ => φ.φ ⋆ ψ) ?_ ?_
-      sorry
-         /-
-             I want to use somehow that (φ ⋆ _) is uniformly continuous (what is domain / codomain) to deduce that
-              it preserve Uniform sequences.
-            exact UniformContinuous.comp_tendstoUniformly (g:= fun ψ => φ.φ ⋆ ψ) ?_ this
-            -/
-lemma iteratedDerivConv {V : Type u}  [MeasureSpace V]
-   [NormedAddCommGroup V]  [NormedSpace ℝ V] [BorelSpace V]
-  {k' : Type w}  [MeasureSpace k'] [NormedAddCommGroup k']  [NormedSpace ℝ k']
-    {φ : 𝓓F ℝ V}  {ψ : ℕ → V → k'} {ψ0 : V → k'} (hψ : TendstoUniformly ψ ψ0 atTop) {l : ℕ}
-    {L : ℝ  →L[ℝ ] k' →L[ℝ] ℝ} :
-    TendstoUniformly (fun n => iteratedFDeriv ℝ (l+1) (φ.φ ⋆[L] (ψ n))) (iteratedFDeriv ℝ (l+1) (φ.φ ⋆[L] ψ0)) atTop := by sorry
-lemma convOfTestFunctionsExists [T2Space V] {φ ψ : 𝓓F ℝ V} : ConvolutionExists φ.φ ψ.φ (ContinuousLinearMap.lsmul ℝ ℝ) := by
-  intro x ;
-  apply HasCompactSupport.convolutionExists_right -- HasCompactSupport.convolutionExistsAt
-  exact  ψ.φHasCmpctSupport --HasCompactSupport.convolution φ.φHasCmpctSupport
-  exact testFunctionIsLocallyIntegrable V φ
-  apply ContDiff.continuous (𝕜:=ℝ ) (ψ.φIsSmooth)
-
+theorem integral_congr {f g : V → ℝ} (p : ∀ x , f x = g x) : ∫ x , f x = ∫ x , g x := by congr ; ext x ; exact p x
 
 @[simp] def convWith  ( φ : 𝓓F ℝ V) : (𝓓F ℝ V) →L[ℝ] 𝓓F ℝ V := by
   apply mk ℝ  ; swap
@@ -762,7 +706,7 @@ lemma convOfTestFunctionsExists [T2Space V] {φ ψ : 𝓓F ℝ V} : ConvolutionE
 
 notation:67 φ " 𝓓⋆ " ψ => convWith φ ψ -- convolution𝓓Mult (tF2 φ ψ)
 --@[simp] def convWith (φ : 𝓓 ℝ Ω ) : 𝓓 ℝ Ω →L[ℝ] 𝓓 ℝ Ω := ContinuousMultilinearMap.toContinuousLinearMap convolution𝓓Mult (tF2 φ 0) 1
-postfix:200 "ʳ" => reflection
+
 open ContinuousLinearMap
 
 notation:67 T " °⋆ " φ  =>  convWith (φʳ) ** T
@@ -780,7 +724,7 @@ lemma convAsLambda (φ ψ : 𝓓F ℝ V) : (φ 𝓓⋆ ψ) = fun x => Λ (φ : L
   rw [neg_add_eq_sub]
 
 
-theorem integral_congr {f g : V → ℝ} (p : ∀ x , f x = g x) : ∫ x , f x = ∫ x , g x := by congr ; ext x ; exact p x
+
 
 -- def smoothFuncForConv (ψ : 𝓓F ℝ V ) :  (𝓓F ℝ V) :=
 open Measure.IsAddHaarMeasure
@@ -846,7 +790,7 @@ theorem  shiftIsContinuous {ζ : 𝓓F ℝ V} : Continuous (fun v => shift v ζ)
     · apply HasCompactSupport.iteratedFDeriv
       exact ζ.φHasCmpctSupport
     · apply ContDiff.continuous_iteratedFDeriv ( OrderTop.le_top _) (ζ.φIsSmooth)
-     -- on compact subset continuous is uniformly continuous
+
   · rw [Metric.tendstoUniformly_iff]
     have {x_1 } {b} : dist (x_1 - x0 + x b) x_1 = ‖ (x b) - x0‖ := by
       rw [dist_eq_norm] ; apply congrArg ; rw[ sub_eq_neg_add ,
@@ -854,9 +798,10 @@ theorem  shiftIsContinuous {ζ : 𝓓F ℝ V} : Continuous (fun v => shift v ζ)
       trans 0 + (x b - x0) ; swap
       · rw [zero_add] ;   -- ,  add_assoc , ← add_ssoc ] ;
       · congr ; exact sub_eq_zero_of_eq rfl
-      sorry
-
-
+      rw [add_assoc]
+      apply congrArg
+      rw [← add_assoc]
+      rw [sub_eq_add_neg x_1 x0]
     simp
     simp_rw [this]
     have : ∀ (ε : ℝ), 0 < ε → ∃ a, ∀ (b : ℕ), a ≤ b → ‖(x b) - x0‖ < ε := by
