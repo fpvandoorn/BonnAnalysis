@@ -13,7 +13,7 @@ import Mathlib
 -- noncomputable section
 --open FourierTransform MeasureTheory Real
 
-set_option profiler true
+-- set_option profiler true
 namespace MeasureTheory
 open MeasureTheory
 universe u v
@@ -49,15 +49,29 @@ instance : Zero (𝓓 k Ω ) where
       0 ,
       by apply contDiff_const ,
       by rw [hasCompactSupport_def, Function.support_zero' , closure_empty] ; exact isCompact_empty  ,
-      by sorry ⟩
+      by unfold tsupport ; rw [show Function.support 0 = ∅ from Function.support_zero] ; rw [closure_empty] ; apply empty_subset  ⟩
 instance : Add (𝓓 k Ω ) where
    add := fun φ ψ => ⟨
     φ + ψ ,
     ContDiff.add φ.φIsSmooth ψ.φIsSmooth,
-    HasCompactSupport.add φ.φHasCmpctSupport ψ.φHasCmpctSupport  , by sorry ⟩
+    HasCompactSupport.add φ.φHasCmpctSupport ψ.φHasCmpctSupport  , by
+      trans (tsupport (φ.φ) ∪ tsupport ψ.φ) ;
+      apply closure_minimal
+      · trans
+        · apply Function.support_add ;
+        · apply Set.union_subset_union
+          · trans ; exact subset_tsupport _ ; exact fun _ a ↦ a
+          · trans ; exact subset_tsupport _ ; exact fun _ => id
+      · apply IsClosed.union ; apply isClosed_tsupport ; apply isClosed_tsupport
+      · apply union_subset_iff.mpr ; constructor
+        · exact φ.sprtinΩ
+        · exact ψ.sprtinΩ ⟩
 @[simp] instance : Neg (𝓓 k Ω ) where
-  neg := fun φ =>
-    ⟨ - φ , ContDiff.neg φ.φIsSmooth , by sorry , by sorry ⟩
+  neg := fun φ => by
+    have : tsupport (-φ.φ) = tsupport (φ.φ) := by
+      unfold tsupport ; apply congrArg ; apply Function.support_neg
+    exact ⟨ - φ , ContDiff.neg φ.φIsSmooth , by
+      unfold HasCompactSupport ; rw [this] ; exact φ.φHasCmpctSupport ;  , by rw [this] ; exact φ.sprtinΩ ⟩
 @[simp] instance : AddCommGroup (𝓓 k Ω ) where
   add_assoc := fun φ ψ τ => by ext x ; apply add_assoc
   zero_add := fun φ => by ext x ; apply zero_add
@@ -71,7 +85,10 @@ instance : Add (𝓓 k Ω ) where
 @[simp] instance : SMul k (𝓓 k Ω ) where
   smul := fun l φ => ⟨ fun x => l * φ x ,
     ContDiff.smul  contDiff_const  φ.φIsSmooth   ,
-    HasCompactSupport.mul_left φ.φHasCmpctSupport   , by sorry ⟩
+    HasCompactSupport.mul_left φ.φHasCmpctSupport   , by
+      trans ;
+      · exact tsupport_smul_subset_right (fun _=> l) (φ.φ) ;
+      · exact φ.sprtinΩ ⟩
 instance : Module k (𝓓 k Ω) where
 
   one_smul := fun φ => by ext x ; exact one_smul k (φ x)
@@ -124,12 +141,10 @@ instance : ConvergingSequences (𝓓' k Ω ) where
   seq := fun AT => ∀ φ : 𝓓 k Ω , Tendsto (fun n => (AT.1 n) φ ) atTop (𝓝 (AT.2 φ))
   seq_cnst := fun T φ => by apply tendsto_const_nhds
   seq_sub := fun hAT A' φ => subSeqConverges (hAT φ) ⟨ _ , A'.hφ ⟩
-lemma diffAt (φ : 𝓓 k Ω) {x : V} (p : x ∈ Ω) : DifferentiableAt k φ x := by
+lemma diffAt (φ : 𝓓 k Ω) {x : V} : DifferentiableAt k φ x := by
             have := ContDiff.differentiable φ.φIsSmooth (OrderTop.le_top 1)
             apply Differentiable.differentiableAt this
-            -- rw [mem_nhds_iff]
-            -- use Ω
-            -- exact ⟨ by exact fun ⦃a⦄ a ↦ trivial , Ω.isOpen , p ⟩
+
 
 
 lemma zeroCase {φ : ℕ → (V → k)} {φ0 : V → k} :

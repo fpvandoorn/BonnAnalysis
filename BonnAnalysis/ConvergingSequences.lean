@@ -178,28 +178,8 @@ open SeqContinuous'
     apply hC
     · exact ha'
     · intro N hN
-      sorry
-      --apply seqCont
-
-      --
-      --apply seq_sub ha
-      --exact hN
-  --#align continuous_of_SeqContinuous continuous.seq_continuous'
-
-/-
-instance SeqSpaceFromConv: SequentialSpace X where
-  isClosed_of_seq := by
-    intro A p
-    rw [← @isOpen_compl_iff]
-    intro x hx a ha
-    by_contra φ
-    obtain ⟨ a' , ha' ⟩ := subSeqCnstrction φ
-    simp at ha'
-    apply hx
-    apply p
-    · exact ha'
-    · intro N hN
-      apply important x N hN a'
-      apply seq_sub
-      exact ha
--/
+      have main : map ((f ∘ a) ∘ a'.φ) atTop ≤ map (f ∘ a) atTop := by calc
+        map ((f ∘ a) ∘ a'.φ) atTop = map (f ∘ a) (map (a'.φ) atTop) := by rw [← Filter.map_compose] ; rfl
+        _ ≤ map (f ∘ a) atTop := by apply map_mono ; apply subsequencePreservesTop ; exact a'.hφ
+      apply main
+      exact hf.seqCont ha hN;
