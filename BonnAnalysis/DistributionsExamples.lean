@@ -10,8 +10,8 @@ import Mathlib.Topology.UniformSpace.UniformConvergence
 import Mathlib.Data.Set.Pointwise.Basic
 import BonnAnalysis.UniformConvergenceSequences
 import BonnAnalysis.Distributions
-import BonnAnalysis.ConvolutionTendsToUniformly
 import BonnAnalysis.DistributionsOfVEndo
+import BonnAnalysis.ConvolutionTendsToUniformly
 import Mathlib
 
 import Mathlib.Analysis.Convolution

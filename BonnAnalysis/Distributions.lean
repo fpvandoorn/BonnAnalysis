@@ -50,7 +50,7 @@ instance  :  CoeFun (ContCompactSupp k V k') (fun _ => V → k') where
       by rw [hasCompactSupport_def, Function.support_zero' , closure_empty] ; exact isCompact_empty  ⟩
 @[simp] instance : Add (ContCompactSupp k V k'  ) where
    add := fun φ ψ =>
-    ⟨φ + ψ ,
+    ⟨φ.f + ψ.f ,
      ContDiff.add φ.smooth ψ.smooth,
     HasCompactSupport.add φ.hsupp ψ.hsupp  ⟩
 lemma neg_tsupport {φ : ContCompactSupp k V k'} : tsupport (-φ.f) = tsupport (φ.f) := by
@@ -73,9 +73,14 @@ lemma neg_tsupport {φ : ContCompactSupp k V k'} : tsupport (-φ.f) = tsupport (
     ContDiff.smul  contDiff_const  φ.smooth   ,
 
        HasCompactSupport.smul_left φ.hsupp    ⟩
+@[simp] lemma ccs_sub {φ ψ : ContCompactSupp k V k'} : (φ - ψ).f = φ.f - ψ.f := by
+  rw [sub_eq_add_neg , show φ.f - ψ.f = φ.f + (-ψ).f from ?_] ;
+  rfl
+  simp only [instNegContCompactSupp]
+  rw [sub_eq_add_neg]
 -------
 variable
-  (k : Type v)   [NontriviallyNormedField k]    --{ΩisOpen : IsOpen Ω}
+     --{ΩisOpen : IsOpen Ω}
    {V : Type u} [NormedAddCommGroup V] [NormedSpace k V] (Ω : Opens V)
 @[ext] structure 𝓓  where
 
@@ -84,22 +89,53 @@ variable
   sprtinΩ  : tsupport φ ⊆ Ω
 
 instance  :  CoeFun (𝓓 k Ω) (fun _ => V → k) where
-  coe σ := σ.φ
+  coe σ := σ.φ.f
 ------- Historical reasons
-variable {V : Type u} {k : Type v}
-  [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] {Ω  : Opens V} {φ : 𝓓 k Ω}
+variable {V : Type u} [NormedAddCommGroup V]  [NormedSpace k V] {Ω  : Opens V} {φ : 𝓓 k Ω}
 lemma 𝓓.φIsSmooth : ContDiff k ⊤ φ.φ := φ.φ.smooth  --⊤ φ
 lemma 𝓓.φHasCmpctSupport :  HasCompactSupport φ.φ := φ.φ.hsupp
+
+instance : ConvergingSequences (ContCompactSupp k V k') where
+  seq := fun (a , x) =>
+    (∃ K : Set V , IsCompact K ∧ ∀ n , tsupport (a n).f ⊆ K) ∧
+    ∀ l : ℕ , TendstoUniformly
+      (fun n => iteratedFDeriv k l (a n).f)
+                (iteratedFDeriv k l x.f) atTop
+  seq_cnst := fun x => by
+    let A : Set (V ) := @tsupport _ _ ⟨ 0 ⟩  _ x.f --- weird
+    constructor
+    · use A
+      constructor
+      · exact x.hsupp
+      · intro n
+        exact subset_rfl
+    · intro l
+      rw [← tendstoUniformlyOn_univ ]
+
+      apply CnstSeqTendstoUniformlyOn
+  seq_sub := fun {a} {x} p a' => by
+    obtain ⟨⟨ K , ⟨ hK1 , hK2 ⟩  ⟩ , conv ⟩  := p
+    constructor
+    · use K
+      constructor
+      · exact hK1
+      · intro n
+        apply hK2
+    · intro l
+      --let da' : SubSequence (fun n => iteratedFDeriv k l (a n)) :=
+      rw [← tendstoUniformlyOn_univ ]
+      exact SubSeqConvergesUniformly ( tendstoUniformlyOn_univ.mpr (conv l)) ⟨ a'.φ , a'.hφ ⟩
+
+
 ----------
-variable {V : Type u} (k : Type v)
-  [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] (Ω  : Opens V)
-instance : Zero (𝓓 k Ω ) where
+variable {V : Type u} [NormedAddCommGroup V]  [NormedSpace k V] (Ω  : Opens V)
+@[simp] instance : Zero (𝓓 k Ω ) where
     zero := ⟨
       ⟨0 ,
        by apply contDiff_const ,
       by rw [hasCompactSupport_def, Function.support_zero' , closure_empty] ; exact isCompact_empty  ⟩,
       by unfold tsupport ; rw [show Function.support 0 = ∅ from Function.support_zero] ; rw [closure_empty] ; apply empty_subset  ⟩
-instance : Add (𝓓 k Ω ) where
+@[simp] instance : Add (𝓓 k Ω ) where
    add := fun φ ψ =>
     ⟨φ.φ + ψ.φ
      , by
@@ -145,36 +181,10 @@ instance : Module k (𝓓 k Ω) where
 open Uniformity
 universe w x
 instance : ConvergingSequences (𝓓 k Ω) where
-  seq := fun (a , x) =>
-    (∃ K : Set V , IsCompact K ∧ ∀ n , tsupport (a n).φ ⊆ K) ∧
-    ∀ l : ℕ , TendstoUniformly
-      (fun n => iteratedFDeriv k l (a n).φ)
-                (iteratedFDeriv k l x.φ) atTop
-  seq_cnst := fun x => by
-    let A : Set (V ) := @tsupport _ _ ⟨ 0 ⟩  _ x.φ --- weird
-    constructor
-    · use A
-      constructor
-      · exact x.φHasCmpctSupport
-      · intro n
-        exact subset_rfl
-    · intro l
-      rw [← tendstoUniformlyOn_univ ]
+  seq := fun (a , x) => (fun n=> (a n).φ) ⟶ x.φ
 
-      apply CnstSeqTendstoUniformlyOn
-  seq_sub := fun {a} {x} p a' => by
-    obtain ⟨⟨ K , ⟨ hK1 , hK2 ⟩  ⟩ , conv ⟩  := p
-    constructor
-    · use K
-      constructor
-      · exact hK1
-      · intro n
-        apply hK2
-    · intro l
-      --let da' : SubSequence (fun n => iteratedFDeriv k l (a n)) :=
-      rw [← tendstoUniformlyOn_univ ]
-      exact SubSeqConvergesUniformly ( tendstoUniformlyOn_univ.mpr (conv l)) ⟨ a'.φ , a'.hφ ⟩
-
+  seq_sub := fun {a} {x} p a' => ConvergingSequences.seq_sub p  ⟨ a'.φ , a'.hφ ⟩
+  seq_cnst := fun p => ConvergingSequences.seq_cnst p.φ
 
 def 𝓓' := (𝓓 k Ω ) →L[k] k
 
@@ -190,20 +200,20 @@ lemma diffAt (φ : 𝓓 k Ω) {x : V} : DifferentiableAt k φ x := by
 
 
 
-lemma zeroCase {φ : ℕ → (V → k)} {φ0 : V → k} :
-  (TendstoUniformly (fun n ↦ iteratedFDeriv k 0 (φ n)) (iteratedFDeriv k 0 φ0) atTop) ↔
+lemma zeroCase {k' : Type u'}  [NormedAddCommGroup k']  [NormedSpace k k']  {φ : ℕ → (V → k')} {φ0 : V → k'} :
+    (TendstoUniformly (fun n ↦ iteratedFDeriv k 0 (φ n)) (iteratedFDeriv k 0 φ0) atTop) ↔
     TendstoUniformly (fun n => (φ n) ) (φ0) atTop := by
 
         rw [iteratedFDeriv_zero_eq_comp]
-        have myrw : (fun n ↦ iteratedFDeriv k 0 (φ n)) = fun n ↦ (⇑(continuousMultilinearCurryFin0 k V k).symm ∘ (φ n)) := by
+        have myrw : (fun n ↦ iteratedFDeriv k 0 (φ n)) = fun n ↦ (⇑(continuousMultilinearCurryFin0 k V k').symm ∘ (φ n)) := by
           ext1 n
           rw [iteratedFDeriv_zero_eq_comp]
         rw [myrw]
         constructor
-        · apply UniformContinuous.comp_tendstoUniformly (g:=⇑(continuousMultilinearCurryFin0 k V k)) ?_
+        · apply UniformContinuous.comp_tendstoUniformly (g:=⇑(continuousMultilinearCurryFin0 k V k')) ?_
           apply Isometry.uniformContinuous
           apply LinearIsometryEquiv.isometry
-        · apply UniformContinuous.comp_tendstoUniformly (g:=⇑(continuousMultilinearCurryFin0 k V k).symm) ?_
+        · apply UniformContinuous.comp_tendstoUniformly (g:=⇑(continuousMultilinearCurryFin0 k V k').symm) ?_
           apply Isometry.uniformContinuous
           apply LinearIsometryEquiv.isometry
 lemma seqImpliesConvergence   {φ : ℕ → (𝓓 k Ω )} {φ0 : 𝓓 k Ω} (hφ : φ ⟶ φ0) {x : V} :
@@ -241,18 +251,18 @@ lemma  KcontainsSuppOfLimit {α  : ℕ → 𝓓 k Ω} {φ : 𝓓 k Ω } (hφ : �
   exact hφ
   exact hK
 
-lemma testFunctionIsBnd {ψ : 𝓓 k Ω} : ∃ C, ∀ (x : V), ‖ψ x‖ ≤ C := by
-  apply Continuous.bounded_above_of_compact_support ; apply ContDiff.continuous (𝕜:=k ) (ψ.φIsSmooth) ;
-  exact ψ.φHasCmpctSupport
+lemma testFunctionIsBnd  (ψ : ContCompactSupp k V k') : ∃ C, ∀ (x : V), ‖ψ x‖ ≤ C := by
+  apply Continuous.bounded_above_of_compact_support ; apply ContDiff.continuous (𝕜:=k ) (ψ.smooth) ;
+  exact ψ.hsupp
 notation "|| " f " ||_∞" => MeasureTheory.snormEssSup f volume
 
-lemma EssSupTestFunction [MeasureSpace V] (φ : 𝓓 k Ω) : || φ.φ ||_∞ < ⊤ := by
+lemma EssSupTestFunction [MeasureSpace V] (φ : ContCompactSupp k V k') : || φ.f ||_∞ < ⊤ := by
   obtain ⟨ C , hC ⟩ := testFunctionIsBnd (ψ := φ)
   apply MeasureTheory.snormEssSup_lt_top_of_ae_nnnorm_bound ; swap
   · exact ‖ C ‖₊
   apply ae_of_all
   intro x
-  · have : ‖φ.φ x‖ ≤ ‖C‖ := by
+  · have : ‖φ.f x‖ ≤ ‖C‖ := by
       trans
       · exact hC x ;
       · apply le_abs_self

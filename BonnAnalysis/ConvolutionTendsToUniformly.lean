@@ -223,8 +223,8 @@ lemma convolution_mono_right_of_nonneg_ae  {f g g' : G → ℝ} (hfg' : Convolut
   have : (f ⋆[lsmul ℝ ℝ, μ] g) x = 0 := integral_undef H
   rw [this]
   exact integral_nonneg fun y => mul_nonneg (hf y) (hg' (x - y))
-variable  {ψ : ℕ → ContCompactSupp ℝ V k'} {ψ0 : ContCompactSupp ℝ V k'} (hψ : TendstoUniformly (fun n => (ψ n)) ψ0 atTop) (KhK : ∃ K : Set V , IsCompact K ∧ ∀ n , tsupport (ψ n) ⊆ K)
-lemma  ConvWithIsUniformContinuous (ψ0 : ContCompactSupp ℝ V k' )
+variable  {ψ : ℕ → ContCompactSupp ℝ V k'} {ψ0 : ContCompactSupp ℝ V k'} (hψ : ψ ⟶ ψ0) --TendstoUniformly (fun n => (ψ n)) ψ0 atTop) (KhK : ∃ K : Set V , IsCompact K ∧ ∀ n , tsupport (ψ n) ⊆ K)
+lemma  ConvWithIsUniformContinuous
      :
     TendstoUniformly (β := k') (fun n => (φ.φ ⋆[L] (ψ n))) ((φ.φ ⋆[L] ψ0)) atTop := by
       apply TendstoUniformly_iff_uniformZeroSeq.mpr
@@ -266,38 +266,23 @@ lemma  ConvWithIsUniformContinuous (ψ0 : ContCompactSupp ℝ V k' )
           · have {x} :  ‖(ψ n - ψ0) x‖ ≤ || ψ n - ψ0 ||_∞.toReal ↔  ‖(ψ n - ψ0) x‖₊ ≤ || ψ n - ψ0 ||_∞ := by
 
               constructor
-              · intro h ; sorry
-              · intro h ; rw [show ‖(ψ n - ψ0) x‖ = (ENNReal.ofReal ‖(ψ n - ψ0) x‖).toReal from ?_] ; refine ENNReal.toReal_mono ?_ h ; sorry ; sorry
+              · intro h ; rw [ofReal_norm_eq_coe_nnnorm] ;
+              · intro h ; rw [show ‖(ψ n - ψ0) x‖ = (ENNReal.ofReal ‖(ψ n - ψ0) x‖).toReal from ?_] ;
+                apply ENNReal.toReal_mono
+                · rw [← lt_top_iff_ne_top] ; apply EssSupTestFunction
+                · rw [ofReal_norm_eq_coe_nnnorm] ; exact h
+                · refine Eq.symm (ENNReal.toReal_ofReal ?h) ; apply norm_nonneg
             simp_rw [this]
             apply ae_le_snormEssSup (f:=(ψ n - ψ0))
           · intro _ ; apply ENNReal.toReal_nonneg
-
-
         apply zeroSeqUniformly this
-
         rw [← tendstoUniformlyOn_univ]
         apply Filter.Tendsto.tendstoUniformlyOn_const
         apply NormedAddCommGroup.tendsto_nhds_zero.mpr
         have {x : ENNReal} : ‖x.toReal‖ = x.toReal :=  NNReal.norm_eq _
-
-        simp_rw [ eventually_atTop , this]
-
-        have th  {b} {x}: (ψ b - ψ0).f = (ψ b).f - ψ0.f  := by simp?
-        simp_rw [th]
-        exact EssSupNormSub (φ := fun n => ψ.φ.f n) (φ₀:= ψ0.φ.f) hψ
-
-
-
-def ContCompactLimit : HasCompactSupport ψ0 := by
-
-    obtain ⟨ K , hK ⟩ := KhK
-    apply IsCompact.of_isClosed_subset ;
-    · exact hK.1
-    · exact isClosed_tsupport ψ0
-    · apply KcontainsSuppOfLimit'
-      intro p
-      apply TendstoUniformly.tendsto_at hψ
-      exact hK
+        simp_rw [ eventually_atTop , this, ccs_sub]
+        apply EssSupNormSub (φ := fun n => (ψ n).f) (φ₀:= ψ0.f)
+        apply (zeroCase _ ).mp (hψ.2 0)
 
 lemma fderiv_convolution (ψ0 : ContCompactSupp ℝ V k') {φ : LocallyIntegrableFunction V} :
    fderiv ℝ (φ.f ⋆[L] ψ0) = φ.f ⋆[ContinuousLinearMap.precompR V L] (fderiv ℝ ψ0) := by
@@ -317,13 +302,13 @@ variable
   {V : Type u}
     [MeasureSpace V]
    [NormedAddCommGroup V]  [NormedSpace ℝ V] --[ProperSpace V]
-    [MeasureTheory.Measure.IsAddHaarMeasure (volume : Measure V)] [BorelSpace V] {Ω : Opens V} [T2Space V]  [SecondCountableTopology V] [LocallyCompactSpace V]
+    [MeasureTheory.Measure.IsAddHaarMeasure (volume : Measure V)] [BorelSpace V] [T2Space V]  [SecondCountableTopology V] [LocallyCompactSpace V]
  [BorelSpace V]
 
     {L : ℝ  →L[ℝ ] k' →L[ℝ] k'}
     {φ : 𝓓F ℝ V} {ψ : ℕ → ContCompactSupp ℝ V k'}  (ψ0 : ContCompactSupp ℝ V k' )
-    (hψ : TendstoUniformly (fun n => (ψ n)) ψ0 atTop)
-      (KhK : ∃ K : Set V , IsCompact K ∧ ∀ n , tsupport (ψ n) ⊆ K)
+    (hψ : ψ ⟶ ψ0)
+
 -- def T : Type max 1 u u' := V →L[ℝ] k'
 --#check  : Type max 1 u u'
 theorem iteratedDerivConv
@@ -333,7 +318,7 @@ theorem iteratedDerivConv
 
 
       induction' l with l hl generalizing k' ψ ψ0 hψ L
-      · sorry
+      · apply (zeroCase _).mpr ; apply ConvWithIsUniformContinuous hψ
       · have {ψ0} :  iteratedFDeriv ℝ (l+1) (φ.φ ⋆[L] (ψ0)) =
           fun z => (iteratedFDeriv ℝ (l) (fderiv ℝ (φ.φ ⋆[L] (ψ0))) z).uncurryRight := by ext1 z ; exact iteratedFDeriv_succ_eq_comp_right
 
@@ -351,11 +336,22 @@ theorem iteratedDerivConv
             (fun n ↦ (iteratedFDeriv ℝ l (φ.φ ⋆[ContinuousLinearMap.precompR V L, volume] fderiv ℝ (ψ n))))
             (iteratedFDeriv ℝ l (φ.φ ⋆[ContinuousLinearMap.precompR V L, volume] ( fderivCCS ψ0 ).f)) atTop := by
               apply hl (k' := (V →L[ℝ] k' )) (ψ := fun n => fderivCCS (ψ n))  (L := ContinuousLinearMap.precompR V L)
-              · sorry
-              · obtain ⟨ K , hK ⟩ := KhK
+              constructor
+              · obtain ⟨ K , hK ⟩ := hψ.1
                 use K
                 exact ⟨ hK.1 , by intro n ; trans ; exact tsupport_fderiv_subset (𝕜 := ℝ) ; exact hK.2 n⟩
               · apply ContDiff.fderiv_right ψ0.smooth ; apply OrderTop.le_top -- refine ((contDiff_succ_iff_fderiv (𝕜 := ℝ) (f:=ψ0)).mp ().2
 
         refine UniformContinuous.comp_tendstoUniformly (g:= (continuousMultilinearCurryRightEquiv' ℝ l V k')) ?_ moin
         exact Isometry.uniformContinuous (continuousMultilinearCurryRightEquiv' ℝ l V k').isometry
+
+-- variable (ψ : V → k')
+-- def ContCompactLimit : HasCompactSupport ψ := by
+
+--     obtain ⟨ K , hK ⟩ := hψ.1
+--     apply IsCompact.of_isClosed_subset ;
+--     · exact hK.1
+--     · exact isClosed_tsupport ψ0
+--     · apply KcontainsSuppOfLimit'
+--       intro p
+--       refine TendstoUniformly.tendsto_at ((zeroCase _ ).mp (hψ.2 0)) hK
