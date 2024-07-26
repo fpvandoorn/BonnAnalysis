@@ -16,7 +16,7 @@ import Mathlib
 -- set_option profiler true
 namespace MeasureTheory
 open MeasureTheory
-universe u v
+universe u v u'
 open Order Set Filter
 open Filter
 open scoped Classical
@@ -27,34 +27,82 @@ open scoped Topology
 open TopologicalSpace
 noncomputable section
 
-variable {V : Type u} (k : Type v)
-  [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] (Ω : Opens V) --{ΩisOpen : IsOpen Ω}
+variable
+  (k : Type v)   [NontriviallyNormedField k]    --{ΩisOpen : IsOpen Ω}
+   (V : Type u) [NormedAddCommGroup V] [NormedSpace k V]
 /-
 structure HasCompactSupportIn (φ : V → k)  : Prop where
   hasCmpctSprt :  HasCompactSupport φ
   sprtinΩ  : tsupport φ ⊆ Ω
   -/
 --Set.EqOn
+variable (k' : Type u')   [NormedAddCommGroup k']  [NormedSpace k k'] -- [MulZeroClass k']
+@[ext] structure ContCompactSupp  where
+  f : V → k'
+  smooth : ContDiff k ⊤ f
+  hsupp : HasCompactSupport f
+instance  :  CoeFun (ContCompactSupp k V k') (fun _ => V → k') where
+  coe σ := σ.f
+@[simp] instance : Zero (ContCompactSupp k V k'  ) where
+    zero := ⟨
+      0 ,
+       by apply contDiff_const ,
+      by rw [hasCompactSupport_def, Function.support_zero' , closure_empty] ; exact isCompact_empty  ⟩
+@[simp] instance : Add (ContCompactSupp k V k'  ) where
+   add := fun φ ψ =>
+    ⟨φ + ψ ,
+     ContDiff.add φ.smooth ψ.smooth,
+    HasCompactSupport.add φ.hsupp ψ.hsupp  ⟩
+lemma neg_tsupport {φ : ContCompactSupp k V k'} : tsupport (-φ.f) = tsupport (φ.f) := by
+      unfold tsupport ; apply congrArg ; apply Function.support_neg
+@[simp] instance : Neg (ContCompactSupp k V k' ) where
+  neg := fun φ => ⟨ -φ.f ,
+        ContDiff.neg φ.smooth , by
+        unfold HasCompactSupport ; rw [neg_tsupport] ; exact φ.hsupp ;  ⟩
+@[simp] instance : AddCommGroup (ContCompactSupp k V k'  ) where
+  add_assoc := fun φ ψ τ => by ext x ; apply add_assoc
+  zero_add := fun φ => by ext x ; apply zero_add
+  add_zero := fun φ => by ext x ; apply add_zero
+  nsmul := nsmulRec
+  add_comm := fun φ ψ => by ext x ; apply add_comm
 
+  zsmul := zsmulRec
+  add_left_neg := fun φ  => by ext x;apply add_left_neg
+@[simp] instance : SMul k (ContCompactSupp k V k' ) where
+  smul := fun l φ => ⟨ fun x => l • φ.f x ,
+    ContDiff.smul  contDiff_const  φ.smooth   ,
+
+       HasCompactSupport.smul_left φ.hsupp    ⟩
+-------
+variable
+  (k : Type v)   [NontriviallyNormedField k]    --{ΩisOpen : IsOpen Ω}
+   {V : Type u} [NormedAddCommGroup V] [NormedSpace k V] (Ω : Opens V)
 @[ext] structure 𝓓  where
-  φ : V → k
-  φIsSmooth : ContDiff k ⊤ φ --⊤ φ
-  φHasCmpctSupport :  HasCompactSupport φ
+
+  φ : ContCompactSupp k V k
+
   sprtinΩ  : tsupport φ ⊆ Ω
 
 instance  :  CoeFun (𝓓 k Ω) (fun _ => V → k) where
   coe σ := σ.φ
+------- Historical reasons
+variable {V : Type u} {k : Type v}
+  [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] {Ω  : Opens V} {φ : 𝓓 k Ω}
+lemma 𝓓.φIsSmooth : ContDiff k ⊤ φ.φ := φ.φ.smooth  --⊤ φ
+lemma 𝓓.φHasCmpctSupport :  HasCompactSupport φ.φ := φ.φ.hsupp
+----------
+variable {V : Type u} (k : Type v)
+  [NontriviallyNormedField k] [NormedAddCommGroup V]  [NormedSpace k V] (Ω  : Opens V)
 instance : Zero (𝓓 k Ω ) where
     zero := ⟨
-      0 ,
-      by apply contDiff_const ,
-      by rw [hasCompactSupport_def, Function.support_zero' , closure_empty] ; exact isCompact_empty  ,
+      ⟨0 ,
+       by apply contDiff_const ,
+      by rw [hasCompactSupport_def, Function.support_zero' , closure_empty] ; exact isCompact_empty  ⟩,
       by unfold tsupport ; rw [show Function.support 0 = ∅ from Function.support_zero] ; rw [closure_empty] ; apply empty_subset  ⟩
 instance : Add (𝓓 k Ω ) where
-   add := fun φ ψ => ⟨
-    φ + ψ ,
-    ContDiff.add φ.φIsSmooth ψ.φIsSmooth,
-    HasCompactSupport.add φ.φHasCmpctSupport ψ.φHasCmpctSupport  , by
+   add := fun φ ψ =>
+    ⟨φ.φ + ψ.φ
+     , by
       trans (tsupport (φ.φ) ∪ tsupport ψ.φ) ;
       apply closure_minimal
       · trans
@@ -67,11 +115,7 @@ instance : Add (𝓓 k Ω ) where
         · exact φ.sprtinΩ
         · exact ψ.sprtinΩ ⟩
 @[simp] instance : Neg (𝓓 k Ω ) where
-  neg := fun φ => by
-    have : tsupport (-φ.φ) = tsupport (φ.φ) := by
-      unfold tsupport ; apply congrArg ; apply Function.support_neg
-    exact ⟨ - φ , ContDiff.neg φ.φIsSmooth , by
-      unfold HasCompactSupport ; rw [this] ; exact φ.φHasCmpctSupport ;  , by rw [this] ; exact φ.sprtinΩ ⟩
+  neg := fun φ => ⟨ - φ.φ ,   by  rw [show tsupport (-φ.φ).f = tsupport φ.φ.f from neg_tsupport (φ := φ.φ)]  ; exact φ.sprtinΩ ⟩
 @[simp] instance : AddCommGroup (𝓓 k Ω ) where
   add_assoc := fun φ ψ τ => by ext x ; apply add_assoc
   zero_add := fun φ => by ext x ; apply zero_add
@@ -83,9 +127,8 @@ instance : Add (𝓓 k Ω ) where
   add_left_neg := fun φ  => by ext x;apply add_left_neg
   --'neg', 'zsmul', 'add_left_neg'
 @[simp] instance : SMul k (𝓓 k Ω ) where
-  smul := fun l φ => ⟨ fun x => l * φ x ,
-    ContDiff.smul  contDiff_const  φ.φIsSmooth   ,
-    HasCompactSupport.mul_left φ.φHasCmpctSupport   , by
+  smul := fun l φ => ⟨ l • φ.φ ,
+    by
       trans ;
       · exact tsupport_smul_subset_right (fun _=> l) (φ.φ) ;
       · exact φ.sprtinΩ ⟩

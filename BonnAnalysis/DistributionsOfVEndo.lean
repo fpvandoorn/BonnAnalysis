@@ -22,7 +22,7 @@ import Mathlib.Analysis.Convolution
 namespace MeasureTheory
 open MeasureTheory
 open scoped Pointwise
-universe u v w
+universe u v w u'
 open Order Set
 
 open scoped Classical
@@ -167,7 +167,7 @@ lemma fDerivTransition  (v x : V) (φ0 : V → W) (hφ0 : ContDiff k ⊤ φ0):
       · exact ContinuousAffineMap.contDiff (𝕜 := k) (shift' k v)
 
 lemma iteratedFDerivTransition  (v x : V) (l) (φ0 : 𝓓F k V) : -- V[×ℓ]→L[ k ] k) (l : ℕ)   :{ℓ : ℕ }
-  iteratedFDeriv k (l) (φ0.φ.comp (shift' k v)) (x) = iteratedFDeriv k l φ0 (x - v) := by
+  iteratedFDeriv k (l) (φ0.φ.f.comp (shift' k v)) (x) = iteratedFDeriv k l φ0 (x - v) := by
 
     induction' l with l hl generalizing x -- φ0  ℓ
     · simp ; ext z ; rw [iteratedFDeriv_zero_apply , iteratedFDeriv_zero_apply] ; apply congrArg ; rfl
@@ -211,7 +211,7 @@ lemma iteratedFDerivTransition  (v x : V) (l) (φ0 : 𝓓F k V) : -- V[×ℓ]→
 -- This is a version of iteratedFDeriv_comp_right for continuous affine maps.
 theorem ContinuousAffineMap.iteratedFDeriv_comp_right {l} {φ0 : 𝓓F k V} (Φ : V →ᴬ[k] V) {x} : (iteratedFDeriv k l (φ0 ∘ Φ)) x =
           (precompmyΦ Φ l) (iteratedFDeriv k l (φ0).φ (Φ x) ) := by
-          let φ0' : V → k := (φ0.φ ).comp ((shift' k (- Φ 0)))
+          let φ0' : V → k := (φ0.φ.f ).comp ((shift' k (- Φ 0)))
           have : φ0 ∘ Φ =  φ0' ∘ Φ.contLinear := by
             ext x ;  simp only [φ0',Function.comp_apply,
             shift', sub_neg_eq_add, ContinuousAffineMap.coe_mk, AffineMap.coe_mk,
@@ -243,15 +243,15 @@ theorem chainRule {l} {φ0 : 𝓓F k V} (Φ : V →ᴬ[k] V) : (iteratedFDeriv k
 
   apply mk ; swap
   ·   intro ψ
-      use ψ ∘ Φ
-      · exact ContDiff.comp ψ.φIsSmooth (ContinuousAffineMap.contDiff  Φ )
-      · apply IsCompact.of_isClosed_subset ; swap
+      use ⟨ ψ ∘ Φ ,
+       ContDiff.comp ψ.φIsSmooth (ContinuousAffineMap.contDiff  Φ ) , by
+        apply IsCompact.of_isClosed_subset ; swap
         exact isClosed_tsupport (ψ.φ ∘ Φ)
         swap
         · exact supportfromEndoOfV (k:=k)  Φ ψ
         · apply IsProperMap.isCompact_preimage
           apply (hΦ)
-          exact (ψ.φHasCmpctSupport)
+          exact (ψ.φHasCmpctSupport) ⟩
       · exact fun _ _ ↦ trivial
       --ψ.φHasCmpctSupport
   · constructor
@@ -315,8 +315,43 @@ lemma testfunctionIsDiffAt {φ : 𝓓 k Ω} (x : V) : DifferentiableAt k (φ) x 
   · apply contDiff_iff_contDiffAt.mp
     exact φ.φIsSmooth
   · exact OrderTop.le_top 1
+variable {V : Type u} {k : Type v} [NontriviallyNormedField k] [NormedAddCommGroup V]
+  [NormedSpace k V] {k' : Type u'} [NormedAddCommGroup k'] [NormedSpace k k'] (φ : ContCompactSupp k V k') (φ : ContCompactSupp k V k')
+lemma obs' {φ : V → k'} : tsupport (fun x => fderiv k φ x ) ⊆ tsupport (φ) := by -- ⊆ tsupport (fun x => fderiv k φ) :=
+    exact tsupport_fderiv_subset k (f:= φ)
+
+lemma obs {v : V} {φ : V → k'} : tsupport (fun x => fderiv k φ x v) ⊆ tsupport (φ) := by -- ⊆ tsupport (fun x => fderiv k φ) :=
+    trans ; swap
+    · exact tsupport_fderiv_subset k (f:= φ)
+    · apply tsupport_comp_subset rfl (g := fun f => f v)  (f:=fderiv k φ)
+@[simp] def fderivCCS : ContCompactSupp k V (V →L[k] k') := by
+
+    use fderiv k φ.f
+    · have dfh : ContDiff k ⊤ (fun x => fderiv k φ.f x) := (contDiff_top_iff_fderiv.mp (φ.smooth )).2
+      exact dfh
+      -- have evvh : ContDiff k ⊤ (ContinuousLinearMap.apply k k' v  ) := by apply ContinuousLinearMap.contDiff
+
+      -- apply ContDiff.comp  evvh dfh
 
 
+    · apply IsCompact.of_isClosed_subset (φ.hsupp)
+      exact isClosed_tsupport _
+      exact obs'
+variable {V : Type } {k : Type v} [NontriviallyNormedField k] [NormedAddCommGroup V]
+  [NormedSpace k V] {k' : Type u'} [NormedAddCommGroup k'] [NormedSpace k k'] (φ : ContCompactSupp k V k') (φ : ContCompactSupp k V k') {Ω : Opens V}
+def fderivCCSAt  (φ : ContCompactSupp k V k') (v : V): ContCompactSupp k V k' := by
+
+    use fun x => fderiv k φ.f x v
+    · have dfh : ContDiff k ⊤ (fun x => fderiv k φ.f x) := (contDiff_top_iff_fderiv.mp (φ.smooth )).2
+
+      have evvh : ContDiff k ⊤ (ContinuousLinearMap.apply k k' v  ) := by apply ContinuousLinearMap.contDiff
+
+      apply ContDiff.comp  evvh dfh
+
+
+    · apply IsCompact.of_isClosed_subset (φ.hsupp)
+      exact isClosed_tsupport _
+      exact obs
 def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
   have crypto {l} {ψ : 𝓓 k Ω} :
   /-
@@ -347,26 +382,11 @@ def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
 
               · exact (OrderTop.le_top _)
 
-  have obs {φ : V → k} : tsupport (fun x => fderiv k φ x v) ⊆ tsupport (φ) := by -- ⊆ tsupport (fun x => fderiv k φ) :=
-    trans ; swap
-    · exact tsupport_fderiv_subset k (f:= φ)
-    · apply tsupport_comp_subset rfl (g := fun f => f v)  (f:=fderiv k φ)
-  let f : 𝓓 k Ω → 𝓓 k Ω := fun φ => by
-    use fun x => fderiv k φ x v
-    · have dfh : ContDiff k ⊤ (fun x => fderiv k φ.φ x) := (contDiff_top_iff_fderiv.mp (φ.φIsSmooth )).2
 
-      have evvh : ContDiff k ⊤ (NormedSpace.inclusionInDoubleDual k V v) := by apply ContinuousLinearMap.contDiff
-
-      apply ContDiff.comp  evvh dfh
-
-
-    · apply IsCompact.of_isClosed_subset (φ.φHasCmpctSupport)
-      exact isClosed_tsupport fun x ↦ (fderiv k φ.φ x) v
-      exact obs
-    ·
+  let f : 𝓓 k Ω → 𝓓 k Ω := fun φ => ⟨ fderivCCSAt φ.φ v , by
           trans
           · exact obs
-          · exact φ.sprtinΩ
+          · exact φ.sprtinΩ ⟩
   apply mk ; swap
   · exact f
   · constructor
