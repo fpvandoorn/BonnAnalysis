@@ -45,11 +45,14 @@ open Function
 
 --rw [Metric.tendstoUniformly_iff]
 ---------- the rest deals with real numbers
+/-
+Unfortunately I have some universe issues and have to assume V lives in 0.th universe
+-/
 variable  (V : Type) [MeasureSpace V] [NormedAddCommGroup V]  [NormedSpace ℝ V] [T2Space V] [BorelSpace V]
   [MeasureSpace V] [OpensMeasurableSpace V] {Ω : Opens V} [OpensMeasurableSpace V]  [IsFiniteMeasureOnCompacts (volume (α := V))] --[IsFiniteMeasureOnCompacts (volume V)]
 @[simp] def intSm' (φ : V → 𝓓F ℝ V) : V → ℝ := fun y => ∫ x , φ x y
 
-@[simp] def intSm (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun y x => φ x y)) (hcontφ : ContDiff ℝ ⊤ (intSm' V φ)) : 𝓓F ℝ V := by
+@[simp] def intSm (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun y x => φ x y)) (hcontφ : ContDiff ℝ ⊤ (intSm' V φ)) : 𝓓F ℝ V :=  by
   use intSm' V φ
   · apply IsCompact.of_isClosed_subset
     · exact hφ

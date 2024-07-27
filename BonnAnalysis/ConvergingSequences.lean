@@ -161,8 +161,10 @@ lemma important (x : X) (N : Set X) (p : N ∈ 𝓝 x) : N ∈ nbh x := by
   exact mem_of_superset (r x p) q
 @[fun_prop] structure SeqContinuous' {Y : Type v} [TopologicalSpace Y] (f : X → Y) : Prop where
   seqCont :∀ {x} {a : X} , (x ⟶ a) → Tendsto (f ∘ x) atTop (𝓝 (f a))
-open SeqContinuous'
 
+open SeqContinuous'
+@[fun_prop] structure SeqContinuousStrongly {Y : Type v} [ConvergingSequences Y] (f : X → Y) : Prop where
+  seqCont :∀ {x} {a : X} , (x ⟶ a) → (f ∘ x) ⟶ (f a)
 @[fun_prop] lemma continuous_of_SeqContinuous {Y : Type v} [TopologicalSpace Y] {f : X → Y}
   (hf : SeqContinuous' f) : Continuous f := by
     apply continuous_iff_isClosed.mpr
@@ -183,3 +185,8 @@ open SeqContinuous'
         _ ≤ map (f ∘ a) atTop := by apply map_mono ; apply subsequencePreservesTop ; exact a'.hφ
       apply main
       exact hf.seqCont ha hN;
+lemma SeqContinuous'OfStrongly  {Y : Type v} [ConvergingSequences Y] (f : X → Y) (hf : SeqContinuousStrongly f) : SeqContinuous' f := by
+      constructor
+      intro α a hx
+      apply tendsTo𝓝
+      apply hf.seqCont hx

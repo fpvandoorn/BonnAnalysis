@@ -73,11 +73,21 @@ lemma neg_tsupport {φ : ContCompactSupp k V k'} : tsupport (-φ.f) = tsupport (
     ContDiff.smul  contDiff_const  φ.smooth   ,
 
        HasCompactSupport.smul_left φ.hsupp    ⟩
+@[simp] lemma ccs_add {φ ψ : ContCompactSupp k V k'} : (φ + ψ).f = φ.f + ψ.f := by
+  rfl
 @[simp] lemma ccs_sub {φ ψ : ContCompactSupp k V k'} : (φ - ψ).f = φ.f - ψ.f := by
   rw [sub_eq_add_neg , show φ.f - ψ.f = φ.f + (-ψ).f from ?_] ;
   rfl
   simp only [instNegContCompactSupp]
   rw [sub_eq_add_neg]
+instance : Module k (ContCompactSupp k V k') where
+
+  one_smul := fun φ => by ext x ; exact one_smul k (φ x)
+  mul_smul := fun l l' φ => by ext x ; exact mul_smul l l' (φ x)
+  smul_zero := fun a => by ext ; exact smul_zero a
+  smul_add := fun a φ φ' => by ext x; exact smul_add a (φ x) (φ' x)
+  add_smul := fun a b φ => by ext x; exact add_smul a b (φ x)
+  zero_smul := fun φ => by ext x; exact zero_smul k (φ x)
 -------
 variable
      --{ΩisOpen : IsOpen Ω}
@@ -194,8 +204,8 @@ instance : ConvergingSequences (𝓓' k Ω ) where
   seq := fun AT => ∀ φ : 𝓓 k Ω , Tendsto (fun n => (AT.1 n) φ ) atTop (𝓝 (AT.2 φ))
   seq_cnst := fun T φ => by apply tendsto_const_nhds
   seq_sub := fun hAT A' φ => subSeqConverges (hAT φ) ⟨ _ , A'.hφ ⟩
-lemma diffAt (φ : 𝓓 k Ω) {x : V} : DifferentiableAt k φ x := by
-            have := ContDiff.differentiable φ.φIsSmooth (OrderTop.le_top 1)
+lemma diffAt (φ : ContCompactSupp k V k') {x : V} : DifferentiableAt k φ x := by
+            have := ContDiff.differentiable φ.smooth (OrderTop.le_top 1)
             apply Differentiable.differentiableAt this
 
 

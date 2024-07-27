@@ -22,7 +22,7 @@ import Mathlib.Analysis.Convolution
 namespace MeasureTheory
 open MeasureTheory
 open scoped Pointwise
-universe u v w u'
+universe u v w u' u''
 open Order Set
 
 open scoped Classical
@@ -37,10 +37,8 @@ open Function
 variable (k : Type v) [NontriviallyNormedField k]
 
 open ContinuousLinearEquiv
-/-
-Unfortunately I have some universe issues and have to assume V lives in 0.th universe
--/
-variable  {V : Type}  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V]
+
+variable  {V : Type u}  [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V]
 @[simp] def reflection' : V →ᴬ[k] V := (ContinuousLinearMap.neg.neg (ContinuousLinearMap.id k V)).toContinuousAffineMap
 @[simp] def shift' (x : V) : V →ᴬ[k] V := by
   apply ContinuousAffineMap.mk ; swap ;
@@ -73,7 +71,7 @@ instance shiftIsProper (v : V) :   IsProperMap ((shift' k v) : V → V) :=  by
     · intro x ; simp only [shift', ContinuousAffineMap.toContinuousMap_coe, sub_neg_eq_add,
       ContinuousMap.coe_coe, ContinuousAffineMap.coe_mk, AffineMap.coe_mk, add_sub_cancel_right]
 
-variable {V : Type} {k : Type v} [NontriviallyNormedField k]
+variable {V : Type u} {k : Type v} [NontriviallyNormedField k]
   [MeasurableSpace V] [NormedAddCommGroup V]  [NormedSpace k V] {Ω : Opens V}
 
 
@@ -315,17 +313,84 @@ lemma testfunctionIsDiffAt {φ : 𝓓 k Ω} (x : V) : DifferentiableAt k (φ) x 
   · apply contDiff_iff_contDiffAt.mp
     exact φ.φIsSmooth
   · exact OrderTop.le_top 1
-variable {V : Type u} {k : Type v} [NontriviallyNormedField k] [NormedAddCommGroup V]
-  [NormedSpace k V] {k' : Type u'} [NormedAddCommGroup k'] [NormedSpace k k'] (φ : ContCompactSupp k V k') (φ : ContCompactSupp k V k')
+variable {V : Type u} [NontriviallyNormedField k] [NormedAddCommGroup V]
+  [NormedSpace k V]
+    {k' : Type u'} [NormedAddCommGroup k'] [NormedSpace k k']
+    {k'' : Type u''} [NormedAddCommGroup k''] [NormedSpace k k'']
+    (e : k' →L[k] k'')  {Ω : Opens V}
+
 lemma obs' {φ : V → k'} : tsupport (fun x => fderiv k φ x ) ⊆ tsupport (φ) := by -- ⊆ tsupport (fun x => fderiv k φ) :=
     exact tsupport_fderiv_subset k (f:= φ)
+lemma obs  {φ : ContCompactSupp k V k'} : tsupport (e ∘ φ.f) ⊆ tsupport (φ) := by -- ⊆ tsupport (fun x => fderiv k φ) :=
+    · apply tsupport_comp_subset (ContinuousLinearMap.map_zero e)  (f:=φ)
 
-lemma obs {v : V} {φ : V → k'} : tsupport (fun x => fderiv k φ x v) ⊆ tsupport (φ) := by -- ⊆ tsupport (fun x => fderiv k φ) :=
-    trans ; swap
-    · exact tsupport_fderiv_subset k (f:= φ)
-    · apply tsupport_comp_subset rfl (g := fun f => f v)  (f:=fderiv k φ)
-@[simp] def fderivCCS : ContCompactSupp k V (V →L[k] k') := by
 
+@[simp] def postCCSMap :  ContCompactSupp k V k' → ContCompactSupp k V k'' := fun φ => ⟨ e ∘ φ.f
+            , by sorry ,
+            by
+            apply IsCompact.of_isClosed_subset (φ.hsupp)
+            exact isClosed_tsupport _
+            exact obs e
+          ⟩
+lemma SeqContinuousStronglypostCCSMap : SeqContinuousStrongly (postCCSMap (V:=V) e)  := by
+        constructor
+        intro α a hx
+        constructor
+        ·     obtain ⟨ K , hK ⟩ := hx.1
+              use K
+              constructor
+              · exact hK.1
+              · intro n
+                trans (tsupport (α n).f)
+                · exact obs e
+                · exact hK.2 n
+        · intro l
+          have : TendstoUniformly (fun n ↦ iteratedFDeriv k (l) (α  n).f) (iteratedFDeriv k (l) (a).f) atTop := hx.2 (l)
+          let precomp_e : (V[×l]→L[k] k') →L[k] (V[×l]→L[k] k'') :=ContinuousLinearMap.compContinuousMultilinearMapL k (fun _ => V) k' k''  e
+          have hxg (ψ : ContCompactSupp k V k')  :  iteratedFDeriv k l (postCCSMap e ψ).f = precomp_e ∘ iteratedFDeriv k (l) (ψ).f := by
+            simp only [postCCSMap]
+            ext1 x
+            rw [ContinuousLinearMap.iteratedFDeriv_comp_left]
+
+            · rfl
+            · exact ψ.smooth
+            · apply OrderTop.le_top
+
+          rw [hxg]
+          have hxg :  (fun (n : ℕ) => iteratedFDeriv k l (((postCCSMap e) ∘ α ) n).f) =
+            fun (n : ℕ) => precomp_e ∘ (iteratedFDeriv k (l) (α  n).f) := by
+              ext1 n
+              exact hxg (α n)
+
+
+          rw [hxg]
+
+          --rw [← tendstoUniformlyOn_univ ] at this
+          --rw [← tendstoUniformlyOn_univ ]
+
+          refine UniformContinuous.comp_tendstoUniformly ?_ this
+          apply ContinuousLinearMap.uniformContinuous
+
+@[simp] def postCCS  : ContCompactSupp k V k' →L[k] ContCompactSupp k V k'' := by
+
+  let f : ContCompactSupp k V k' → ContCompactSupp k V k'' := postCCSMap e
+  apply mk ; swap
+  · exact f
+  · constructor
+    ·     intro φ ψ
+          ext x
+          simp only [ f, postCCSMap, instAddCommGroupContCompactSupp, instAddContCompactSupp,
+            instZeroContCompactSupp, instNegContCompactSupp, ccs_add, map_comp_add, Pi.add_apply,
+            comp_apply]
+    · intro c φ
+      ext x
+      simp
+      apply LinearMap.map_smul
+    · apply SeqContinuous'OfStrongly
+      exact (SeqContinuousStronglypostCCSMap e)
+
+@[simp] def fderivCCS : (ContCompactSupp k V k') →ₗ[k] ContCompactSupp k V (V →L[k] k') := by
+  let map :  (ContCompactSupp k V k') → ContCompactSupp k V (V →L[k] k') := fun φ => by
     use fderiv k φ.f
     · have dfh : ContDiff k ⊤ (fun x => fderiv k φ.f x) := (contDiff_top_iff_fderiv.mp (φ.smooth )).2
       exact dfh
@@ -337,126 +402,88 @@ lemma obs {v : V} {φ : V → k'} : tsupport (fun x => fderiv k φ x v) ⊆ tsup
     · apply IsCompact.of_isClosed_subset (φ.hsupp)
       exact isClosed_tsupport _
       exact obs'
-variable {V : Type } {k : Type v} [NontriviallyNormedField k] [NormedAddCommGroup V]
-  [NormedSpace k V] {k' : Type u'} [NormedAddCommGroup k'] [NormedSpace k k'] (φ : ContCompactSupp k V k') (φ : ContCompactSupp k V k') {Ω : Opens V}
-def fderivCCSAt  (φ : ContCompactSupp k V k') (v : V): ContCompactSupp k V k' := by
+  apply LinearMap.mk ; swap
+  use map
 
-    use fun x => fderiv k φ.f x v
-    · have dfh : ContDiff k ⊤ (fun x => fderiv k φ.f x) := (contDiff_top_iff_fderiv.mp (φ.smooth )).2
+  · intro x y ; ext1 ; simp only [map] ;
+    ext1 z
+    apply fderiv_add
+    apply diffAt
+    apply diffAt
+  · intro c x ;
+    ext1 ; simp only [map] ;
+    ext1 z
+    simp
 
-      have evvh : ContDiff k ⊤ (ContinuousLinearMap.apply k k' v  ) := by apply ContinuousLinearMap.contDiff
+    apply fderiv_const_smul
+    apply diffAt
+lemma SeqContinuousStronglyFderivCCS : SeqContinuousStrongly
+  (fderivCCS : ContCompactSupp k V (k') → ContCompactSupp k V (V →L[k] k') ) := by
 
-      apply ContDiff.comp  evvh dfh
+
+    constructor
+    intro φ φ0 hφ
+    constructor
+    · obtain ⟨ K , hK⟩ := hφ.1
+      use K
+      constructor
+      · exact hK.1
+      · intro n
+        trans ; swap
+        · exact hK.2 n
+        · apply obs'
+    · intro l
+      have {φ : ContCompactSupp k V k'} : (iteratedFDeriv k l ((fderivCCS φ) ).f) = fun z => (iteratedFDeriv k (l+1) ((φ).f) z).curryRight:= by
+        ext z x
+        rw [iteratedFDeriv_succ_eq_comp_right]
+        simp only [fderivCCS, Nat.succ_eq_add_one, comp_apply,
+          ContinuousMultilinearMap.curryRight_apply, continuousMultilinearCurryRightEquiv_apply',
+          Fin.init_snoc, Fin.snoc_last]
+        congr
 
 
-    · apply IsCompact.of_isClosed_subset (φ.hsupp)
-      exact isClosed_tsupport _
-      exact obs
+      rw [this]
+      have : (fun n ↦ iteratedFDeriv k l ((fderivCCS ∘ φ) n).f) = fun n ↦ fun z => (iteratedFDeriv k (l+1) ((φ n).f) z).curryRight := by
+        ext1 n ;
+        exact this
+      rw [this]
+      have := (hφ.2 (l+1))
+      refine UniformContinuous.comp_tendstoUniformly (g:=(fun f => f.curryRight)) ?_ this
+      exact Isometry.uniformContinuous (continuousMultilinearCurryRightEquiv' k l V k').symm.isometry
+
+@[simp] def fderivCCSAt  (v : V) : (ContCompactSupp k V k') →ₗ[k] ContCompactSupp k V k' := ((postCCS (ev_cts v)).toLinearMap).comp (fderivCCS)
+
+lemma obsOLD' {v : V} {φ : V → k'} : tsupport (fun x => fderiv k φ x v) ⊆ tsupport (φ) := by -- ⊆ tsupport (fun x => fderiv k φ) :=
+    trans ; swap
+    · exact tsupport_fderiv_subset k (f:= φ)
+    · apply tsupport_comp_subset rfl (g := fun f => f v)  (f:=fderiv k φ)
+lemma obsOLD {v : V} {φ : ContCompactSupp k V k'} : tsupport (fun x => (fderivCCSAt v φ).f x) ⊆ tsupport (φ) := by -- ⊆ tsupport (fun x => fderiv k φ) :=
+
+    apply obsOLD'
 def fderiv𝓓 (v : V) : (𝓓 k Ω) →L[k] 𝓓 k Ω := by
-  have crypto {l} {ψ : 𝓓 k Ω} :
-  /-
-   iteratedFDeriv 𝕜 (n + 1) f =
-    (⇑(continuousMultilinearCurryRightEquiv' 𝕜 n E F) ∘ iteratedFDeriv 𝕜 n fun y ↦ fderiv 𝕜 f y)
-  -/
-    iteratedFDeriv k l (fun y => fderiv k ψ.φ y v)  =
-       (fun f => ( ev_cts v).compContinuousMultilinearMap f) ∘ fun z =>  (iteratedFDeriv k (l + 1) (ψ).φ z).curryRight  := by
-            ext1 z ;
-            simp_rw [iteratedFDeriv_succ_eq_comp_right]
-            ext1 w
-            simp only [ev_cts, Nat.succ_eq_add_one, Function.comp_apply,
-              ContinuousLinearMap.compContinuousMultilinearMap_coe, ContinuousLinearMap.apply_apply,
-              ContinuousMultilinearMap.curryRight_apply,
-              continuousMultilinearCurryRightEquiv_apply', Fin.init_snoc, Fin.snoc_last]
-
-            calc
-                  _ = (iteratedFDeriv k l ((⇑(ev_cts (W:=k) v)).comp (fderiv k ψ)) z) w := by rfl
-                  _ = (ev_cts v).compContinuousMultilinearMap (iteratedFDeriv k l (fderiv k ψ) z) w := ?_
-                  _ = ((ev_cts v).toFun.comp ((iteratedFDeriv k l (fderiv k ψ) z))) w  := by rfl
-                  _ = ((iteratedFDeriv k l (fderiv k ψ) z) w) v := by rfl
-            · apply congrFun
-              rw [ContinuousLinearMap.iteratedFDeriv_comp_left (f:= fderiv k ψ) (ev_cts (W:= k) v) (i:=l)  ]
-              · apply ContDiff.fderiv_right
-                · exact ψ.φIsSmooth
-                · apply OrderTop.le_top
-
-
-              · exact (OrderTop.le_top _)
-
-
-  let f : 𝓓 k Ω → 𝓓 k Ω := fun φ => ⟨ fderivCCSAt φ.φ v , by
+  let f : 𝓓 k Ω → 𝓓 k Ω := fun φ => ⟨ fderivCCSAt v φ.φ , by
           trans
-          · exact obs
+          · exact obsOLD
           · exact φ.sprtinΩ ⟩
   apply mk ; swap
   · exact f
   · constructor
-    ·     intro φ ψ
-          ext x
-          by_cases p : x ∈ Ω ; swap
-          · trans (fderiv k φ x + fderiv k ψ x) v
-            · apply congrFun (congrArg DFunLike.coe ?_) v ; apply fderiv_add ; apply testfunctionIsDiffAt ;apply testfunctionIsDiffAt ;
-            · rfl
-
-          · have : (fderiv k (fun y => φ.φ y + ψ.φ y) x) = (fderiv k φ.φ x) + (fderiv k ψ.φ x) := by
-              apply fderiv_add
-              · exact diffAt k Ω φ
-              · exact diffAt k Ω ψ
-            have obv : ((fderiv k (fun y => φ.φ y + ψ.φ y) x)) v = (fderiv k φ.φ x) v + (fderiv k ψ.φ x) v := by
-              rw [this]
-              rfl
-            exact obv
-    · intro c φ
-      ext x
-      simp
-      trans (c • (fderiv k φ.φ x)) v
-      · apply congrFun (congrArg DFunLike.coe ?_) v
-        apply fderiv_const_smul (E:=V) (f:= φ.φ) (𝕜 := k) (R:=k) (F:=k) (x:=x) ?_ c
-        apply testfunctionIsDiffAt
-      · rfl
-    · constructor
-      intro α  a hx
-      apply tendsTo𝓝
+    · intro φ ψ ; ext1  ; apply LinearMap.map_add
+    · intro φ ψ ; ext1  ; apply LinearMap.map_smul
+    · apply SeqContinuous'OfStrongly
       constructor
-      · obtain ⟨ K , hK ⟩ := hx.1
-        use K
-        constructor
-        · exact hK.1
-        · intro n
-          trans (tsupport (α n).φ)
-          · exact obs
-          · exact hK.2 n
-      · intro l
-        have : TendstoUniformly (fun n ↦ iteratedFDeriv k (l+1) (α  n).φ) (iteratedFDeriv k (l+1) (a).φ) atTop := hx.2 (l+1)
-        let g1 : (V[×(l+1)]→L[k] k) ≃ₗᵢ[k] (V[×l]→L[k] V →L[k] k) := (continuousMultilinearCurryRightEquiv k (fun _ => V) k).symm
-        let g1 : (V[×(l+1)]→L[k] k) →L[k] (V[×l]→L[k] V →L[k] k)  := ContinuousLinearEquiv.toContinuousLinearMap g1
-        let precomp_ev_v : (V[×l]→L[k] V →L[k] k) →L[k] (V[×l]→L[k] k) :=ContinuousLinearMap.compContinuousMultilinearMapL k (fun _ => V) (V →L[k] k) k  ( ev_cts v)
-        let g : (V[×(l+1)]→L[k] k) →L[k] (V[×l]→L[k] k)  :=  precomp_ev_v.comp g1
-    --     have step (f : V → k ) (z : V) : iteratedFDeriv k l (fderiv k f) z =
-    -- ContinuousMultilinearMap.curryLeft (iteratedFDeriv k (l + 1) f z) := congrFun (fderiv_iteratedFDeriv (𝕜 := k) (f:= f)) z
-        have hxg (ψ : 𝓓 k Ω)  :  iteratedFDeriv k l (f ψ).φ = g ∘ iteratedFDeriv k (l + 1) (ψ).φ := by
-          calc
-           _ = iteratedFDeriv k l (fun y => fderiv k ψ.φ y v) := rfl
-           --_ = fun z => (ContinuousMultilinearMap.curryRight v (iteratedFDeriv k (l + 1) ψ.φ z)) := crypto
-           _ = g ∘ iteratedFDeriv k (l + 1) (ψ).φ := crypto -- ext1 z ; simp
+
+      intro α  a hx
+
+      --apply tendsTo𝓝
+      have : (fun n => (α n).φ) ⟶ a.φ := hx
+      apply (SeqContinuousStronglypostCCSMap (V:=V) (k' := V →L[k] k) (k'' := k) (ev_cts v)).seqCont
+      apply SeqContinuousStronglyFderivCCS.seqCont hx
 
 
 
 
 
-        rw [hxg]
-        have hxg :  (fun (n : ℕ) => iteratedFDeriv k l ((f ∘ α ) n).φ) =
-          fun (n : ℕ) => g ∘ (iteratedFDeriv k (l + 1) (α  n).φ) := by
-            ext1 n
-            exact hxg (α n)
-
-
-        rw [hxg]
-
-        --rw [← tendstoUniformlyOn_univ ] at this
-        --rw [← tendstoUniformlyOn_univ ]
-        have hg : UniformContinuous g.1 := by apply ContinuousLinearMap.uniformContinuous
-        refine UniformContinuous.comp_tendstoUniformly hg ?_
-        exact this
 
 notation  A "**" T => T ∘L A
 example (v : V) (φ : 𝓓 k Ω ) (T : 𝓓' k Ω ): (fderiv𝓓 v ** T) φ = T (fderiv𝓓 v φ) := by rfl

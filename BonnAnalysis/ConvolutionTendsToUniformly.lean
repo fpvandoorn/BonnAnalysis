@@ -224,6 +224,7 @@ lemma convolution_mono_right_of_nonneg_ae  {f g g' : G → ℝ} (hfg' : Convolut
   rw [this]
   exact integral_nonneg fun y => mul_nonneg (hf y) (hg' (x - y))
 variable  {ψ : ℕ → ContCompactSupp ℝ V k'} {ψ0 : ContCompactSupp ℝ V k'} (hψ : ψ ⟶ ψ0) --TendstoUniformly (fun n => (ψ n)) ψ0 atTop) (KhK : ∃ K : Set V , IsCompact K ∧ ∀ n , tsupport (ψ n) ⊆ K)
+
 lemma  ConvWithIsUniformContinuous
      :
     TendstoUniformly (β := k') (fun n => (φ.φ ⋆[L] (ψ n))) ((φ.φ ⋆[L] ψ0)) atTop := by
@@ -241,9 +242,9 @@ lemma  ConvWithIsUniformContinuous
         · symm ; exact convolution_smul
         · ext x ; simp only [Pi.smul_apply, smul_eq_mul, neg_mul, one_mul, neg_smul, one_smul]
         · apply convOfCtsCmpctSupportExists (φ := (φ : LocallyIntegrableFunction V))
-        · apply convOfCtsCmpctSupportExists  (φ := (φ : LocallyIntegrableFunction V))   --(ψ := (-1) • φ0)
+        · apply convOfCtsCmpctSupportExists  (φ := (φ : LocallyIntegrableFunction V))
         · simp only [instAddCommGroupContCompactSupp, instNegContCompactSupp,
-          instSMulContCompactSupp] ; ext x ; simp only [Pi.sub_apply, Pi.add_apply, Pi.neg_apply] ; sorry --  apply sub_eq_add_neg (a := (ψ n) x) (b:= ψ0 x)
+          instSMulContCompactSupp] ; ext x ; simp only [Pi.sub_apply, Pi.add_apply, Pi.neg_apply] ; simp ;  apply sub_eq_add_neg (a := (ψ n) x) (b:= ψ0 x)
       · let C : ℝ≥0 := ⟨ ‖L‖ *  ∫  v , ‖ φ v‖ , by apply mul_nonneg ; apply ContinuousLinearMap.opNorm_nonneg ; apply integral_nonneg ; intro _ ; apply norm_nonneg  ⟩
         have : ∀ n x , ‖ (φ.φ ⋆[L] (ψ n - ψ0)) x‖ ≤ || ψ n - ψ0 ||_∞.toReal * C.1  := by
           intro n x
@@ -261,18 +262,15 @@ lemma  ConvWithIsUniformContinuous
               · intro _ ; exact norm_eq_zero ;
               · exact φ.φHasCmpctSupport
             · rw [← MeasureTheory.locallyIntegrableOn_univ] ; apply MeasureTheory.LocallyIntegrableOn.norm ; rw [MeasureTheory.locallyIntegrableOn_univ] ; sorry -- apply testFunctionIsLocallyIntegrable
-            · apply continuous_const ; --apply convolutionExistsAt_flip.mpr ;
+            · apply continuous_const ;
           · intro x ; apply norm_nonneg ;
-          · have {x} :  ‖(ψ n - ψ0) x‖ ≤ || ψ n - ψ0 ||_∞.toReal ↔  ‖(ψ n - ψ0) x‖₊ ≤ || ψ n - ψ0 ||_∞ := by
-
-              constructor
-              · intro h ; rw [ofReal_norm_eq_coe_nnnorm] ;
-              · intro h ; rw [show ‖(ψ n - ψ0) x‖ = (ENNReal.ofReal ‖(ψ n - ψ0) x‖).toReal from ?_] ;
-                apply ENNReal.toReal_mono
-                · rw [← lt_top_iff_ne_top] ; apply EssSupTestFunction
-                · rw [ofReal_norm_eq_coe_nnnorm] ; exact h
-                · refine Eq.symm (ENNReal.toReal_ofReal ?h) ; apply norm_nonneg
+          · have {x} :  ‖(ψ n - ψ0) x‖ ≤ || ψ n - ψ0 ||_∞.toReal ↔  ENNReal.ofReal ‖(ψ n - ψ0) x‖ ≤ || ψ n - ψ0 ||_∞ := by
+              symm
+              apply ENNReal.ofReal_le_iff_le_toReal
+              rw [← lt_top_iff_ne_top]
+              apply EssSupTestFunction
             simp_rw [this]
+            simp_rw [ofReal_norm_eq_coe_nnnorm]
             apply ae_le_snormEssSup (f:=(ψ n - ψ0))
           · intro _ ; apply ENNReal.toReal_nonneg
         apply zeroSeqUniformly this
@@ -312,7 +310,7 @@ variable
 -- def T : Type max 1 u u' := V →L[ℝ] k'
 --#check  : Type max 1 u u'
 theorem iteratedDerivConv
-    {φ : 𝓓F ℝ V}  (hψ0 : ContDiff ℝ ⊤ ψ0)  {l : ℕ}
+    {φ : 𝓓F ℝ V}  {l : ℕ}
      :
     TendstoUniformly (fun n => iteratedFDeriv ℝ (l) (φ.φ ⋆[L] (ψ n))) (iteratedFDeriv ℝ (l) (φ.φ ⋆[L] ψ0)) atTop := by
 
@@ -336,11 +334,9 @@ theorem iteratedDerivConv
             (fun n ↦ (iteratedFDeriv ℝ l (φ.φ ⋆[ContinuousLinearMap.precompR V L, volume] fderiv ℝ (ψ n))))
             (iteratedFDeriv ℝ l (φ.φ ⋆[ContinuousLinearMap.precompR V L, volume] ( fderivCCS ψ0 ).f)) atTop := by
               apply hl (k' := (V →L[ℝ] k' )) (ψ := fun n => fderivCCS (ψ n))  (L := ContinuousLinearMap.precompR V L)
-              constructor
-              · obtain ⟨ K , hK ⟩ := hψ.1
-                use K
-                exact ⟨ hK.1 , by intro n ; trans ; exact tsupport_fderiv_subset (𝕜 := ℝ) ; exact hK.2 n⟩
-              · apply ContDiff.fderiv_right ψ0.smooth ; apply OrderTop.le_top -- refine ((contDiff_succ_iff_fderiv (𝕜 := ℝ) (f:=ψ0)).mp ().2
+              · apply SeqContinuousStronglyFderivCCS.seqCont
+                exact hψ
+
 
         refine UniformContinuous.comp_tendstoUniformly (g:= (continuousMultilinearCurryRightEquiv' ℝ l V k')) ?_ moin
         exact Isometry.uniformContinuous (continuousMultilinearCurryRightEquiv' ℝ l V k').isometry
