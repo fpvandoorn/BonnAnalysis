@@ -311,9 +311,9 @@ lemma SeqContinuous'OfContinuous  (T : X →L[k] M) : SeqContinuous' T := by
 def Full (V : Type u) [TopologicalSpace V] : Opens V := ⟨ univ , isOpen_univ ⟩
 
 abbrev 𝓓F  (k : Type v) (V : Type u) [NontriviallyNormedField k]
-  [NormedAddCommGroup V]  [NormedSpace k V]  := 𝓓 k (⊤:Opens V)
+  [NormedAddCommGroup V]  [NormedSpace k V]  := ContCompactSupp k V k
 abbrev 𝓓'F  (k : Type v) (V : Type u) [NontriviallyNormedField k]
- [NormedAddCommGroup V]  [NormedSpace k V]  := 𝓓' k (Full V)
+ [NormedAddCommGroup V]  [NormedSpace k V]  := 𝓓F k V →L[k] k
 
 
 
@@ -324,13 +324,13 @@ structure LocallyIntegrableFunction where
    hf : MeasureTheory.LocallyIntegrable f
 
 lemma testFunctionIsLocallyIntegrable
-  (φ : 𝓓 ℝ Ω  ) : MeasureTheory.LocallyIntegrable φ := by
+  (φ : 𝓓F ℝ V  ) : MeasureTheory.LocallyIntegrable φ := by
     apply MeasureTheory.Integrable.locallyIntegrable
     apply Continuous.integrable_of_hasCompactSupport
-    exact ContDiff.continuous (𝕜:=ℝ) φ.φIsSmooth
-    exact φ.φHasCmpctSupport
+    exact ContDiff.continuous (𝕜:=ℝ) φ.smooth
+    exact φ.hsupp
 instance : Coe ( 𝓓F ℝ V) (LocallyIntegrableFunction V) where
-  coe φ := ⟨ φ , testFunctionIsLocallyIntegrable V φ ⟩
+  coe φ := ⟨ φ.f , testFunctionIsLocallyIntegrable V φ ⟩
 
 
 

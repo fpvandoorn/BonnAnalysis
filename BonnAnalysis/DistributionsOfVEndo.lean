@@ -165,7 +165,7 @@ lemma fDerivTransition  (v x : V) (φ0 : V → W) (hφ0 : ContDiff k ⊤ φ0):
       · exact ContinuousAffineMap.contDiff (𝕜 := k) (shift' k v)
 
 lemma iteratedFDerivTransition  (v x : V) (l) (φ0 : 𝓓F k V) : -- V[×ℓ]→L[ k ] k) (l : ℕ)   :{ℓ : ℕ }
-  iteratedFDeriv k (l) (φ0.φ.f.comp (shift' k v)) (x) = iteratedFDeriv k l φ0 (x - v) := by
+  iteratedFDeriv k (l) (φ0.f.comp (shift' k v)) (x) = iteratedFDeriv k l φ0 (x - v) := by
 
     induction' l with l hl generalizing x -- φ0  ℓ
     · simp ; ext z ; rw [iteratedFDeriv_zero_apply , iteratedFDeriv_zero_apply] ; apply congrArg ; rfl
@@ -192,7 +192,7 @@ lemma iteratedFDerivTransition  (v x : V) (l) (φ0 : 𝓓F k V) : -- V[×ℓ]→
       have : fderiv k (ψ.comp (shift' k v)) (x) = fderiv k ψ (x - v) := by
         apply fDerivTransition
         apply ContDiff.iteratedFDeriv_right
-        exact φ0.φIsSmooth
+        exact φ0.smooth
         apply OrderTop.le_top
       rw [←  this]
       congr
@@ -208,8 +208,8 @@ lemma iteratedFDerivTransition  (v x : V) (l) (φ0 : 𝓓F k V) : -- V[×ℓ]→
 
 -- This is a version of iteratedFDeriv_comp_right for continuous affine maps.
 theorem ContinuousAffineMap.iteratedFDeriv_comp_right {l} {φ0 : 𝓓F k V} (Φ : V →ᴬ[k] V) {x} : (iteratedFDeriv k l (φ0 ∘ Φ)) x =
-          (precompmyΦ Φ l) (iteratedFDeriv k l (φ0).φ (Φ x) ) := by
-          let φ0' : V → k := (φ0.φ.f ).comp ((shift' k (- Φ 0)))
+          (precompmyΦ Φ l) (iteratedFDeriv k l (φ0) (Φ x) ) := by
+          let φ0' : V → k := (φ0.f ).comp ((shift' k (- Φ 0)))
           have : φ0 ∘ Φ =  φ0' ∘ Φ.contLinear := by
             ext x ;  simp only [φ0',Function.comp_apply,
             shift', sub_neg_eq_add, ContinuousAffineMap.coe_mk, AffineMap.coe_mk,
@@ -231,27 +231,27 @@ theorem ContinuousAffineMap.iteratedFDeriv_comp_right {l} {φ0 : 𝓓F k V} (Φ 
             simp only [sub_neg_eq_add]
           · have : ContDiff k ⊤ ⇑(shift' k (-Φ 0)) := by apply ContinuousAffineMap.contDiff
 
-            refine ContDiff.comp φ0.φIsSmooth (this)
+            refine ContDiff.comp φ0.smooth (this)
 
 
 theorem chainRule {l} {φ0 : 𝓓F k V} (Φ : V →ᴬ[k] V) : (iteratedFDeriv k l (φ0 ∘ Φ)) =
-          (precompmyΦ Φ l ∘ (iteratedFDeriv k l (φ0).φ ∘ Φ )) := by ext1 x ; exact ContinuousAffineMap.iteratedFDeriv_comp_right Φ
+          (precompmyΦ Φ l ∘ (iteratedFDeriv k l (φ0) ∘ Φ )) := by ext1 x ; exact ContinuousAffineMap.iteratedFDeriv_comp_right Φ
 
 @[simp] def fromEndoOfV  (Φ : V →ᴬ[k] V)  (hΦ : IsProperMap (Φ : V → V)): 𝓓F k V →L[k] 𝓓F k V := by
 
   apply mk ; swap
   ·   intro ψ
-      use ⟨ ψ ∘ Φ ,
-       ContDiff.comp ψ.φIsSmooth (ContinuousAffineMap.contDiff  Φ ) , by
+      exact ⟨ ψ ∘ Φ ,
+       ContDiff.comp ψ.smooth (ContinuousAffineMap.contDiff  Φ ) , by
         apply IsCompact.of_isClosed_subset ; swap
-        exact isClosed_tsupport (ψ.φ ∘ Φ)
+        exact isClosed_tsupport (ψ.f ∘ Φ)
         swap
         · exact supportfromEndoOfV (k:=k)  Φ ψ
         · apply IsProperMap.isCompact_preimage
           apply (hΦ)
-          exact (ψ.φHasCmpctSupport) ⟩
-      · exact fun _ _ ↦ trivial
-      --ψ.φHasCmpctSupport
+          exact (ψ.hsupp) ⟩
+
+      --ψ.fHasCmpctSupport
   · constructor
     · intro φ ψ
       ext x
@@ -283,7 +283,7 @@ theorem chainRule {l} {φ0 : 𝓓F k V} (Φ : V →ᴬ[k] V) : (iteratedFDeriv k
 
 
 
-        have : (fun n => iteratedFDeriv k l ((φ n).φ ∘ Φ) ) = (fun n => precompmyΦ Φ l ∘ iteratedFDeriv k l (φ n).φ ∘ Φ )  := by
+        have : (fun n => iteratedFDeriv k l ((φ n).f ∘ Φ) ) = (fun n => precompmyΦ Φ l ∘ iteratedFDeriv k l (φ n).f ∘ Φ )  := by
            ext1 n
            apply chainRule
         have : TendstoUniformly (fun n => iteratedFDeriv k l (φ n ∘ Φ) ) (iteratedFDeriv k l (φ0 ∘ Φ)) atTop := by
@@ -308,10 +308,10 @@ def δ : 𝓓' k Ω := mk k (fun φ => φ 0) (by
     apply (zeroCase k).mp
     assumption
     )
-lemma testfunctionIsDiffAt {φ : 𝓓 k Ω} (x : V) : DifferentiableAt k (φ) x := by
+lemma testfunctionIsDiffAt {φ : 𝓓F k V} (x : V) : DifferentiableAt k (φ) x := by
   apply ContDiffAt.differentiableAt
   · apply contDiff_iff_contDiffAt.mp
-    exact φ.φIsSmooth
+    exact φ.smooth
   · exact OrderTop.le_top 1
 variable {V : Type u} [NontriviallyNormedField k] [NormedAddCommGroup V]
   [NormedSpace k V]

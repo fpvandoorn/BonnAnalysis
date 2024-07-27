@@ -68,7 +68,7 @@ variable  (V : Type) [MeasureSpace V] [NormedAddCommGroup V]  [NormedSpace ℝ V
       simp only [integral_zero']
     apply isClosed_tsupport
 
-  · exact fun _ _ => trivial
+
 
 -- ContinuousLinearMap.integral_comp_comm PROBLEM: 𝓓F ℝ V is not NormedAddGroup so we cant apply
 -- probably some smoothness condition on φ is missing anyway really Ccinfty(Ω × Ω ) needed?
@@ -80,7 +80,7 @@ lemma FcommWithIntegrals (φ : V → 𝓓F ℝ V)  (hφ : HasCompactSupport (fun
 
 
 
-lemma convOfTestFunctionsExists  [BorelSpace V] {φ ψ : 𝓓F ℝ V} : ConvolutionExists φ.φ ψ.φ (ContinuousLinearMap.lsmul ℝ ℝ) :=
+lemma convOfTestFunctionsExists  [BorelSpace V] {φ ψ : 𝓓F ℝ V} : ConvolutionExists φ.f ψ.f (ContinuousLinearMap.lsmul ℝ ℝ) :=
   convOfCtsCmpctSupportExists (φ := (φ : LocallyIntegrableFunction V)) (ψ := ψ)
 
 open MeasureSpace
@@ -215,7 +215,7 @@ lemma testFunctionMeasurable {φ : 𝓓 ℝ Ω} : AEStronglyMeasurable φ.φ vol
             · trans ; exact subset_tsupport _ ; exact supportφ₀
         have someOtherArg : (∫⁻ (v : V) in K , ‖ ((φ n).φ -φ₀.φ) v ‖₊ * ‖ f.f v ‖₊  ).toReal  ≤
           (∫⁻ (v : V) in K , || ((φ n).φ -φ₀.φ) ||_∞ * ‖ f.f v ‖₊  ).toReal := by
-          have : || (φ n).φ - φ₀.φ ||_∞ ≠ ⊤ := by apply LT.lt.ne_top ; apply LE.le.trans_lt ; apply MeasureTheory.snormEssSup_add_le ; apply WithTop.add_lt_top.mpr ; constructor ; exact EssSupTestFunction ℝ _ (φ n); exact EssSupTestFunction _ _ (-φ₀)
+          have : || (φ n).φ - φ₀.φ ||_∞ ≠ ⊤ := by apply LT.lt.ne_top ; apply LE.le.trans_lt ; apply MeasureTheory.snormEssSup_add_le ; apply WithTop.add_lt_top.mpr ; constructor ; exact EssSupTestFunction ℝ _ (φ n).φ; exact EssSupTestFunction _ _ (-φ₀).φ
           apply ENNReal.toReal_mono ;
           · apply LT.lt.ne_top ; rw [MeasureTheory.lintegral_const_mul''] ; apply WithTop.mul_lt_top ; exact this ; exact fIsIntegrableOnK' hK.1 ; apply AEMeasurable.restrict ;  exact fIsMeasureable
           · apply MeasureTheory.lintegral_mono_ae ;
@@ -248,13 +248,13 @@ lemma testFunctionMeasurable {φ : 𝓓 ℝ Ω} : AEStronglyMeasurable φ.φ vol
           = ‖  ∫ (v : V) , (φ n).φ v * f.f v  - φ₀.φ v * f.f v‖  := by congr ; rw [← MeasureTheory.integral_sub] ; exact integrable ; exact integrable
         _ = ‖  ∫ (v : V) , ((φ n).φ v -φ₀.φ v) * f.f v‖ := by congr ; ext1 v ; symm ; exact (sub_smul ((φ n).φ v) (φ₀.φ v) (f.f v) )
         _ = ‖  ∫ (v : V) in K , (((φ n).φ -φ₀.φ) * f.f) v‖ := by apply congrArg ; apply shouldExist (fun v => ((φ n).φ -φ₀.φ) v * f.f v ) K ; exact IsCompact.measurableSet hK.1 ; exact someArg
-        _ ≤ (∫⁻ (v : V) in K , ENNReal.ofReal ‖ (((φ n).φ -φ₀.φ) v) * f.f v‖ ).toReal   := by apply MeasureTheory.norm_integral_le_lintegral_norm (((φ n).φ -φ₀.φ) * f.f )
+        _ ≤ (∫⁻ (v : V) in K , ENNReal.ofReal ‖ (((φ n).φ -φ₀.φ) v) * f.f v‖ ).toReal   := by apply MeasureTheory.norm_integral_le_lintegral_norm (((φ n).φ -φ₀.φ).f * f.f )
         _ = (∫⁻ (v : V) in K , ‖ ((φ n).φ -φ₀.φ) v ‖₊ * ‖ f.f v ‖₊ ).toReal   := by  congr ; ext v ; simp_rw [norm_mul] ; trans ; swap ;  apply ENNReal.coe_mul ; exact this
         _ ≤ (∫⁻ (v : V) in K ,  || ((φ n).φ -φ₀.φ) ||_∞ * ‖ f.f v ‖₊).toReal   := by exact someOtherArg
         _ =  ((|| ((φ n).φ -φ₀.φ) ||_∞) * (∫⁻ (v : V) in K , ‖ f.f v ‖₊ )).toReal := by congr ;  apply MeasureTheory.lintegral_const_mul''  (|| ((φ n).φ -φ₀.φ) ||_∞) ; apply AEMeasurable.restrict ; exact fIsMeasureable
         _ = (|| ((φ n).φ -φ₀.φ) ||_∞).toReal * (∫⁻ (v : V) in K , ‖ f.f v ‖₊ ).toReal   := by rw [ENNReal.toReal_mul]
 
-      have : TendstoUniformly (fun n => (φ n) ) φ₀ atTop := by apply (zeroCase _).mp ; exact hφ.2 0
+      have : TendstoUniformly (fun n => (φ n).φ ) φ₀.φ atTop := by apply (zeroCase _).mp (hφ.2 0) ;
         --
 
       rw [← tendsto_sub_nhds_zero_iff]
@@ -273,16 +273,16 @@ theorem integral_congr {f g : V → ℝ} (p : ∀ x , f x = g x) : ∫ x , f x =
   use  φ ⋆ ψ
   --rw [← contDiffOn_univ] ;
   · apply HasCompactSupport.contDiff_convolution_right
-    · exact ψ.φHasCmpctSupport
+    · exact ψ.hsupp
     · exact (testFunctionIsLocallyIntegrable V φ)
-    · exact ψ.φIsSmooth
+    · exact ψ.smooth
   · apply HasCompactSupport.convolution
-    · exact φ.φHasCmpctSupport
-    · exact ψ.φHasCmpctSupport
-  · exact fun _ _ ↦ trivial
+    · exact φ.hsupp
+    · exact ψ.hsupp
+
   · constructor
     · intro ψ₁ ψ₂ ; ext z ; simp ; apply ConvolutionExistsAt.distrib_add ; exact convOfTestFunctionsExists V z ; exact convOfTestFunctionsExists V z --help
-    · intro c ψ ; ext z ; simp ; exact congrFun (convolution_smul (𝕜 := ℝ ) (F:= ℝ ) (G:= V) (f:=φ.φ) (g:= ψ.φ) ) z
+    · intro c ψ ; ext z ; simp ; exact congrFun (convolution_smul (𝕜 := ℝ ) (F:= ℝ ) (G:= V) (f:=φ.f) (g:= ψ.f) ) z
     · constructor
       intro ψ ψ0 hψ
       apply tendsTo𝓝
@@ -291,14 +291,14 @@ theorem integral_congr {f g : V → ℝ} (p : ∀ x , f x = g x) : ∫ x , f x =
         use tsupport (φ) + K
         constructor
         · apply add_compact_subsets
-          exact φ.φHasCmpctSupport
+          exact φ.hsupp
           exact hK.1
 
         · intro n
-          have : tsupport (φ.φ ⋆ (ψ n).φ) ⊆ tsupport φ.φ + tsupport (ψ n).φ := by
+          have : tsupport (φ.f ⋆ (ψ n).f) ⊆ tsupport φ.f + tsupport (ψ n).f := by
             apply tsupport_convolution_subset
-            exact φ.φHasCmpctSupport
-            exact (ψ n).φHasCmpctSupport
+            exact φ.hsupp
+            exact (ψ n).hsupp
           trans
           · exact this
           · apply add_subset_add_left
@@ -310,19 +310,17 @@ theorem integral_congr {f g : V → ℝ} (p : ∀ x , f x = g x) : ∫ x , f x =
         induction' l with l _ -- ψ ψ0 hψ --
         · simp
           apply (zeroCase _).mpr
-          exact ConvWithIsUniformContinuous ((zeroCase ℝ ).mp (hψ.2 0))
+          exact ConvWithIsUniformContinuous hψ -- ((zeroCase ℝ ).mp (hψ.2 0))
         · apply iteratedDerivConv
-          · exact ((zeroCase ℝ ).mp (hψ.2 0))
-          · exact hψ.1
-          · exact ψ0.φIsSmooth
+          · exact hψ
 
 
 notation:67 φ " 𝓓⋆ " ψ => convWith φ ψ
 open ContinuousLinearMap
 
 notation:67 T " °⋆ " φ  =>  convWith (φʳ) ** T
-example  (φ : 𝓓F ℝ V ) (T : 𝓓' ℝ (Full V) ) : ∀ ψ, (T °⋆ φ) ψ = T ( φʳ 𝓓⋆ ψ) := fun _ => rfl
-lemma convAsLambda (φ ψ : 𝓓F ℝ V) : (φ 𝓓⋆ ψ) = fun x => Λ (φ : LocallyIntegrableFunction V) (shift  x (ψʳ)) := by
+example  (φ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : ∀ ψ, (T °⋆ φ) ψ = T ( φʳ 𝓓⋆ ψ) := fun _ => rfl
+lemma convAsLambda (φ ψ : 𝓓F ℝ V) : (φ 𝓓⋆ ψ) = fun x => Λ (Ω:= Full V ) (φ : LocallyIntegrableFunction V) ⟨ shift  x (ψʳ) , fun _ _ => trivial⟩ := by
   simp
   unfold convolution
   simp_rw [mul_comm]
@@ -362,11 +360,11 @@ theorem  shiftIsContinuous {ζ : 𝓓F ℝ V} : Continuous (fun v => shift v ζ)
   obtain ⟨ K' , hK' ⟩ := this
   use K' + tsupport ζ
   constructor
-  apply add_compact_subsets ; exact hK'.1 ; exact ζ.φHasCmpctSupport
+  apply add_compact_subsets ; exact hK'.1 ; exact ζ.hsupp
   intro n
   trans
   · exact supportfromEndoOfV (Φ := shift' ℝ (x n)) ζ
-  · rw [show ⇑(shift' ℝ (x n)) ⁻¹' tsupport ζ.φ = {x n} + tsupport ζ.φ  from ?_]
+  · rw [show ⇑(shift' ℝ (x n)) ⁻¹' tsupport ζ.f = {x n} + tsupport ζ.f  from ?_]
     apply Set.add_subset_add_right
     refine singleton_subset_iff.mpr ?_
     exact hK'.2 n
@@ -386,7 +384,7 @@ theorem  shiftIsContinuous {ζ : 𝓓F ℝ V} : Continuous (fun v => shift v ζ)
       rw [← hz.2]
       simp only [add_sub_cancel_left]
   intro l
-  have : (fun n ↦ iteratedFDeriv ℝ l (((fun v ↦  (shift v ζ) ) ∘ x) n).φ)  =
+  have : (fun n ↦ iteratedFDeriv ℝ l (((fun v ↦  (shift v ζ) ) ∘ x) n).f)  =
     (fun n ↦ iteratedFDeriv ℝ l  ζ ∘ shift' ℝ (x n))
     := by
       trans (fun n ↦ iteratedFDeriv ℝ l ( shift (x n) ζ ))
@@ -399,8 +397,8 @@ theorem  shiftIsContinuous {ζ : 𝓓F ℝ V} : Continuous (fun v => shift v ζ)
   apply UniformContinuous.comp_tendstoUniformly
   · apply HasCompactSupport.uniformContinuous_of_continuous ;
     · apply HasCompactSupport.iteratedFDeriv
-      exact ζ.φHasCmpctSupport
-    · apply ContDiff.continuous_iteratedFDeriv ( OrderTop.le_top _) (ζ.φIsSmooth)
+      exact ζ.hsupp
+    · apply ContDiff.continuous_iteratedFDeriv ( OrderTop.le_top _) (ζ.smooth)
 
   · rw [Metric.tendstoUniformly_iff]
     have {x_1 } {b} : dist (x_1 - x0 + x b) x_1 = ‖ (x b) - x0‖ := by
@@ -437,8 +435,8 @@ def convolutionAsFunction (T : 𝓓'F ℝ V ) (ψ : 𝓓F ℝ V )  :  LocallyInt
   apply shiftIsContinuous
 notation T " *f " ψ => convolutionAsFunction T ψ
 
-theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) = Λ (T *f ψ) := by
-    ext φ
+theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) {φ : 𝓓 ℝ (Full V)} : (T °⋆ ψ) φ.φ = (Λ (Ω := Full V) (T *f ψ)) φ  := by
+
     symm
     trans
     have : Λ (T *f ψ) φ = ∫ x , φ x  * T (shift x (ψʳ))  := by
@@ -455,13 +453,13 @@ theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) 
         have biφcalc {x y : V} := calc
               biφ x y = φ x * ψ (- (y - x)) := by rfl
               _ = φ x * (ψ (x-y)) := by rw [neg_sub ]
-        have sub_compact : IsCompact (tsupport φ.φ - tsupport ψ.φ) :=
-             sub_compact_subsets (φ.φHasCmpctSupport) (ψ.φHasCmpctSupport)
+        have sub_compact : IsCompact (tsupport φ.φ - tsupport ψ.f) :=
+             sub_compact_subsets (φ.φ.hsupp) (ψ.hsupp)
         have hbiφ : HasCompactSupport (fun x y => biφ y x) := by
           apply IsCompact.of_isClosed_subset
           exact sub_compact
           apply isClosed_tsupport
-          have : (fun y x => biφ x y) = (fun y  => φ.φ * (shift y ψ ) ) := by ext y x ; exact biφcalc
+          have : (fun y x => biφ x y) = (fun y  => φ.φ.f * (shift y ψ ) ) := by ext y x ; exact biφcalc
           simp_rw [this]
           apply closure_minimal ; swap
           · apply IsCompact.isClosed ; exact sub_compact
@@ -472,7 +470,7 @@ theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) 
               · intro y hy
                 simp only [instAddCommGroup𝓓, fromEndoOfV, mk, ContinuousLinearMap.coe_mk',
                   LinearMap.coe_mk, AddHom.coe_mk, mem_support, ne_eq] at hy
-                have hy := Function.support_nonempty_iff (f:= φ.φ * ((shift y ψ).φ)).mpr hy
+                have hy := Function.support_nonempty_iff (f:= φ.φ.f * ((shift y ψ).f)).mpr hy
                 obtain ⟨ x , hx ⟩ := hy
                 have hx1 : x ∈ support φ.φ := by apply support_mul_subset_left ; exact hx
                 have hx2 : x ∈ support (shift y ψ) := by apply support_mul_subset_right ; exact hx --
@@ -483,10 +481,10 @@ theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) 
                 constructor
                 · exact hx2
                 · simp only [sub_sub_cancel]
-        have : intSm'  V biφ = (ψʳ 𝓓⋆ φ).φ := by
+        have : intSm'  V biφ = (ψʳ 𝓓⋆ φ.φ) := by
             ext y
             trans ; swap
-            · exact (congrFun (convAsLambda ( ψʳ) (φ )) y).symm
+            · exact (congrFun (convAsLambda ( ψʳ) (φ.φ )) y).symm
             · simp
               symm
               rw [← MeasureTheory.integral_sub_left_eq_self _ _ y ]
@@ -497,7 +495,7 @@ theorem convolutionProp  (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : (T °⋆ ψ) 
               exact biφcalc
         have cd : ContDiff ℝ ⊤ (intSm' V biφ) := by
             rw [this]
-            apply 𝓓.φIsSmooth
+            apply ContCompactSupp.smooth
 
         trans  T (intSm V biφ hbiφ cd)
         · symm ;
