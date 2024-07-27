@@ -515,15 +515,16 @@ theorem convolution𝓓'IsSmooth (ψ : 𝓓F ℝ V ) (T : 𝓓'F ℝ V ) : ContD
 
 
   /- Idea how to get smoothness from here:
-  For every ψ we find ψ' s.th. As T °⋆ ψ = Λ ψ'  , we find a function ∂ψ' such that T °⋆ ∂ ψ = Λ ∂ψ'
+  Induction.
+  As For every ψ we find ψ' s.th.  T °⋆ ψ = Λ ψ'  , we find a function ∂ψ' such that T °⋆ ∂ ψ = Λ ∂ψ'
   One can show Then
   ∂ Λ ψ' = ∂ (T °* ψ) = T °⋆ ∂ ψ = Λ ∂ψ'
-  If the weak derivative of a continuous function is continuous then the function was cont diff.
+  If the weak derivative of a continuous function is continuous then the function was continuously differentiable.
   -/
-  --sorry --help
 
 
-  · let ζ := ψʳ
+
+
 
     sorry
 -- #lint

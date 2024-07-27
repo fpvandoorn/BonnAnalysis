@@ -217,9 +217,9 @@ theorem ContinuousAffineMap.iteratedFDeriv_comp_right {l} {φ0 : 𝓓F k V} (Φ 
           rw [this]
           ext1 y
           rw [ContinuousLinearMap.iteratedFDeriv_comp_right (i:=l) (Φ.contLinear) ?_ _ (OrderTop.le_top _)]
-          · have lol : ((iteratedFDeriv k l φ0' (Φ.contLinear x)).compContinuousLinearMap fun _ ↦ Φ.contLinear) =
+          · have sth : ((iteratedFDeriv k l φ0' (Φ.contLinear x)).compContinuousLinearMap fun _ ↦ Φ.contLinear) =
             ⇑(precompmyΦ Φ l) (iteratedFDeriv k l φ0' (Φ.contLinear x)) := by unfold precompmyΦ ; rw [ContinuousMultilinearMap.compContinuousLinearMapL_apply]
-            rw [lol]
+            rw [sth]
             simp
             apply congrFun
             apply congrArg
@@ -326,7 +326,7 @@ lemma obs  {φ : ContCompactSupp k V k'} : tsupport (e ∘ φ.f) ⊆ tsupport (�
 
 
 @[simp] def postCCSMap :  ContCompactSupp k V k' → ContCompactSupp k V k'' := fun φ => ⟨ e ∘ φ.f
-            , by sorry ,
+            , by apply ContDiff.comp ; apply ContinuousLinearMap.contDiff ;  exact φ.smooth ,
             by
             apply IsCompact.of_isClosed_subset (φ.hsupp)
             exact isClosed_tsupport _

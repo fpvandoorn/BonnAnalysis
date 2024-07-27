@@ -164,11 +164,17 @@ lemma norm_convolution_le {x} {φ : 𝓓F ℝ V} (ψ0 : ContCompactSupp ℝ V k'
             apply MeasureTheory.Integrable.lintegral_lt_top
 
             apply Continuous.integrable_of_hasCompactSupport
-            sorry
-            sorry
+            have : Continuous φ.f := φ.continuous
+            have : Continuous ψ0.f := ψ0.continuous
+            continuity
+            apply HasCompactSupport.mul_right  --(f:= fun _ => ‖L‖ )
+            apply HasCompactSupport.mul_left
+            apply HasCompactSupport.norm
+            exact φ.hsupp
 
-            --let f : BoundedContinuousFunction V ℝ := ⟨⟨ fun t => ‖L‖ * ‖φ t‖ * ‖ψ0 (x - t)‖  , by have : Continuous φ.f := by sorry ; have : Continuous ψ0.f := by sorry ; continuity ⟩ , by sorry ⟩ ;
-            --exact BoundedContinuousFunction.lintegral_of_real_lt_top (f:= f)
+
+
+
           · exact this
         · rw [← MeasureTheory.integral_toReal]
           · congr ; ext a ; simp only [smul_eq_mul] ;
@@ -205,17 +211,44 @@ lemma norm_convolution_le {x} {φ : 𝓓F ℝ V} (ψ0 : ContCompactSupp ℝ V k'
 
 open ContinuousLinearMap
 variable {G : Type* } {x : G} [MeasureSpace G] {μ : Measure G}
-  [AddGroup G]
+  [AddGroup G] [ MeasurableAdd₂ G] [  SigmaFinite μ] [ MeasurableNeg G] [  μ.IsAddLeftInvariant]
+
+
+
 theorem convolution_mono_right_ae {f g g' : G → ℝ} (hfg : ConvolutionExistsAt f g x (lsmul ℝ ℝ) μ)
-    (hfg' : ConvolutionExistsAt f g' x (lsmul ℝ ℝ) μ) (hf : ∀ x, 0 ≤ f x) (hg : ∀ᵐ (x : G), g x ≤ g' x) :
+    (hfg' : ConvolutionExistsAt f g' x (lsmul ℝ ℝ) μ) (hf : ∀ x, 0 ≤ f x) (hg : ∀ᵐ  (x : G) ∂μ, g x ≤ g' x) :
     (f ⋆[lsmul ℝ ℝ, μ] g) x ≤ (f ⋆[lsmul ℝ ℝ, μ] g') x := by
   apply integral_mono_ae hfg hfg'
   simp only [lsmul_apply, Algebra.id.smul_eq_mul]
-  sorry
+  unfold EventuallyLE
+
+  have hg : {t | g (x - t) ≤ g' (x-t)} ∈ ae μ := by
+    have :  {t | g (x - t) ≤ g' (x-t)} = (fun t => x - t) ⁻¹' {t | g t ≤ g' t} := by rfl -- ext t ; simp ; constructor ; intro h ; use x - t; exact ⟨ h , simp ⟩  ; intro h ; obtain ⟨ x' , hx' ⟩ := h ; rw [show x = x' + t from ?_]  ; exact hx'.1
+    rw [this]
+    rw [ae_iff] at hg
+    rw [mem_ae_iff ,← Set.preimage_compl]
+    apply MeasureTheory.Measure.QuasiMeasurePreserving.preimage_null
+    apply MeasureTheory.quasiMeasurePreserving_sub_left
+    exact hg
+
+
+
+  have {x t} : g (x - t) ≤ g' (x-t) →  f t * g (x - t) ≤ f t * g' (x-t) := by
+    intro h
+    apply mul_le_mul_of_nonneg_left h (hf _)
+  rw [Filter.eventually_iff]
+
+  -- have hg : {x | g (x - t) ≤ g' (x-t)} ∈ ae μ
+
+  apply sets_of_superset
+  ·
+    exact hg
+  · intro t ht ; apply this ht
+  -- simp_rw [ ]
+
   -- intro t
-  -- apply mul_le_mul_of_nonneg_left (hg _) (hf _)
 lemma convolution_mono_right_of_nonneg_ae  {f g g' : G → ℝ} (hfg' : ConvolutionExistsAt f g' x (ContinuousLinearMap.lsmul ℝ ℝ) μ)
-  (hf : ∀ (x : G), 0 ≤ f x) (hg : ∀ᵐ (x : G), g x ≤ g' x) (hg' : ∀ (x : G), 0 ≤ g' x) :
+  (hf : ∀ (x : G), 0 ≤ f x) (hg : ∀ᵐ (x : G) ∂ μ, g x ≤ g' x) (hg' : ∀ (x : G), 0 ≤ g' x) :
   (f ⋆[ContinuousLinearMap.lsmul ℝ ℝ, μ] g) x ≤ (f ⋆[ContinuousLinearMap.lsmul ℝ ℝ, μ] g') x :=
   by
   by_cases H : ConvolutionExistsAt f g x (lsmul ℝ ℝ) μ
@@ -261,7 +294,7 @@ lemma  ConvWithIsUniformContinuous
             · refine (hasCompactSupport_comp_left (g:= fun x => ‖x‖) (f:= φ.f) ?_).mpr ?_ ;
               · intro _ ; exact norm_eq_zero ;
               · exact φ.hsupp
-            · rw [← MeasureTheory.locallyIntegrableOn_univ] ; apply MeasureTheory.LocallyIntegrableOn.norm ; rw [MeasureTheory.locallyIntegrableOn_univ] ; sorry -- apply testFunctionIsLocallyIntegrable
+            · rw [← MeasureTheory.locallyIntegrableOn_univ] ; apply MeasureTheory.LocallyIntegrableOn.norm ; rw [MeasureTheory.locallyIntegrableOn_univ] ; apply testFunctionIsLocallyIntegrable -- apply testFunctionIsLocallyIntegrable
             · apply continuous_const ;
           · intro x ; apply norm_nonneg ;
           · have {x} :  ‖(ψ n - ψ0) x‖ ≤ || ψ n - ψ0 ||_∞.toReal ↔  ENNReal.ofReal ‖(ψ n - ψ0) x‖ ≤ || ψ n - ψ0 ||_∞ := by
