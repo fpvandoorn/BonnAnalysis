@@ -47,7 +47,7 @@ instance : NormedAddCommGroup (V →₁₂[volume] E) :=
         simp [snorm_congr_ae (AEEqFun.coeFn_add f g),
               snorm_add_le ((Lp.mem_Lp_iff_memℒp.1 hf).1) ((Lp.mem_Lp_iff_memℒp.1 hg).1)])
       ((Lp.mem_Lp_iff_snorm_lt_top.1 hf).ne) ((Lp.mem_Lp_iff_snorm_lt_top.1 hg).ne)
-    neg' := by simp[snorm_congr_ae (AEEqFun.coeFn_neg _)]
+    neg' := by simp [ snorm_congr_ae (AEEqFun.coeFn_neg _)]
     eq_zero_of_map_eq_zero' := by
       intro ⟨f, _, hf⟩ h
       simp [ENNReal.toReal_eq_zero_iff] at h
