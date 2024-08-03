@@ -1129,10 +1129,10 @@ lemma snormEssSup_eq_sSup_snorm [SigmaFinite μ] (f : α → ℂ) (hf : Measurab
 (hf' : ∀ g : SimpleFunc α ℂ, ∀ S : Set α, μ S < ⊤ → snorm (f * (g : α → ℂ)) 1 μ < ⊤)
 (hf'' : sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
 (∀ S : Set α, μ S < ⊤ → snorm (f * (g : α → ℂ)) 1 μ < ⊤) ∧ x
-= snorm (f * (g.1 : α → ℂ)) 1 μ} < ⊤):
+= snorm (f * (g : α → ℂ)) 1 μ} < ⊤):
 snormEssSup f μ = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
 (∀ S : Set α, μ S < ⊤ → snorm (f * (g : α → ℂ)) 1 μ < ⊤) ∧ x
-= snorm (f * (g.1 : α → ℂ)) 1 μ} := by
+= snorm (f * (g : α → ℂ)) 1 μ} := by
    apply le_antisymm ?_
    .  apply sSup_le
       intro s ⟨g, hg₁, _, hg₃⟩
@@ -1141,7 +1141,7 @@ snormEssSup f μ = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
       apply le_trans (lintegral_norm_mul_le_one_top _ (by measurability))
       apply mul_le_of_le_one_of_le hg₁ (by simp [snorm])
    .  set M := sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧ (∀ S : Set α, μ S < ⊤ →
-      snorm (f * (g : α → ℂ)) 1 μ < ⊤) ∧ x = snorm (f * (g.1 : α → ℂ)) 1 μ}
+      snorm (f * (g : α → ℂ)) 1 μ < ⊤) ∧ x = snorm (f * (g : α → ℂ)) 1 μ}
       apply essSup_le_of_ae_le
       simp only [EventuallyLE, eventually_iff, mem_ae_iff]
       by_contra h
@@ -1224,6 +1224,41 @@ snormEssSup f μ = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
           by_cases hx : x ∈ B
           simp only [indicator_of_mem hx, nnnorm_real]
           simp only [indicator_of_not_mem hx, nnnorm_zero, ENNReal.coe_zero, mul_zero]
+
+lemma snormEssSup_eq_sSup_snorm' [SigmaFinite μ] (f : α → ℂ) (hf : AEMeasurable f μ)
+(hf' : ∀ g : SimpleFunc α ℂ, ∀ S : Set α, μ S < ⊤ → snorm (f * (g : α → ℂ)) 1 μ < ⊤)
+(hf'' : sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
+(∀ S : Set α, μ S < ⊤ → snorm (f * (g : α → ℂ)) 1 μ < ⊤) ∧ x
+= snorm (f * (g : α → ℂ)) 1 μ} < ⊤):
+snormEssSup f μ = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
+(∀ S : Set α, μ S < ⊤ → snorm (f * (g : α → ℂ)) 1 μ < ⊤) ∧ x
+= snorm (f * (g : α → ℂ)) 1 μ} := by
+
+  have aux1 {g : α → ℂ} : snorm (f * g) 1 μ = snorm (hf.mk * g) 1 μ := by
+    rw [snorm_congr_ae]
+    apply EventuallyEq.mul hf.ae_eq_mk EventuallyEq.rfl
+
+  have : sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
+    (∀ S : Set α, μ S < ⊤ → snorm (hf.mk * (g : α → ℂ)) 1 μ < ⊤) ∧ x
+    = snorm (hf.mk * (g : α → ℂ)) 1 μ} = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
+    (∀ S : Set α, μ S < ⊤ → snorm (f * (g : α → ℂ)) 1 μ < ⊤) ∧ x
+    = snorm (f * (g : α → ℂ)) 1 μ} := by
+      congr with x; simp
+      constructor
+      . rintro ⟨g, hg⟩; use g; rw [aux1]; exact hg --- need better solution
+      . rintro ⟨g, hg⟩; use g; rw [← aux1]; exact hg
+
+  calc snormEssSup f μ = snormEssSup hf.mk μ := snormEssSup_congr_ae hf.ae_eq_mk
+  _ = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
+      (∀ S : Set α, μ S < ⊤ → snorm (hf.mk * (g : α → ℂ)) 1 μ < ⊤) ∧ x
+      = snorm (hf.mk * (g : α → ℂ)) 1 μ} := by
+        apply snormEssSup_eq_sSup_snorm hf.mk hf.measurable_mk
+        . intro g S h; rw [← aux1]; apply hf' g S h
+        . rwa [this]
+  _ = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
+      (∀ S : Set α, μ S < ⊤ → snorm (f * (g : α → ℂ)) 1 μ < ⊤) ∧ x
+      = snorm (f * (g : α → ℂ)) 1 μ} := this
+
 
 end MeasureTheory
 end
