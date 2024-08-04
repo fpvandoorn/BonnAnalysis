@@ -94,19 +94,65 @@ There are various statements of this in Lean, see \href{https://leanprover-commu
 
 
 \begin{lemma}
-  \label{lem:lp_of_sup_norm}
+  \label{lem:snorm_eq_sSup_snorm}
   %\uses{}
-  %\lean{}
-  %\leanok
-  Let $p$ and $q$ be conjugate exponents and let $g$ be integrable on all sets of finite measure. If
-  \[ \sup_{||f||_{L^p} \leq 1, \ f \text{ simple}} \left| \int fg \right| = M < \infty \]
-  then $g$ is in $L^q$ and $||g||_{L^q} = M$.
+  \lean{MeasureTheory.snorm_eq_sSup_snorm}
+  \leanok
+  Let $p$ and $q$ be real conjugate exponents. Let $f$ be measurable. Then
+  \[ \|f\|_{L^q} = \sup_{\|g\|_{L^p} \leq 1, \ g \text{ simple}} \| fg \|_{L^1}.\]
+
+  In particular, if the right hand side formula is finite, $f\in L^q$.
   \end{lemma}
 \begin{proof}
   % \uses{} % Put any results used in the proof but not in the statement here
-  % \leanok % uncomment if the lemma has been proven
-  Details to be filled later.
+  \leanok % uncomment if the lemma has been proven
+  That $$\sup_{\|g\|_{L^p} \leq 1, \ g \text{ simple}} \| fg \|_{L^1} \le \|f\|_{L^q}$$
+  follows from Hölder's inequality.
+
+  The other direction is trivial when $\|f\|_{L^q}=0$. Suppose $\|f\|_{L^q}\ne 0$.
+  Set $$g = \cfrac{|f|^{p-1}}{\|f\|_{L^p}^{p-1}}.$$
+  Then $\|g\|_{L^p} = 1$.
+  \begin{align*}
+    \|f\|_{L^q} &= \| fg \|_{L^1} \\
+    &= \sup_{n \in \mathbb N} \| fg_n \|_{L^1} \tag{1}\\
+    &\le \sup_{\|g\|_{L^p} \leq 1, \ g \text{ simple}} \| fg \|_{L^1} \tag{2}
+  \end{align*}
+
+  In (1) and (2), $g_n$ is a monotone sequence of simple function approximating $g$ from below,
+  whose existence is basic real analysis.
 \end{proof}
+
+\begin{lemma}
+  \label{lem:snormEssSup_eq_sSup_snorm}
+  %\uses{}
+  \lean{MeasureTheory.snormEssSup_eq_sSup_snorm}
+  \leanok
+  Let $f$ be measurable and the measure $\mu$ be $\sigma$-finite. Then
+  \[ \|f\|_{L^\infty} = \sup_{\|g\|_{L^1} \leq 1, \ g \text{ simple}} \| fg \|_{L^1}.\]
+\end{lemma}
+
+\begin{proof}
+  \leanok
+  That $$\sup_{\|g\|_{L^1} \leq 1, \ g \text{ simple}} \| fg \|_{L^1} \le \|f\|_{L^\infty}$$
+  follows from Hölder's inequality.
+
+  Suppose $M:= \sup_{\|g\|_{L^1} \leq 1, \ g \text{ simple}} \| fg \|_{L^1} < \|f\|_{L^\infty}$.
+  Then $\{x | |f(x)| \ge M \}$ has positive measure. Since $\mu$ is $\sigma$-finite, we have a subset $B \subset \{x | |f(x)| \ge M \}$ with finite positive measure
+  by \href{https://leanprover-community.github.io/mathlib4_docs/Mathlib/MeasureTheory/Measure/Typeclasses.html#MeasureTheory.Measure.exists_subset_measure_lt_top}{a classical lemma.} Now set
+  $$h := \mu(B)^{-1} \chi_B.$$
+  Then we have
+  \begin{align*}
+    M &= \int_B \mu (B)^{-1} M d\mu \\
+    &< \int_B \mu (B) |f| d\mu \\
+    &= \|fh\|_{L^1}.
+  \end{align*}
+  But $\|h\|=1$ and $h$ is simple, so $\|fh\|_{L^1} \le M$, contradiction.
+
+\end{proof}
+
+
+
+
 
 \begin{comment}
       (Note: This is used by Stein-Shakarchi to prove the dual of $L^p$ is $L^q$, so it may be already formalized by the time
