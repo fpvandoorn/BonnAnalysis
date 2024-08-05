@@ -29,7 +29,7 @@ There are various statements of this in Lean, see \href{https://leanprover-commu
     \label{lem:threelines}
     %\uses{}
     \lean{DiffContOnCl.norm_le_pow_mul_pow}
-    %\leanok
+    \leanok
     Let $S$ be the strip $S:=\{z \in \C \ | \ 0 < \mathrm{Re} \, z < 1 \}$. Let $f: \overline{S} \to \C$
     be a function that is holomorphic on $S$ and continuous and bounded on $\overline{S}$.\\
     Assume $M_0, M_1$ are positive real numbers such that for all values of $y$ in $\R$, we have
@@ -40,7 +40,8 @@ There are various statements of this in Lean, see \href{https://leanprover-commu
 \end{lemma}
 \begin{proof}
     % \uses{} % Put any results used in the proof but not in the statement here
-    % \leanok % uncomment if the lemma has been proven
+    % Not sure what to put here exactly
+    \leanok % uncomment if the lemma has been proven
     ~\\
     If $|\phi|$ is constant, everything holds trivially by setting $M_0$ and $M_1$ to be the value of $|\phi|$ at a point. Assume $|\phi|$ non-constant.\\
     \begin{itemize}

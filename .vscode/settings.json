@@ -18,18 +18,24 @@
         "LICENSE": true,
         "mathematics_in_lean.pdf": true
     },
-    "editor.minimap.enabled": false,
-    "editor.acceptSuggestionOnEnter": "off",
     "scm.diffDecorationsGutterVisibility": "hover",
     "editor.semanticHighlighting.enabled": true,
     "editor.semanticTokenColorCustomizations": {
         "[Default Light+]": {"rules": {"variable": "#1a31da"}}
     },
+    "editor.minimap.enabled": false,
     "editor.unicodeHighlight.nonBasicASCII": false,
     "editor.unicodeHighlight.ambiguousCharacters": false,
     "editor.fontLigatures": true,
-    "files.trimTrailingWhitespace": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.rulers" : [100],
+    "editor.acceptSuggestionOnEnter": "off",
+    "files.encoding": "utf8",
+    "files.eol": "\n",
+    "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
     "lean4.infoview.emphasizeFirstGoal": true,
     "lean4.infoview.showExpectedType": false,
     "search.useIgnoreFiles": true
