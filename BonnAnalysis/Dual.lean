@@ -354,23 +354,23 @@ theorem snorm'_mul_const {p : ℝ} (hp : p > 0) (f : α → ℝ) (c : ℝ) :
 
   conv =>
     pattern (_ * _) ^ _
-    rw[ENNReal.mul_rpow_of_ne_top]
+    rw [ENNReal.mul_rpow_of_ne_top]
     rfl
     apply coe_ne_top
     apply coe_ne_top
 
-  rw[lintegral_mul_const']
+  rw [lintegral_mul_const']
   case neg.hr => simp_all only [ne_eq, rpow_eq_top_iff, ENNReal.coe_eq_zero, nnnorm_eq_zero,
     false_and, coe_ne_top, and_true, or_self, not_false_eq_true]
 
   by_cases hf : ∫⁻ (a : α), ↑‖f a‖₊ ^ p ∂μ = ∞
-  . rw[hf]; simp_all only [ne_eq, ENNReal.rpow_eq_zero_iff, ENNReal.coe_eq_zero, nnnorm_eq_zero,
+  . rw [hf]; simp_all only [ne_eq, ENNReal.rpow_eq_zero_iff, ENNReal.coe_eq_zero, nnnorm_eq_zero,
     and_true, coe_ne_top, false_and, or_self, not_false_eq_true, top_mul, inv_pos, top_rpow_of_pos]
 
-  rw[ENNReal.mul_rpow_of_ne_top hf]
+  rw [ENNReal.mul_rpow_of_ne_top hf]
   case neg.hy => simp_all only [ne_eq, rpow_eq_top_iff, ENNReal.coe_eq_zero, nnnorm_eq_zero,
     false_and, coe_ne_top, and_true, or_self, not_false_eq_true];
-
+    
   congr
   apply ENNReal.rpow_rpow_inv
   exact ne_of_gt hp
@@ -421,14 +421,14 @@ theorem nnnorm_of_sign (x) : ‖Real.sign x‖₊ = if x = 0 then 0 else 1 := by
 
 theorem Real.self_mul_sign (x : ℝ) : x * x.sign = |x| := by
   by_cases hx₁ : x = 0
-  . rw[hx₁, Real.sign_zero, mul_zero, abs_zero]
+  . rw [hx₁, Real.sign_zero, mul_zero, abs_zero]
   . by_cases hx₂ : x > 0
-    . rw[Real.sign_of_pos hx₂, mul_one, abs_of_pos hx₂]
+    . rw [Real.sign_of_pos hx₂, mul_one, abs_of_pos hx₂]
     . have hx₃ : x < 0 := by
         apply lt_of_le_of_ne
         linarith
         exact hx₁
-      rw[Real.sign_of_neg hx₃, mul_neg_one, abs_of_neg hx₃]
+      rw [Real.sign_of_neg hx₃, mul_neg_one, abs_of_neg hx₃]
 
 theorem rpow_of_nnnorm_of_sign (x y : ℝ) (hypos : y > 0)
     : (‖Real.sign x‖₊ : ℝ≥0∞) ^ y = if x = 0 then 0 else 1 := by aesop
@@ -440,13 +440,13 @@ theorem rpow'_eq_rpow (x : ℝ≥0) (y : ℝ) : rpow' y x = x^y := rfl
 theorem ennreal_rpow_of_nnreal (x : ℝ≥0) (y : ℝ)
     : (ENNReal.rpow x y).toNNReal = NNReal.rpow x y := by
   simp only [ENNReal.rpow_eq_pow, NNReal.rpow_eq_pow]
-  rw[←ENNReal.toNNReal_rpow]
+  rw [←ENNReal.toNNReal_rpow]
   simp only [ENNReal.toNNReal_coe]
 
 theorem ennreal_rpow_of_nnreal' (x : ℝ≥0) (y : ℝ) (hynneg : y ≥ 0)
     : ENNReal.rpow x y = ofNNReal (NNReal.rpow x y) := by
   apply (ENNReal.toNNReal_eq_toNNReal_iff' _ _).mp <;> simp
-  . rw[←ENNReal.toNNReal_rpow, ENNReal.toNNReal_coe]
+  . rw [←ENNReal.toNNReal_rpow, ENNReal.toNNReal_coe]
   . intro _; assumption
 
 theorem measurable_rpow'_const (c : ℝ) : Measurable (rpow' c) :=
@@ -483,7 +483,7 @@ theorem mul_of_ae_eq {f f' g g' : α → ℝ≥0∞} (hf : f =ᵐ[μ] f') (hg : 
 theorem mul_of_ae_eq_one (f g: α → ℝ≥0∞) (hf : f =ᵐ[μ] 1) : f * g =ᵐ[μ] g := by
   conv =>
     rhs
-    rw[←one_mul g]
+    rw [←one_mul g]
 
   apply mul_of_ae_eq hf
   trivial
@@ -535,9 +535,9 @@ theorem lint_conj_q_lt_top'_mul_self (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ}
       dsimp
       congr
       . congr
-        rw[mul_comm, Real.toNNReal_mul, ENNReal.toNNReal_eq_toNNreal_of_toReal]
-        . rw[ENNReal.coe_rpow_of_nonneg]
-          . rw[ENNReal.toNNReal_coe]
+        rw [mul_comm, Real.toNNReal_mul, ENNReal.toNNReal_eq_toNNreal_of_toReal]
+        . rw [ENNReal.coe_rpow_of_nonneg]
+          . rw [ENNReal.toNNReal_coe]
             rfl
           . apply q_sub_one_nneg' (p := p) hqᵢ
         . apply toReal_nonneg
@@ -570,11 +570,11 @@ theorem int_conj_q_lt_top'_mul_self (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ}
   unfold ENNReal.rpow'
   conv =>
     pattern _ * _
-    rw[mul_assoc, mul_comm, mul_assoc]
+    rw [mul_assoc, mul_comm, mul_assoc]
     congr
     rfl
-    rw[Real.self_mul_sign]
-    rw[←nnnorm_toReal_eq_abs]
+    rw [Real.self_mul_sign]
+    rw [←nnnorm_toReal_eq_abs]
     rfl
 
   have hq' : q ≠ 0 := by {
@@ -640,10 +640,10 @@ theorem snorm'_of_conj_q_lt_top' (hqᵢ : q ≠ ∞) (g : Lp ℝ q μ)
     : snorm' (conj_q_lt_top' g) p.toReal μ
     = (snorm' g q.toReal μ) ^ (q.toReal - 1) := by
   unfold snorm'
-  rw[←ENNReal.rpow_mul, ←q_div_p_add_one'' (q := q) (p := p) hqᵢ]
-  rw[←mul_div_right_comm (a := 1) (c := q.toReal)]
-  rw[one_mul, div_div, div_mul_cancel_right₀ (q_ne_zero' (p := p) hqᵢ) (a := p.toReal)]
-  rw[inv_eq_one_div]
+  rw [←ENNReal.rpow_mul, ←q_div_p_add_one'' (q := q) (p := p) hqᵢ]
+  rw [←mul_div_right_comm (a := 1) (c := q.toReal)]
+  rw [one_mul, div_div, div_mul_cancel_right₀ (q_ne_zero' (p := p) hqᵢ) (a := p.toReal)]
+  rw [inv_eq_one_div]
   congr 1
 
   unfold conj_q_lt_top'
@@ -756,7 +756,7 @@ theorem snorm'_normalized_conj_q_lt_top' {g : Lp ℝ q μ} (hqᵢ : q ≠ ∞) (
   unfold normalized_conj_q_lt_top'
   unfold rpow'
 
-  rw[snorm'_mul_const p_gt_zero',
+  rw [snorm'_mul_const p_gt_zero',
      snorm'_of_conj_q_lt_top' hqᵢ,
      NNReal.rpow_eq_pow,
      coe_rpow,
@@ -771,30 +771,30 @@ theorem snorm'_normalized_conj_q_lt_top' {g : Lp ℝ q μ} (hqᵢ : q ≠ ∞) (
   generalize hy : q.toReal - 1 = y
 
   have y_pos : y > 0 := by
-    calc _ = q.toReal - 1 := by rw[hy]
+    calc _ = q.toReal - 1 := by rw [hy]
          _ > 1 - 1        := by gcongr; apply q_gt_one' (p := p) hqᵢ
          _ = 0            := by ring
 
   have y_nneg : y ≥ 0 := by linarith[y_pos]
 
-  have x_ne_top : x ≠ ∞ := by rw[←hx]; exact snorm_ne_top g
+  have x_ne_top : x ≠ ∞ := by rw [←hx]; exact snorm_ne_top g
 
   have x_ne_zero : x ≠ 0 := by
-    calc _ = snorm g q μ            := by rw[hx]
-         _ = (snorm g q μ).toNNReal := by symm; apply ENNReal.coe_toNNReal; rw[hx]; exact x_ne_top
-         _ = ‖g‖₊                   := by rw[nnnorm_def]
+    calc _ = snorm g q μ            := by rw [hx]
+         _ = (snorm g q μ).toNNReal := by symm; apply ENNReal.coe_toNNReal; rw [hx]; exact x_ne_top
+         _ = ‖g‖₊                   := by rw [nnnorm_def]
          _ ≠ 0                      := by apply ENNReal.coe_ne_zero.mpr; exact hg
 
   have x_rpow_y_ne_top : x^y ≠ ∞ := ENNReal.rpow_ne_top_of_nonneg y_nneg x_ne_top
 
-  rw[←ENNReal.coe_toNNReal (a := x ^ y) x_rpow_y_ne_top,
+  rw [←ENNReal.coe_toNNReal (a := x ^ y) x_rpow_y_ne_top,
      ENNReal.toReal_rpow,
      ENNReal.nnnorm_of_toReal_eq_toNNReal]
   norm_cast
-  rw[←ENNReal.toNNReal_mul,
+  rw [←ENNReal.toNNReal_mul,
      ←ENNReal.one_toNNReal]
   congr
-  rw[←ENNReal.rpow_add]
+  rw [←ENNReal.rpow_add]
   . simp
   . exact x_ne_zero
   . exact x_ne_top
@@ -802,7 +802,7 @@ theorem snorm'_normalized_conj_q_lt_top' {g : Lp ℝ q μ} (hqᵢ : q ≠ ∞) (
 @[simp]
 theorem snorm_normalized_conj_q_lt_top' (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖₊ ≠ 0)
     : snorm (normalized_conj_q_lt_top' g) p μ = 1 := by
-  rw[snorm_eq_snorm']
+  rw [snorm_eq_snorm']
   exact snorm'_normalized_conj_q_lt_top' hqᵢ hg
   exact p_ne_zero (q := q)
   exact p_ne_top (p := p)
@@ -811,7 +811,7 @@ theorem Memℒp_normalized_conj_q_lt_top' (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} 
     : Memℒp (normalized_conj_q_lt_top' g) p μ := by
   constructor
   . exact normalized_conj_q_lt_top'_aestrongly_measurable g
-  . rw[snorm_normalized_conj_q_lt_top' hqᵢ hg]
+  . rw [snorm_normalized_conj_q_lt_top' hqᵢ hg]
     trivial
 
 def normalized_conj_q_lt_top (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖₊ ≠ 0) : Lp ℝ p μ :=
@@ -828,7 +828,7 @@ theorem snorm_normalized_conj_q_lt_top (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg
 @[simp]
 theorem norm_of_normalized_conj_q_lt_top (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ} (hg : ‖g‖₊ ≠ 0)
     : ‖normalized_conj_q_lt_top (p := p) hqᵢ hg‖ = 1 := by
-  rw[norm_def, ←ENNReal.one_toReal]
+  rw [norm_def, ←ENNReal.one_toReal]
   congr
   exact snorm_normalized_conj_q_lt_top (p := p) hqᵢ hg
 
@@ -863,7 +863,7 @@ theorem snorm_eq_sup_q_gt_top (g : Lp ℝ q μ) (hqᵢ : q ≠ ∞) :
       swap; sorry
       constructor
       . simp only [Set.mem_setOf_eq]
-        rw[norm_of_normalized_conj_q_lt_top]
+        rw [norm_of_normalized_conj_q_lt_top]
       . dsimp only
         exact int_normalized_conj_q_lt_top_mul_self (p := p) hqᵢ (?_ : ‖g‖₊ ≠ 0)
 
