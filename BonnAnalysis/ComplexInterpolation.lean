@@ -41,9 +41,8 @@ lemma Real.le_one_of_add_nonneg_eq_one {t s : ℝ} (hs : 0 ≤ s) (hts : t + s =
   calc
   t = 1 - s := eq_sub_of_add_eq hts
   _ ≤ 1 := by simp [hs]
-}
 
-lemma pow_bound₀ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex.abs (M^(z-1)) ≤ max 1 (1/M) := by{
+lemma pow_bound₀ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex.abs (M^(z-1)) ≤ max 1 (1/M) := by
   rw [Complex.abs_cpow_eq_rpow_re_of_pos hM (z-1)]
   simp
   simp at hz
@@ -711,7 +710,7 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
     ‖f (x + I * y)‖ ≤ M₀ ^ (1-((t-1)*a+s*b)/(b-a)) * M₁ ^ (((t-1)*a+s*b)/(b-a)) := by{
 
       have hb_sub_a: b - a ≠ 0 := ne_of_gt (by simp [hab])
-      
+
       have hts'' : s = 1-t := eq_sub_of_add_eq (add_comm t s ▸ hts)
 
       have hax: x ≥ a := by{
