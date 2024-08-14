@@ -1,10 +1,4 @@
-import Mathlib.Topology.Sequences
-import Mathlib.Topology.Defs.Filter
-import Mathlib.Topology.Order
-import Mathlib.Order.Filter.Basic
-import BonnAnalysis.ConvergingSequences
-import Mathlib.Geometry.Manifold.Instances.Real
-import Mathlib.Topology.UniformSpace.UniformConvergence
+import BonnAnalysis.Preliminaries.ConvergingSequences
 import Mathlib
 
 

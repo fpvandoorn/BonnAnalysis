@@ -1,25 +1,4 @@
-import Mathlib.Topology.Sequences
-import Mathlib.Topology.Defs.Filter
-import Mathlib.Topology.Order
-import Mathlib.Topology.Algebra.ContinuousAffineMap
-import Mathlib.Order.Filter.Basic
-import Mathlib.Init.Function
-import BonnAnalysis.ConvergingSequences
-import Mathlib.Geometry.Manifold.Instances.Real
-import Mathlib.Topology.UniformSpace.UniformConvergence
-import Mathlib.Data.Set.Pointwise.Basic
-import BonnAnalysis.UniformConvergenceSequences
-import BonnAnalysis.Distributions
-import BonnAnalysis.DistributionsOfVEndo
-import BonnAnalysis.ConvolutionTendsToUniformly
-import Mathlib
-
-import Mathlib.Analysis.Convolution
---import Mathlib.Analysis.InnerProductSpace
--- import Mathlib.Order
--- noncomputable section
---open FourierTransform MeasureTheory Real
-
+import BonnAnalysis.Distributions.ConvolutionTendsToUniformly
 
 namespace MeasureTheory
 open MeasureTheory
