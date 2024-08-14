@@ -346,18 +346,18 @@ theorem snorm'_mul_const {p : ℝ} (hp : p > 0) (f : α → ℝ) (c : ℝ) :
     · exact coe_ne_top
     · exact coe_ne_top
 
-  rw[lintegral_mul_const']
+  rw [lintegral_mul_const']
   case neg.hr => simp_all only [ne_eq, rpow_eq_top_iff, ENNReal.coe_eq_zero, nnnorm_eq_zero,
     false_and, coe_ne_top, and_true, or_self, not_false_eq_true]
 
   by_cases hf : ∫⁻ (a : α), ↑‖f a‖₊ ^ p ∂μ = ∞
-  . rw[hf]; simp_all only [ne_eq, ENNReal.rpow_eq_zero_iff, ENNReal.coe_eq_zero, nnnorm_eq_zero,
+  . rw [hf]; simp_all only [ne_eq, ENNReal.rpow_eq_zero_iff, ENNReal.coe_eq_zero, nnnorm_eq_zero,
     and_true, coe_ne_top, false_and, or_self, not_false_eq_true, top_mul, inv_pos, top_rpow_of_pos]
 
-  rw[ENNReal.mul_rpow_of_ne_top hf]
+  rw [ENNReal.mul_rpow_of_ne_top hf]
   case neg.hy => simp_all only [ne_eq, rpow_eq_top_iff, ENNReal.coe_eq_zero, nnnorm_eq_zero,
     false_and, coe_ne_top, and_true, or_self, not_false_eq_true];
-
+    
   congr
   apply ENNReal.rpow_rpow_inv
   exact ne_of_gt hp

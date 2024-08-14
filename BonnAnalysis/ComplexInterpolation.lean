@@ -40,11 +40,13 @@ lemma Real.rpow_le_rpow_iff_left {M:ℝ} (hM: M>0) (a b : ℝ) : M^a ≤ M^b ↔
 lemma Real.le_one_of_add_nonneg_eq_one {t s : ℝ} (hs : 0 ≤ s) (hts : t + s = 1) : t ≤ 1 :=
   calc
   t = 1 - s := eq_sub_of_add_eq hts
-  _ ≤ 1 := sub_le_self 1 hs
+  _ ≤ 1 := by simp [hs]
+}
 
-lemma pow_bound₀ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex.abs (M^(z-1)) ≤ max 1 (1/M) := by
-  rw [Complex.abs_cpow_eq_rpow_re_of_pos hM (z - 1), sub_re, one_re, one_div, le_max_iff]
-  simp only [mem_Icc] at hz
+lemma pow_bound₀ {M:ℝ} (hM: M > 0) {z: ℂ} (hz: z.re ∈ Icc 0 1) : Complex.abs (M^(z-1)) ≤ max 1 (1/M) := by{
+  rw [Complex.abs_cpow_eq_rpow_re_of_pos hM (z-1)]
+  simp
+  simp at hz
   by_cases h: M ≥ 1
   · left
     have : 1 = M^0 := rfl
@@ -111,7 +113,6 @@ lemma isPreconnected_strip : IsPreconnected { z : ℂ | z.re ∈ Ioo 0 1} := by
     simp
   rw [this, Homeomorph.isPreconnected_preimage Complex.equivRealProdCLM.toHomeomorph]
   exact IsPreconnected.prod isPreconnected_Ioo isPreconnected_univ
-
 
 lemma isOpen_strip : IsOpen { z : ℂ | z.re ∈ Ioo 0 1} :=
   strip_prod ▸ IsOpen.reProdIm isOpen_Ioo isOpen_univ
@@ -710,7 +711,7 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
     ‖f (x + I * y)‖ ≤ M₀ ^ (1-((t-1)*a+s*b)/(b-a)) * M₁ ^ (((t-1)*a+s*b)/(b-a)) := by{
 
       have hb_sub_a: b - a ≠ 0 := ne_of_gt (by simp [hab])
-
+      
       have hts'' : s = 1-t := eq_sub_of_add_eq (add_comm t s ▸ hts)
 
       have hax: x ≥ a := by{

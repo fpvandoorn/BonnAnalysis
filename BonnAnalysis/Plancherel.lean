@@ -533,7 +533,6 @@ def L12 (V : Type*) [NormedAddCommGroup V] [InnerProductSpace ℝ V] [Measurable
 
 instance : NormedAddCommGroup (L12 V) := AddSubgroup.normedAddCommGroup
 
-
 scoped[MeasureTheory] notation:25 α " →₁₂[" μ "] " E =>
     ((α →₁[μ] E) ⊓ (α →₂[μ] E) : AddSubgroup (α →ₘ[μ] E))
 /-
@@ -546,7 +545,7 @@ instance : NormedAddCommGroup (V →₁₂[volume] ℂ) :=
         simp [snorm_congr_ae (AEEqFun.coeFn_add f g),
               snorm_add_le ((Lp.mem_Lp_iff_memℒp.1 hf).1) ((Lp.mem_Lp_iff_memℒp.1 hg).1)])
       ((Lp.mem_Lp_iff_snorm_lt_top.1 hf).ne) ((Lp.mem_Lp_iff_snorm_lt_top.1 hg).ne)
-    neg' := by simp [ snorm_congr_ae (AEEqFun.coeFn_neg _)]
+    neg' := by simp [snorm_congr_ae (AEEqFun.coeFn_neg _)]
     eq_zero_of_map_eq_zero' := by
       intro ⟨f, _, hf⟩ h
       simp [ENNReal.toReal_eq_zero_iff] at h
@@ -602,7 +601,6 @@ instance : NormedSpace ℝ (L12 V) where
   zero_smul := sorry
   norm_smul_le := sorry
 
-
 /- The Fourier integral as a continuous linear map `L^1(V, E) ∩ L^2(V, E) → L^2(V, E)`. -/
 def fourierIntegralL2OfL12Fun : (V →₁₂[volume] ℂ) → (V →₂[volume] ℂ) := sorry
   --fun ⟨f,hf,hf2⟩ ↦ (memℒp_fourierIntegral (memℒp_one_iff_integrable.1 <|
@@ -616,8 +614,6 @@ def fourierIntegralL2OfL12Fun : (V →₁₂[volume] ℂ) → (V →₂[volume] 
     bound := sorry
   }
   IsBoundedLinearMap.toContinuousLinearMap this-/
-
-
 
 /- The Fourier integral as a continuous linear map `L^2(V, E) → L^2(V, E)`. -/
 def fourierIntegralL2 : (V →₂[volume] ℂ) →L[ℝ] (V →₂[volume] ℂ) :=
