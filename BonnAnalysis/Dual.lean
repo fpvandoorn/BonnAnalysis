@@ -7,12 +7,6 @@ import Mathlib.Analysis.NormedSpace.LinearIsometry
 import Mathlib.MeasureTheory.Integral.Bochner
 import Mathlib.Data.Real.Sign
 
-
-set_option linter.setOption false
-set_option trace.profiler true
-set_option profiler true
-
-
 /-! We show that the dual space of `L^p` for `1 ≤ p < ∞`.
 
 See [Stein-Shakarchi, Functional Analysis, section 1.4] -/
