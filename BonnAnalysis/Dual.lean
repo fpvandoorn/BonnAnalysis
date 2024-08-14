@@ -107,10 +107,11 @@ lemma toNNReal {p q : ℝ≥0∞} (hp : p ≠ ∞) (hq : q ≠ ∞) (hpq : p.IsC
 
 lemma mul_eq_add (hpq : p.IsConjExponent q) : p * q = p + q := by
   induction p
-  . simp [hpq.right_ne_zero]
+  . simp only [ne_eq, hpq.right_ne_zero, not_false_eq_true, top_mul, top_add]
   induction q
-  . simp [hpq.left_ne_zero]
-  exact_mod_cast hpq.toNNReal coe_ne_top coe_ne_top |>.mul_eq_add
+  . simp only [ne_eq, hpq.left_ne_zero, not_false_eq_true, mul_top, add_top]
+  norm_cast
+  exact hpq.toNNReal coe_ne_top coe_ne_top |>.mul_eq_add
 
 lemma induction
     (P : (p q : ℝ≥0∞) → (p.IsConjExponent q) → Prop)
@@ -143,17 +144,17 @@ Note that the hard case already exists as `ENNReal.lintegral_mul_le_Lp_mul_Lq`. 
 lemma _root_.ContinuousLinearMap.le_opNNNorm₂ (L : E₁ →L[𝕜] E₂ →L[𝕜] E₃) (x : E₁) (y : E₂) :
     ‖L x y‖₊ ≤ ‖L‖₊ * ‖x‖₊ * ‖y‖₊ := L.le_opNorm₂ x y
 
-lemma _root_.ENNReal.lintegral_mul_le_one_top (μ : Measure α) {f g : α → ℝ≥0∞}
-  (hf : AEMeasurable f μ) : ∫⁻ (a : α), (f * g) a ∂μ ≤ (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
-  calc ∫⁻ (a : α), (f * g) a ∂μ = ∫⁻ (a : α), (f * g) a ∂μ := rfl
-  _ ≤ ∫⁻ (a : α), f a * (essSup g μ) ∂μ := by
-    apply MeasureTheory.lintegral_mono_ae
-    rw [Filter.eventually_iff, ← Filter.exists_mem_subset_iff]
-    use {a | g a ≤ essSup g μ}
-    rw [← Filter.eventually_iff]
-    exact ⟨ae_le_essSup _, fun _ ha ↦ ENNReal.mul_left_mono ha⟩
-  _ = (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
-    rw [lintegral_mul_const'' _ hf]
+lemma _root_.ENNReal.lintegral_mul_le_one_top (μ : Measure α) {f g : α → ℝ≥0∞} (hf : AEMeasurable f μ) :
+  ∫⁻ (a : α), (f * g) a ∂μ ≤ (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
+    calc ∫⁻ (a : α), (f * g) a ∂μ = ∫⁻ (a : α), (f * g) a ∂μ := rfl
+    _ ≤ ∫⁻ (a : α), f a * (essSup g μ) ∂μ := by
+      apply MeasureTheory.lintegral_mono_ae
+      rw [Filter.eventually_iff, ← Filter.exists_mem_subset_iff]
+      use {a | g a ≤ essSup g μ}
+      rw [← Filter.eventually_iff]
+      exact ⟨ae_le_essSup _, by simp only [Pi.mul_apply, Set.setOf_subset_setOf]; intro _ ha; exact ENNReal.mul_left_mono ha⟩
+    _ = (∫⁻ (a : α), f a ∂μ) * (essSup g μ) := by
+      rw [lintegral_mul_const'' _ hf]
 
 lemma _root_.ENNReal.lintegral_norm_mul_le_one_top (μ : Measure α) {f : α → E₁} {g : α → E₂}
     (hf : AEMeasurable f μ) : ∫⁻ a, ‖f a‖₊ * ‖g a‖₊ ∂μ ≤ snorm f 1 μ * snorm g ⊤ μ := by
@@ -196,7 +197,12 @@ theorem integrable_bilin (hpq : p.IsConjExponent q) (μ : Measure α) {f : α �
 end IsConjExponent
 
 lemma toNNReal_eq_toNNreal_of_toReal (x : ℝ≥0∞) :
-    x.toReal.toNNReal = x.toNNReal := by aesop
+    x.toReal.toNNReal = x.toNNReal := by
+    rename_i inst inst_1 inst_2 _ inst_4 inst_5 _ inst_7 inst_8 _ inst_10 inst_11 _ inst_13
+      _ inst_15 _ inst_17 _ inst_19 _
+    ext1
+    simp_all only [coe_toNNReal', toReal_nonneg, max_eq_left]
+    apply Eq.refl
 
 lemma rpow_of_to_ENNReal_of_NNReal_ne_top (x : ℝ≥0) (y : ℝ) (hynneg : y ≥ 0)
     : (x : ℝ≥0∞) ^ y ≠ ∞ := by aesop
@@ -310,7 +316,7 @@ lemma q_div_p_add_one : q / p + 1 = q := by
 
 lemma q_div_p_add_one' (hqᵢ : q ≠ ∞) : q.toReal / p.toReal + 1 = q.toReal := by
   calc _ = (q / p).toReal + 1 := by rw [toReal_div]
-       _ = (q / p + 1).toReal := by rw [toReal_add, one_toReal]; apply q_div_p_ne_top hqᵢ; simp
+       _ = (q / p + 1).toReal := by rw [toReal_add]; simp only [one_toReal]; exact q_div_p_ne_top hqᵢ; simp
        _ = q.toReal := by rw [q_div_p_add_one]
 
 lemma q_div_p_add_one'' (hqᵢ : q ≠ ∞) : q.toReal / p.toReal = q.toReal - 1 := by
@@ -324,12 +330,14 @@ open Memℒp
 
 section BasicFunctions
 
+--Inference of Module takes 130ms, but I don't get this message every time. Same for other theorems in the file
 theorem snorm'_mul_const {p : ℝ} (hp : p > 0) (f : α → ℝ) (c : ℝ) :
     snorm' (fun x => f x * c) p μ = (snorm' f p μ) * ‖c‖₊ := by
-  unfold snorm'; dsimp only; simp_all
+  unfold snorm'; dsimp only; simp_all only [gt_iff_lt, nnnorm_mul, ENNReal.coe_mul, one_div]
 
   by_cases hc : c = 0
-  . simp_all[hc, p_ne_zero']
+  . simp_all only [_root_.nnnorm_zero, ENNReal.coe_zero, mul_zero, zero_rpow_of_pos,
+    lintegral_const, zero_mul, inv_pos]
 
   conv =>
     pattern (_ * _) ^ _
@@ -338,18 +346,21 @@ theorem snorm'_mul_const {p : ℝ} (hp : p > 0) (f : α → ℝ) (c : ℝ) :
     · exact coe_ne_top
     · exact coe_ne_top
 
-  rw [lintegral_mul_const']
-  case neg.hr => simp_all
+  rw[lintegral_mul_const']
+  case neg.hr => simp_all only [ne_eq, rpow_eq_top_iff, ENNReal.coe_eq_zero, nnnorm_eq_zero,
+    false_and, coe_ne_top, and_true, or_self, not_false_eq_true]
 
   by_cases hf : ∫⁻ (a : α), ↑‖f a‖₊ ^ p ∂μ = ∞
-  . rw [hf]; simp_all
+  . rw[hf]; simp_all only [ne_eq, ENNReal.rpow_eq_zero_iff, ENNReal.coe_eq_zero, nnnorm_eq_zero,
+    and_true, coe_ne_top, false_and, or_self, not_false_eq_true, top_mul, inv_pos, top_rpow_of_pos]
 
-  rw [ENNReal.mul_rpow_of_ne_top hf]
-  case neg.hy => simp_all;
+  rw[ENNReal.mul_rpow_of_ne_top hf]
+  case neg.hy => simp_all only [ne_eq, rpow_eq_top_iff, ENNReal.coe_eq_zero, nnnorm_eq_zero,
+    false_and, coe_ne_top, and_true, or_self, not_false_eq_true];
 
   congr
   apply ENNReal.rpow_rpow_inv
-  linarith
+  exact ne_of_gt hp
 
 theorem nnnorm_toReal_eq_abs (x : ℝ) : ‖x‖₊.toReal = |x| := by rw [coe_nnnorm, norm_eq_abs]
 
@@ -386,7 +397,7 @@ theorem abs_of_sign (x) : |Real.sign x| = if x = 0 then 0 else 1 := by
     simp [h₁, h₂]
   . by_cases h₂ : x = 0
     . simp [h₁, h₂]
-    . have h₃ : 0 < x := by apply lt_of_le_of_ne; simp at h₁; exact h₁; symm; exact h₂
+    . have h₃ : 0 < x := by apply lt_of_le_of_ne; simp only [not_lt] at h₁; exact h₁; symm; exact h₂
       simp [h₁, h₂, h₃]
 @[simp]
 theorem nnnorm_of_sign (x) : ‖Real.sign x‖₊ = if x = 0 then 0 else 1 := by
@@ -472,7 +483,8 @@ theorem integral_mul_le (hpq : p.IsConjExponent q) (μ : Measure α) {f : Lp E�
   rw [integral_norm_eq_lintegral_nnnorm this]
 
   have : (‖L‖₊ * (snorm f p μ) * (snorm g q μ)).toReal = ‖L‖ * ‖f‖ * ‖g‖ := by
-    calc _ = ‖L‖₊.toReal * (snorm f p μ).toReal * (snorm g q μ).toReal := by simp
+    calc _ = ‖L‖₊.toReal * (snorm f p μ).toReal * (snorm g q μ).toReal := by simp only [toReal_mul,
+      coe_toReal, coe_nnnorm]
          _ = ‖L‖ * ‖f‖ * ‖g‖                                           := by congr
   rw [←this]
 
@@ -496,12 +508,13 @@ theorem lint_conj_q_lt_top'_mul_self (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ}
     : ∫⁻ (x : α), (conj_q_lt_top' g x).toNNReal * (g x).toNNReal ∂μ = ‖g‖₊ ^ q.toReal := by
   unfold conj_q_lt_top'
   unfold ENNReal.rpow'
+  -- Isn't this false e.g. if the function only has negative values the lhs is 0??? I'm confused
   conv =>
     lhs
     congr
     . rfl
     . intro x
-      simp
+      dsimp
       congr
       . congr
         rw [mul_comm, Real.toNNReal_mul, ENNReal.toNNReal_eq_toNNreal_of_toReal]
@@ -512,7 +525,26 @@ theorem lint_conj_q_lt_top'_mul_self (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ}
         . apply toReal_nonneg
       . rfl
 
-  sorry
+  have hq' : q ≠ 0 := by {
+    symm
+    apply ne_of_lt
+    calc
+    0 < 1 := by norm_num
+    _ ≤ q := hq.out
+  }
+  simp only [ENNReal.coe_mul, nnnorm_coe_ennreal, snorm, hq', ↓reduceIte, hqᵢ]
+  rw[← MeasureTheory.lintegral_rpow_nnnorm_eq_rpow_snorm']
+  · apply MeasureTheory.lintegral_congr_ae
+    filter_upwards with x
+    sorry --not true?
+  · apply lt_of_le_of_ne
+    · simp
+    · symm
+      rw[ENNReal.toReal_ne_zero]
+      simp[hq', hqᵢ]
+
+
+
 
 theorem int_conj_q_lt_top'_mul_self (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ}
     : ‖∫ (x : α), (conj_q_lt_top' g) x * g x ∂μ‖ = ‖g‖ ^ q.toReal := by
@@ -526,7 +558,28 @@ theorem int_conj_q_lt_top'_mul_self (hqᵢ : q ≠ ∞) {g : Lp ℝ q μ}
     rw [Real.self_mul_sign, ← nnnorm_toReal_eq_abs]
     rfl
 
-  sorry
+  have hq' : q ≠ 0 := by {
+    symm
+    apply ne_of_lt
+    calc
+    0 < 1 := by norm_num
+    _ ≤ q := hq.out
+  }
+
+  rw[MeasureTheory.Lp.norm_def]
+  simp only [ENNReal.rpow_eq_pow, coe_nnnorm, norm_eq_abs, snorm, hq', ↓reduceIte, hqᵢ]
+  have : (snorm' (↑↑g) q.toReal μ).toReal ^ q.toReal = ((snorm' (↑↑g) q.toReal μ) ^ q.toReal).toReal := by{
+    sorry
+  }
+
+  rw[this, ← MeasureTheory.lintegral_rpow_nnnorm_eq_rpow_snorm']
+  · sorry
+  · apply lt_of_le_of_ne
+    · simp
+    · symm
+      rw[ENNReal.toReal_ne_zero]
+      simp[hq', hqᵢ]
+
 
 @[measurability]
 theorem conj_q_lt_top'_aemeasurable (g : Lp ℝ q μ)
@@ -593,7 +646,7 @@ theorem snorm'_of_conj_q_lt_top' (hqᵢ : q ≠ ∞) (g : Lp ℝ q μ)
     congr
     rfl
     rw [sub_mul (c := p.toReal), one_mul, mul_comm, ←p_add_q' hqᵢ]
-    simp
+    rw [add_comm, add_sub_assoc, sub_self, add_zero]
     rfl
 
   conv =>
@@ -610,7 +663,8 @@ theorem snorm'_of_conj_q_lt_top' (hqᵢ : q ≠ ∞) (g : Lp ℝ q μ)
 
   apply lintegral_congr_ae
   apply ae_iff.mpr
-  simp_all
+  simp_all only [ne_eq, ite_mul, _root_.nnnorm_zero, ENNReal.coe_zero, zero_mul, one_mul,
+    ite_eq_right_iff, Classical.not_imp]
 
   conv =>
     lhs
@@ -674,7 +728,8 @@ theorem normalized_conj_q_lt_top'_ae_measurable (g : Lp ℝ q μ)
 theorem normalized_conj_q_lt_top'_aestrongly_measurable (g : Lp ℝ q μ)
     : AEStronglyMeasurable (normalized_conj_q_lt_top' g) μ := by
   unfold normalized_conj_q_lt_top'
-  exact (aestronglyMeasurable_iff_aemeasurable (μ := μ)).mpr (normalized_conj_q_lt_top'_ae_measurable g)
+  exact (aestronglyMeasurable_iff_aemeasurable (μ := μ)).mpr
+    (normalized_conj_q_lt_top'_ae_measurable g)
 
 @[simp]
 theorem snorm'_normalized_conj_q_lt_top' {g : Lp ℝ q μ} (hqᵢ : q ≠ ∞) (hg : ‖g‖₊ ≠ 0)
@@ -765,14 +820,15 @@ theorem snorm_eq_sup_q_gt_top (g : Lp ℝ q μ) (hqᵢ : q ≠ ∞) :
     . use ‖g‖
       intro x hx
       rcases hx with ⟨f, hf, rfl⟩
-      dsimp at hf
+      dsimp only [Set.mem_setOf_eq] at hf
       dsimp only
-      calc _ ≤ ∫ x, ‖f x * g x‖ ∂μ             := norm_integral_le_integral_norm _
-           _ = ∫ x, ‖(mul ℝ ℝ) (f x) (g x)‖ ∂μ := rfl
-           _ ≤ ‖(mul ℝ ℝ)‖ * ‖f‖ * ‖g‖         := integral_mul_le _ hpq.out _
-           _ = ‖f‖ * ‖g‖                       := by simp
+      calc _ ≤ ∫ x, ‖f x * g x‖ ∂μ             := by apply norm_integral_le_integral_norm
+           _ = ∫ x, ‖(mul ℝ ℝ) (f x) (g x)‖ ∂μ := by simp only [norm_mul, norm_eq_abs,
+             mul_apply']
+           _ ≤ ‖(mul ℝ ℝ)‖ * ‖f‖ * ‖g‖         := by apply integral_mul_le; exact hpq.out
+           _ = ‖f‖ * ‖g‖                       := by simp only [opNorm_mul, one_mul]
            _ ≤ 1 * ‖g‖                         := by gcongr
-           _ = ‖g‖                             := by simp
+           _ = ‖g‖                             := by simp only [one_mul]
     . use normalized_conj_q_lt_top (p := p) hqᵢ (?_ : ‖g‖₊ ≠ 0)
       swap; sorry
       constructor
@@ -783,11 +839,11 @@ theorem snorm_eq_sup_q_gt_top (g : Lp ℝ q μ) (hqᵢ : q ≠ ∞) :
 
   . refine Real.sSup_le (fun x hx ↦ ?_) (norm_nonneg _)
     rcases hx with ⟨f, hf, rfl⟩
-    simp at hf; dsimp only
+    simp only [Set.mem_setOf_eq] at hf; dsimp only
 
     calc _ ≤ ∫ x, ‖f x * g x‖ ∂μ             := norm_integral_le_integral_norm _
          _ = ∫ x, ‖(mul ℝ ℝ) (f x) (g x)‖ ∂μ := by simp only [norm_mul, norm_eq_abs, mul_apply']
-         _ ≤ ‖(mul ℝ ℝ)‖ * ‖f‖ * ‖g‖         := integral_mul_le _ hpq.out _
+         _ ≤ ‖(mul ℝ ℝ)‖ * ‖f‖ * ‖g‖         := by apply integral_mul_le; exact hpq.out
          _ = ‖f‖ * ‖g‖                       := by rw [opNorm_mul, one_mul]
          _ ≤ 1 * ‖g‖                         := by gcongr
          _ = ‖g‖                             := by rw [one_mul]
@@ -797,7 +853,7 @@ theorem snorm_eq_sup_abs (hμ : SigmaFinite μ) (g : Lp ℝ q μ):
               ‖g‖ = sSup ((fun f => ‖∫ x, (f x) * (g x) ∂μ‖) '' {(f : Lp ℝ p μ) | ‖f‖ ≤ 1}) := by
 
   by_cases hqᵢ : q ≠ ⊤; swap
-  . simp at hqᵢ
+  . simp only [ne_eq, Decidable.not_not] at hqᵢ
     have hp₁ : p = 1 := by {
       rw [left_eq_one_iff, ← hqᵢ]
       exact hpq.out
@@ -806,6 +862,8 @@ theorem snorm_eq_sup_abs (hμ : SigmaFinite μ) (g : Lp ℝ q μ):
     sorry
   . sorry
 
+
+-- The following def takes 3.2 seconds
 /- The map sending `g` to `f ↦ ∫ x, L (g x) (f x) ∂μ` induces a map on `L^q` into
 `Lp E₂ p μ →L[ℝ] E₃`. Generally we will take `E₃ = ℝ`. -/
 variable (p μ) in
@@ -817,25 +875,25 @@ def toDual (g : Lp E₁ q μ) : Lp E₂ p μ →L[ℝ] E₃ := by{
     exact {
       map_add := by{
         intro f₁ f₂
-        simp [F]
+        simp only [AddSubmonoid.coe_add, AddSubgroup.coe_toAddSubmonoid, F]
         rw [← integral_add]
         · apply integral_congr_ae
           filter_upwards [coeFn_add f₁ f₂] with a ha
           norm_cast
           rw [ha]
-          simp
+          simp only [Pi.add_apply, map_add]
         · exact ENNReal.IsConjExponent.integrable_bilin L hpq.out.symm μ (Lp.memℒp g) (Lp.memℒp f₁)
         · exact ENNReal.IsConjExponent.integrable_bilin L hpq.out.symm μ (Lp.memℒp g) (Lp.memℒp f₂)
         }
 
       map_smul := by{
         intro m f
-        simp [F]
+        simp only [F]
         rw [← integral_smul]
         apply integral_congr_ae
         filter_upwards [coeFn_smul m f] with a ha
         rw [ha]
-        simp
+        simp only [Pi.smul_apply, LinearMapClass.map_smul]
         }
 
       bound := by{
@@ -847,7 +905,7 @@ def toDual (g : Lp E₁ q μ) : Lp E₂ p μ →L[ℝ] E₃ := by{
             calc ‖F f‖ ≤ M * ‖f‖ := hM f
                  _     ≤ 1 * ‖f‖ := by apply mul_le_mul_of_nonneg_right; linarith
                                        apply norm_nonneg
-          . simp at hM_le_zero; use M
+          . simp only [not_le] at hM_le_zero; use M
 
         simp only [F]
         use ‖L‖ * ‖g‖
@@ -863,82 +921,140 @@ def toDual (g : Lp E₁ q μ) : Lp E₂ p μ →L[ℝ] E₃ := by{
   apply IsBoundedLinearMap.toContinuousLinearMap this
 }
 
+
+
+-- NOTE: SO ARE WE JUST TAKING L TO BE THE PRODUCT FROM NOW ON?
+-- The assumptions making L' into the product were added previously, I added hμ
+
+--3 seconds. Half a second wasted on typeclass inferences
+
+variable (L' : ℝ →L[ℝ] ℝ →L[ℝ] ℝ) (L'mul : ∀ x y, L' x y = x * y) (L'norm_one : ‖L'‖ = 1)
+  (hμ: SigmaFinite μ) (f : Lp ℝ p μ) (g : Lp ℝ q μ) (N:ℝ) (Nnneg: N ≥ 0) in
+lemma toDual_bound (hbound: ∀ (x : ↥(Lp ℝ p μ)), ‖(toDual p μ L' g) x‖ ≤ N * ‖x‖ ) : ‖g‖ ≤ N := by{
+  rw[snorm_eq_sup_abs p q μ hμ g]
+  apply csSup_le
+  · apply Set.Nonempty.image
+    use 0
+    simp only [Set.mem_setOf_eq, _root_.norm_zero, zero_le_one]
+  · intro x hx
+    obtain ⟨f, hf₁, hf₂⟩ := hx
+    simp only [Set.mem_setOf_eq] at hf₁
+    simp only [norm_eq_abs] at hf₂
+    specialize hbound f
+    rw[← hf₂]
+    have : (toDual p μ L' g) f = ∫ (x : α), L' (g x) (f x) ∂μ := rfl
+    rw[this] at hbound
+    conv in f _ * g _ => rw[mul_comm]
+    simp_rw[L'mul] at hbound
+    calc
+    |∫ (x : α), g x * f x ∂μ| ≤ N * ‖f‖ := hbound
+    _ ≤ N := by nth_rewrite 2 [← mul_one N]; gcongr
+}
+
+--2.6 seconds
+variable (L' : ℝ →L[ℝ] ℝ →L[ℝ] ℝ) (L'norm_one : ‖L'‖ = 1)
+  (f : Lp ℝ p μ) (g : Lp ℝ q μ) in
+lemma toDual_norm : ‖(toDual p μ L' g) f‖ ≤ ‖g‖ * ‖f‖ := by{
+  calc ‖(toDual p μ L' g) f‖ ≤ ∫ x, ‖L' (g x) (f x)‖ ∂μ := by apply norm_integral_le_integral_norm
+  _ ≤ ‖L'‖ * ‖g‖ * ‖f‖ := by apply integral_mul_le L' hpq.out.symm
+  _ = ‖g‖ * ‖f‖ := by simp only [L'norm_one, one_mul]
+}
+
+-- Lots of things take lots of time here, even the `simp only`s
+
 /- The map sending `g` to `f ↦ ∫ x, (f x) * (g x) ∂μ` is a linear isometry. -/
-variable (L' : ℝ →L[ℝ] ℝ →L[ℝ] ℝ) (L'mul : ∀ x y, L' x y = x * y) (L'norm_one : ‖L'‖ = 1) in
+variable (L' : ℝ →L[ℝ] ℝ →L[ℝ] ℝ) (L'mul : ∀ x y, L' x y = x * y) (L'norm_one : ‖L'‖ = 1)
+  (hμ: SigmaFinite μ) in
 def toDualₗᵢ' : Lp ℝ q μ →ₗᵢ[ℝ] Lp ℝ p μ →L[ℝ] ℝ where
   toFun := toDual _ _ L'
   map_add':= by{
     intro g₁ g₂
-    simp [toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap]
+    simp only [toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap,
+      AddSubmonoid.coe_add, AddSubgroup.coe_toAddSubmonoid]
     ext f
-    simp
+    simp only [coe_mk', IsLinearMap.mk'_apply, add_apply]
     rw [← integral_add]
     · apply integral_congr_ae
       filter_upwards [coeFn_add g₁ g₂] with a ha
       norm_cast
       rw [ha]
-      simp
+      simp only [Pi.add_apply, map_add, add_apply]
     · exact ENNReal.IsConjExponent.integrable_bilin L' hpq.out.symm μ (Lp.memℒp g₁) (Lp.memℒp f)
     · exact ENNReal.IsConjExponent.integrable_bilin L' hpq.out.symm μ (Lp.memℒp g₂) (Lp.memℒp f)
   }
   map_smul':= by{
     intro m g
-    simp [toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap]
+    simp only [toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap,
+      RingHom.id_apply]
     ext f
-    simp
+    simp only [coe_mk', IsLinearMap.mk'_apply, coe_smul', Pi.smul_apply, smul_eq_mul]
     rw [← integral_mul_left] -- mul vs smul
     apply integral_congr_ae
     filter_upwards [coeFn_smul m g] with a ha
     rw [ha]
-    simp [L'mul]; ring
+    simp only [Pi.smul_apply, smul_eq_mul, L'mul]; ring
   }
   norm_map' := by {
     intro g
-    conv_lhs => simp [Norm.norm]
+    conv_lhs => simp [Norm.norm] -- is this simp okay or is there a risk this gets converted to something else if simp rules change? How do we deal with simps in conv?
     apply ContinuousLinearMap.opNorm_eq_of_bounds
-    . simp
+    . simp only [norm_nonneg]
     . intro f
-      calc ‖(toDual p μ L' g) f‖ ≤ ∫ x, ‖L' (g x) (f x)‖ ∂μ := by apply norm_integral_le_integral_norm
-           _ ≤ ‖L'‖ * ‖g‖ * ‖f‖ := by apply integral_mul_le L' hpq.out.symm
-           _ = ‖g‖ * ‖f‖ := by simp [L'norm_one]
-           _ = _ := by aesop
+      apply toDual_norm
+      exact L'norm_one
     . intro N Nnneg
       intro hbound
-      sorry
+      apply toDual_bound L' L'mul hμ g N Nnneg hbound
   }
 
-/- The map sending `g` to `f ↦ ∫ x, L (f x) (g x) ∂μ` is a linear isometry. -/
-variable (p q μ) in
-def toDualₗᵢ : Lp E₁ q μ →ₗᵢ[ℝ] Lp E₂ p μ →L[ℝ] E₃ where
 
-  toFun := toDual _ _ L
+--See above. 5.6 seconds
+-- I AM ADDING THE SAME HYPOTHESES AS ABOVE DOWN HERE. Namely, every space becomes ℝ and any bilinear map becomes a product
+/- The map sending `g` to `f ↦ ∫ x, (f x) * (g x) ∂μ` is a linear isometry. -/
+variable (p q μ) (L' : ℝ →L[ℝ] ℝ →L[ℝ] ℝ) (L'mul : ∀ x y, L' x y = x * y) (L'norm_one : ‖L'‖ = 1)
+  (hμ: SigmaFinite μ) in
+def toDualₗᵢ : Lp ℝ q μ →ₗᵢ[ℝ] Lp ℝ p μ →L[ℝ] ℝ  where
+
+  toFun := toDual _ _ L'
   map_add':= by{
     intro g₁ g₂
-    simp [toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap]
+    simp only [toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap,
+      AddSubmonoid.coe_add, AddSubgroup.coe_toAddSubmonoid]
     ext f
-    simp
+    simp only [coe_mk', IsLinearMap.mk'_apply, add_apply]
     rw [← integral_add]
     · apply integral_congr_ae
       filter_upwards [coeFn_add g₁ g₂] with a ha
       norm_cast
       rw [ha]
-      simp
-    · exact ENNReal.IsConjExponent.integrable_bilin L hpq.out.symm μ (Lp.memℒp g₁) (Lp.memℒp f)
-    · exact ENNReal.IsConjExponent.integrable_bilin L hpq.out.symm μ (Lp.memℒp g₂) (Lp.memℒp f)
+      simp only [Pi.add_apply, map_add, add_apply]
+    · exact ENNReal.IsConjExponent.integrable_bilin L' hpq.out.symm μ (Lp.memℒp g₁) (Lp.memℒp f)
+    · exact ENNReal.IsConjExponent.integrable_bilin L' hpq.out.symm μ (Lp.memℒp g₂) (Lp.memℒp f)
   }
   map_smul':= by{
     intro m g
-    simp [toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap]
+    simp only [toDual, IsBoundedLinearMap.toContinuousLinearMap, IsBoundedLinearMap.toLinearMap,
+      RingHom.id_apply]
     ext f
-    simp
+    simp only [coe_mk', IsLinearMap.mk'_apply, coe_smul', Pi.smul_apply]
     rw [← integral_smul]
     apply integral_congr_ae
     filter_upwards [coeFn_smul m g] with a ha
     rw [ha]
-    simp
+    simp only [Pi.smul_apply, smul_eq_mul, L'mul, mul_assoc]
   }
   norm_map' := by {
-    sorry
+    intro g
+    simp only [LinearMap.coe_mk, AddHom.coe_mk]
+    conv_lhs => simp[Norm.norm]
+    apply ContinuousLinearMap.opNorm_eq_of_bounds
+    · simp only [norm_nonneg]
+    · intro f
+      apply toDual_norm
+      exact L'norm_one
+    · intro N Nnneg
+      intro hbound
+      apply toDual_bound L' L'mul hμ g N Nnneg hbound
   }
 
 /- The map sending `g` to `f ↦ ∫ x, L (f x) (g x) ∂μ` is a linear isometric equivalence.  -/
