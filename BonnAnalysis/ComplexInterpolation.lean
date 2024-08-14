@@ -945,45 +945,43 @@ theorem DiffContOnCl.norm_le_pow_mul_pow {a b : ℝ} {f : ℂ → ℂ} (hab: a<b
       assumption
     }
 
--- the following work proves that Lp norm of a function can be approximated by simple functions with Lq norm ≤ 1
+-- the following work proves that Lp norm of a function
+-- can be approximated by simple functions with Lq norm ≤ 1
 variable (E p μ) in
 def Lp.simpleLe1 := {g : SimpleFunc α E // snorm g p μ ≤ 1}
 
-def SimpleFunc.toLpSimpLe1 (q : ℝ≥0) (hq : q ≠ 0) (f : SimpleFunc α ℝ≥0) (h : (∫⁻ a, (f a) ^ (q : ℝ) ∂ μ) ^ (q : ℝ)⁻¹ ≤ 1) : Lp.simpleLe1 ℂ q μ where
+def SimpleFunc.toLpSimpLe1 (q : ℝ≥0) (hq : q ≠ 0) (f : SimpleFunc α ℝ≥0)
+(h : (∫⁻ a, (f a) ^ (q : ℝ) ∂ μ) ^ (q : ℝ)⁻¹ ≤ 1) : Lp.simpleLe1 ℂ q μ where
   val := {
     toFun := fun x ↦ ((f x) : ℂ)
     measurableSet_fiber' := by
       intro x
       rcases eq_or_ne x.im 0 with (H' | H')
       rcases le_or_lt 0 x.re with (H | H)
-      convert f.measurableSet_fiber' x.re.toNNReal
-      ext y
-      simp
-      constructor
-      intro h
-      ext
-      rw [← h, Complex.ofReal_re, Real.coe_toNNReal _ (by norm_num)]
-      intro h
-      rw [h, Real.coe_toNNReal _ H]
-      apply Complex.ext
-      rw [Complex.ofReal_re]
-      rw [Complex.ofReal_im, H']
-      convert MeasurableSet.empty
-      ext y
-      simp
-      contrapose! H
-      rw [← H]
-      apply NNReal.coe_nonneg _
-      convert MeasurableSet.empty
-      ext y
-      simp
-      contrapose! H'
-      rw [← H', Complex.ofReal_im]
+      . convert f.measurableSet_fiber' x.re.toNNReal
+        ext y; simp
+        constructor
+        intro h; ext
+        rw [← h, Complex.ofReal_re, Real.coe_toNNReal _ (by norm_num)]
+        intro h
+        rw [h, Real.coe_toNNReal _ H]
+        apply Complex.ext (by rw [Complex.ofReal_re]) (by rw [Complex.ofReal_im, H'])
+      . convert MeasurableSet.empty
+        ext y; simp
+        contrapose! H
+        rw [← H]
+        apply NNReal.coe_nonneg _
+      . convert MeasurableSet.empty
+        ext y; simp
+        contrapose! H'
+        rw [← H', Complex.ofReal_im]
     finite_range' := by
-      have : (range fun x ↦ (((f x) : ℝ) : ℂ)) = ofReal' '' (range fun x ↦ f x) := by apply Set.range_comp ofReal'
+      have : (range fun x ↦ (((f x) : ℝ) : ℂ)) = ofReal' '' (range fun x ↦ f x) := by
+        apply Set.range_comp ofReal'
       rw [this]
       apply Set.Finite.image _
-      have : (range fun x ↦ ((f x) : ℝ)) = toReal '' (range fun x ↦ f x) := by apply Set.range_comp toReal
+      have : (range fun x ↦ ((f x) : ℝ)) = toReal '' (range fun x ↦ f x) := by
+        apply Set.range_comp toReal
       rw [this]
       apply Set.Finite.image _ f.finite_range'
   }
@@ -995,77 +993,104 @@ open SimpleFunc
 
 namespace MeasureTheory
 
-lemma mul_lintegral_eq_iSup_mul_eapprox_lintegral {f g: α → ℝ≥0∞} (hf : Measurable f) (hg : Measurable g) :
-    ∫⁻ a, (f * g) a ∂μ = ⨆ n, ∫⁻ a, (f * (eapprox g n)) a ∂μ := by
-    calc  ∫⁻ a, (f * g) a ∂μ = ∫⁻ a, ⨆ n, (f * (eapprox g n)) a ∂μ := by {
-       congr
-       ext a
-       simp only [Pi.mul_apply, ← ENNReal.mul_iSup, iSup_eapprox_apply g hg]
-       }
-    _ = ⨆ n, ∫⁻ a, (f * (eapprox g n)) a ∂μ := by
-      apply lintegral_iSup
-      . measurability
-      . intro i j h a
-        simp only [Pi.mul_apply]
-        gcongr
-        exact monotone_eapprox g h a
+lemma mul_lintegral_eq_iSup_mul_eapprox_lintegral
+{f g: α → ℝ≥0∞} (hf : Measurable f) (hg : Measurable g) :
+∫⁻ a, (f * g) a ∂μ = ⨆ n, ∫⁻ a, (f * (eapprox g n)) a ∂μ := by
+  calc  ∫⁻ a, (f * g) a ∂μ = ∫⁻ a, ⨆ n, (f * (eapprox g n)) a ∂μ := by {
+      congr; funext x
+      simp only [Pi.mul_apply, ← ENNReal.mul_iSup]
+      congr; exact (iSup_eapprox_apply g hg x).symm
+      }
+  _ = ⨆ n, ∫⁻ a, (f * (eapprox g n)) a ∂μ := by
+    apply lintegral_iSup'
+    . measurability
+    . apply Filter.eventually_of_forall
+      intro _ _ _ a
+      simp only [Pi.mul_apply]
+      gcongr
+      apply monotone_eapprox g a
 
-lemma snorm_eq_lintegral_rpow_nnnorm' (f : α → E) (p : ℝ≥0) (hp : p ≠ 0): (snorm f p μ) ^ (p : ℝ) = (∫⁻ x, (‖f x‖₊ : ℝ≥0∞) ^ p.toReal ∂μ) := by
-  rw [snorm_eq_lintegral_rpow_nnnorm (by norm_num; exact hp) (by norm_num), ← ENNReal.rpow_mul, coe_toReal, one_div, inv_mul_cancel (by norm_num; exact hp), ENNReal.rpow_one]
+lemma snorm_eq_lintegral_rpow_nnnorm' (f : α → E) (p : ℝ≥0) (hp : p ≠ 0):
+(snorm f p μ) ^ (p : ℝ) = (∫⁻ x, (‖f x‖₊ : ℝ≥0∞) ^ p.toReal ∂μ) := by
+  rw [snorm_eq_lintegral_rpow_nnnorm (by norm_num; exact hp) (by norm_num),
+    ← ENNReal.rpow_mul, coe_toReal, one_div, inv_mul_cancel
+    (by norm_num; exact hp), ENNReal.rpow_one]
 
-lemma ae_lt_top_of_LpNorm_ne_top {f : α → ℝ≥0∞} {p : ℝ≥0} (hp : p ≠ 0) (hf : Measurable f) (h' : (∫⁻ (a : α), f a ^ (p : ℝ) ∂μ) ^ (p : ℝ)⁻¹ ≠ ⊤) : ∀ᵐ (a : α) ∂μ, f a < ⊤ := by
+lemma ae_lt_top_of_LpNorm_ne_top {f : α → ℝ≥0∞} {p : ℝ≥0} (hp : p ≠ 0)
+(hf : Measurable f) (h' : (∫⁻ (a : α), f a ^ (p : ℝ) ∂μ) ^ (p : ℝ)⁻¹ ≠ ⊤)
+  : ∀ᵐ (a : α) ∂μ, f a < ⊤ := by
   have : {a | f a < ⊤} = {a | (f a) ^ (p : ℝ) < ⊤} := by
     ext _
     apply (ENNReal.rpow_lt_top_iff_of_pos (by norm_num; exact hp.bot_lt)).symm
   rw [Filter.Eventually, this]
   apply ae_lt_top (hf.pow_const _)
   rw [← lt_top_iff_ne_top] at h'
-  rwa [← lt_top_iff_ne_top, ← ENNReal.rpow_lt_top_iff_of_pos (y := (p : ℝ)⁻¹) (by norm_num; exact hp.bot_lt)]
+  rwa [← lt_top_iff_ne_top, ← ENNReal.rpow_lt_top_iff_of_pos (y := (p : ℝ)⁻¹)
+    (by norm_num; exact hp.bot_lt)]
 
-lemma snorm_eq_sSup_snorm (p q : ℝ≥0) (hpq : NNReal.IsConjExponent p q) (f : α → ℂ) (hf : Measurable f) (hf' : snorm f p μ ≠ ∞) (hf0 : snorm f p μ ≠ 0):
+lemma snorm_eq_sSup_snorm (p q : ℝ≥0) (hpq : NNReal.IsConjExponent p q) (f : α → ℂ)
+(hf : Measurable f) (hf' : snorm f p μ ≠ ∞) (hf0 : snorm f p μ ≠ 0):
 snorm f p μ = sSup {snorm (f * (g.1 : α → ℂ)) 1 μ | g : Lp.simpleLe1 ℂ q μ} := by
   apply le_antisymm ?_
   . apply sSup_le
     rintro b ⟨g, hg⟩
     rw [← hg]
     calc snorm (f * (g.1 : α → ℂ)) 1 μ = ∫⁻ a, ‖f a‖₊ * ‖g.1 a‖₊ ∂μ := by simp [snorm, snorm']
-    _ = ∫⁻ a, ((‖f ·‖₊) * (‖(g.1 : α → ℂ) ·‖₊)) a ∂μ := lintegral_congr (by simp only [Pi.mul_apply, ENNReal.coe_mul, implies_true])
+    _ = ∫⁻ a, ((‖f ·‖₊) * (‖(g.1 : α → ℂ) ·‖₊)) a ∂μ := lintegral_congr (by
+      simp only [Pi.mul_apply, ENNReal.coe_mul, implies_true])
     _ ≤ snorm f p μ * snorm g.1 q μ  := by
       simp only [snorm, coe_toReal, snorm', ENNReal.coe_eq_zero,
       hpq.ne_zero, ↓reduceIte, coe_ne_top, hpq.symm.ne_zero]
-      apply ENNReal.lintegral_mul_le_Lp_mul_Lq _ (NNReal.IsConjExponent.coe hpq) hf.ennnorm.aemeasurable (AEMeasurable.ennnorm (SimpleFunc.aemeasurable _))
+      apply ENNReal.lintegral_mul_le_Lp_mul_Lq _ (NNReal.IsConjExponent.coe hpq
+      ) hf.aemeasurable.ennnorm (AEMeasurable.ennnorm (SimpleFunc.aemeasurable _))
     _ ≤ snorm f p μ := mul_le_of_le_one_right (by positivity) g.2
   . rcases eq_or_ne (snorm f p μ) 0 with hf0 | hf0
     . simp [hf0]
-    . set g : α → ℝ≥0∞ := ENNReal.ofNNReal ∘ fun a ↦ ‖f a‖₊ ^ ((p : ℝ) - 1) * (snorm f p μ).toNNReal ^ (1 - (p : ℝ))
-      have g_meas : Measurable g :=
+    . set g : α → ℝ≥0∞ :=
+      ENNReal.ofNNReal ∘ fun a ↦ ‖f a‖₊ ^ ((p : ℝ) - 1) * (snorm f p μ).toNNReal ^ (1 - (p : ℝ))
+      have g_meas : Measurable g:=
         ((hf.nnnorm.pow_const _).mul_const _).coe_nnreal_ennreal
       have g_norm : (∫⁻ (a : α), g a ^ (q : ℝ) ∂μ) ^ (q : ℝ)⁻¹ = 1 := by
         simp only [g, Function.comp_apply, ENNReal.coe_mul]
-        calc (∫⁻ (a : α), ↑(‖f a‖₊ ^ ((p : ℝ) - 1) * (snorm f p μ).toNNReal ^ (1 - (p : ℝ))) ^ (q : ℝ) ∂μ) ^ (q : ℝ)⁻¹ = (∫⁻ (a : α), (↑‖f a‖₊ ^ (((p : ℝ) - 1) * q) * (snorm f p μ).toNNReal ^ ((1 - (p : ℝ)) * q)) ∂μ) ^ (q : ℝ)⁻¹ := by congr 1; apply lintegral_congr (by intro a; simp; rw [ENNReal.mul_rpow_of_nonneg (hz := by norm_num),
+        calc (∫⁻ (a : α), ↑(‖f a‖₊ ^ ((p : ℝ) - 1) * (snorm f p μ).toNNReal ^
+        (1 - (p : ℝ))) ^ (q : ℝ) ∂μ) ^ (q : ℝ)⁻¹ = (∫⁻ (a : α), (↑‖f a‖₊ ^ (((p : ℝ) - 1) * q)
+        * (snorm f p μ).toNNReal ^ ((1 - (p : ℝ)) * q)) ∂μ) ^ (q : ℝ)⁻¹ := by {
+          congr 1; apply lintegral_congr (by
+          intro a; simp; rw [ENNReal.mul_rpow_of_nonneg (hz := by norm_num),
         ← ENNReal.coe_rpow_of_nonneg _ (by norm_num; exact hpq.one_le),
         ← ENNReal.coe_rpow_of_ne_zero (by rw [ENNReal.toNNReal_ne_zero]; exact ⟨hf0, hf'⟩),
-        ← ENNReal.rpow_mul, ← ENNReal.rpow_mul])
+        ← ENNReal.rpow_mul, ← ENNReal.rpow_mul])}
         _ = 1 := by
-          rw [lintegral_mul_const _ ((Measurable.pow_const hf.ennnorm) _),
+          rw [lintegral_mul_const'' _ ((AEMeasurable.pow_const hf.aemeasurable.ennnorm) _),
           (isConjExponent_coe.mpr hpq).sub_one_mul_conj, ENNReal.coe_toNNReal hf',
           ← snorm_eq_lintegral_rpow_nnnorm' _ _ hpq.ne_zero, ← ENNReal.rpow_add _ _ hf0 hf',
           sub_mul (1 : ℝ), (isConjExponent_coe.mpr hpq).mul_eq_add, one_mul,
           sub_add_cancel_right, add_right_neg, ENNReal.rpow_zero, ENNReal.one_rpow]
       have f_norm : ∫⁻ (a : α), ‖f a‖₊ * (g a) ∂ μ = snorm f p μ := by
         simp only [g, Function.comp_apply]
-        calc ∫⁻ (a : α), ↑‖f a‖₊ * (↑(‖f a‖₊ ^ ((p : ℝ) - 1)) * ↑((snorm f p μ).toNNReal ^ (1 - (p : ℝ)))) ∂μ = ∫⁻ (a : α), ↑‖f a‖₊ ^ (p : ℝ) * ↑((snorm f p μ).toNNReal ^ (1 - (p : ℝ))) ∂μ := lintegral_congr (by
+        calc ∫⁻ (a : α), ↑‖f a‖₊ * (↑(‖f a‖₊ ^ ((p : ℝ) - 1))
+          * ↑((snorm f p μ).toNNReal ^ (1 - (p : ℝ)))) ∂μ
+          = ∫⁻ (a : α), ↑‖f a‖₊ ^ (p : ℝ) * ↑((snorm f p μ).toNNReal ^ (1 - (p : ℝ))) ∂μ :=
+              lintegral_congr (by
               intro _; rw [← mul_assoc]; congr
-              rw [← ENNReal.rpow_one ↑‖f _‖₊,← ENNReal.coe_rpow_of_nonneg _ (by norm_num; exact hpq.one_le), ← ENNReal.rpow_add_of_nonneg _ _ (by norm_num) (by norm_num; exact hpq.one_le), ENNReal.rpow_one, add_sub_cancel]
+              rw [← ENNReal.rpow_one ↑‖f _‖₊, ← ENNReal.coe_rpow_of_nonneg _ (by
+                norm_num; exact hpq.one_le),
+                ← ENNReal.rpow_add_of_nonneg _ _ (by norm_num) (by norm_num; exact hpq.one_le),
+                ENNReal.rpow_one, add_sub_cancel]
               )
         _ = (∫⁻ (a : α), ↑‖f a‖₊ ^ (p : ℝ) ∂ μ) * ↑((snorm f p μ).toNNReal ^ (1 - (p : ℝ))) := by
-          rw [lintegral_mul_const _ ((Measurable.pow_const hf.ennnorm) _)]
+          rw [lintegral_mul_const'' _ ((AEMeasurable.pow_const hf.aemeasurable.ennnorm) _)]
         _ = snorm f p μ := by
-          rw [← snorm_eq_lintegral_rpow_nnnorm' _ _ hpq.ne_zero, ← ENNReal.coe_rpow_of_ne_zero (ENNReal.toNNReal_ne_zero.mpr ⟨hf0, hf'⟩), ENNReal.coe_toNNReal hf', ← ENNReal.rpow_add _ _ hf0 hf', add_sub_cancel, ENNReal.rpow_one]
+          rw [← snorm_eq_lintegral_rpow_nnnorm' _ _ hpq.ne_zero,
+              ← ENNReal.coe_rpow_of_ne_zero (ENNReal.toNNReal_ne_zero.mpr ⟨hf0, hf'⟩),
+              ENNReal.coe_toNNReal hf', ← ENNReal.rpow_add _ _ hf0 hf',
+              add_sub_cancel, ENNReal.rpow_one]
       calc snorm f p μ = ∫⁻ (a : α), ‖f a‖₊ * (g a) ∂ μ := f_norm.symm
       _ = ⨆ n, ∫⁻ a, ↑‖f a‖₊  * (eapprox g n a) ∂μ := by
-        apply mul_lintegral_eq_iSup_mul_eapprox_lintegral (f := fun a ↦ (‖f a‖₊ : ℝ≥0∞)) hf.ennnorm g_meas
-      _ ≤ sSup {∫⁻ (a : α), ‖f a‖₊ * (g.1 a) ∂ μ | g : {f : SimpleFunc α ℝ≥0∞ // (∫⁻ a, (f a) ^ (q : ℝ) ∂ μ) ^ (q : ℝ)⁻¹ ≤ 1} } := by
+        apply mul_lintegral_eq_iSup_mul_eapprox_lintegral (f := fun a ↦ (‖f a‖₊ : ℝ≥0∞))
+          hf.ennnorm g_meas
+      _ ≤ sSup {∫⁻ (a : α), ‖f a‖₊ * (g.1 a) ∂ μ | g : {f : SimpleFunc α ℝ≥0∞ //
+      (∫⁻ a, (f a) ^ (q : ℝ) ∂ μ) ^ (q : ℝ)⁻¹ ≤ 1} } := by
         apply iSup_le; intro n; apply le_sSup
         simp only [Subtype.exists, exists_prop, mem_setOf_eq]
         use eapprox g n
@@ -1074,11 +1099,14 @@ snorm f p μ = sSup {snorm (f * (g.1 : α → ℂ)) 1 μ | g : Lp.simpleLe1 ℂ 
           gcongr
           rw [← iSup_eapprox_apply _ g_meas]
           apply le_iSup _ n, rfl⟩
-      _ ≤ sSup {∫⁻ (a : α), ‖f a‖₊ * (g.1 a) ∂ μ | g : {f : SimpleFunc α ℝ≥0 // (∫⁻ a, (f a) ^ (q : ℝ) ∂ μ) ^ (q : ℝ)⁻¹ ≤ 1} } := by
+      _ ≤ sSup {∫⁻ (a : α), ‖f a‖₊ * (g.1 a) ∂ μ | g : {f : SimpleFunc α ℝ≥0 //
+       (∫⁻ a, (f a) ^ (q : ℝ) ∂ μ) ^ (q : ℝ)⁻¹ ≤ 1} } := by
         gcongr
         rintro x ⟨h, hh⟩
-        have ae := ae_lt_top_of_LpNorm_ne_top hpq.symm.ne_zero (SimpleFunc.measurable _) (ne_top_of_le_ne_top one_ne_top h.2)
-        have : (∫⁻ (a : α), ↑(h.1 a).toNNReal ^ (q : ℝ) ∂μ) ^ (q : ℝ)⁻¹ = (∫⁻ (a : α), (h.1 a) ^ (q : ℝ) ∂μ) ^ (q : ℝ)⁻¹ := by
+        have ae := ae_lt_top_of_LpNorm_ne_top hpq.symm.ne_zero (SimpleFunc.measurable _)
+          (ne_top_of_le_ne_top one_ne_top h.2)
+        have : (∫⁻ (a : α), ↑(h.1 a).toNNReal ^ (q : ℝ) ∂μ) ^ (q : ℝ)⁻¹
+          = (∫⁻ (a : α), (h.1 a) ^ (q : ℝ) ∂μ) ^ (q : ℝ)⁻¹ := by
           congr 1
           apply lintegral_congr_ae
           rw [Filter.EventuallyEq, Filter.Eventually, ← Filter.exists_mem_subset_iff]
@@ -1096,6 +1124,150 @@ snorm f p μ = sSup {snorm (f * (g.1 : α → ℂ)) 1 μ | g : Lp.simpleLe1 ℂ 
         convert hh
         simp [snorm, snorm', toLpSimpLe1]
 
+lemma snorm_eq_sSup_snorm' (p q : ℝ≥0) (hpq : NNReal.IsConjExponent p q) (f : α → ℂ)
+(hf : AEMeasurable f μ) (hf' : snorm f p μ ≠ ∞) (hf0 : snorm f p μ ≠ 0):
+snorm f p μ = sSup {snorm (f * (g.1 : α → ℂ)) 1 μ | g : Lp.simpleLe1 ℂ q μ} := by
+  calc snorm f p μ = snorm hf.mk p μ := snorm_congr_ae hf.ae_eq_mk
+  _ = sSup {snorm (hf.mk * (g.1 : α → ℂ)) 1 μ | g : Lp.simpleLe1 ℂ q μ} := by
+    apply snorm_eq_sSup_snorm p q hpq hf.mk hf.measurable_mk
+    <;> rwa [← snorm_congr_ae hf.ae_eq_mk]
+  _ = sSup {snorm (f * (g.1 : α → ℂ)) 1 μ | g : Lp.simpleLe1 ℂ q μ} := by
+    congr; ext
+    have (g : Lp.simpleLe1 ℂ q μ) : snorm (f * (g.1 : α → ℂ)) 1 μ
+      = snorm (hf.mk * (g.1 : α → ℂ)) 1 μ :=
+    snorm_congr_ae <| Filter.EventuallyEq.mul hf.ae_eq_mk (EventuallyEq.refl _ _)
+    simp [this]
+
+
+open Set in
+lemma snormEssSup_eq_sSup_snorm [SigmaFinite μ] (f : α → ℂ) (hf : Measurable f)
+(hf' : sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
+x = snorm (f * (g : α → ℂ)) 1 μ} < ⊤):
+snormEssSup f μ = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1
+∧ x = snorm (f * (g : α → ℂ)) 1 μ} := by
+   apply le_antisymm ?_
+   .  apply sSup_le
+      intro s ⟨g, hg₁, hg₂⟩
+      rw [hg₂, mul_comm]
+      simp [snorm, snorm']
+      apply le_trans (lintegral_norm_mul_le_one_top _ (by measurability))
+      apply mul_le_of_le_one_of_le hg₁ (by simp [snorm])
+   .  set M := sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
+       x = snorm (f * (g : α → ℂ)) 1 μ}
+      apply essSup_le_of_ae_le
+      simp only [EventuallyLE, eventually_iff, mem_ae_iff]
+      by_contra h
+
+      have aux1 : ∃ B : Set α, MeasurableSet B ∧ B ⊆ {x | ‖f x‖₊ ≤ M}ᶜ ∧ 0 < μ B ∧ μ B < ⊤ := by
+        apply Measure.exists_subset_measure_lt_top (MeasurableSet.compl _) ((ne_eq _ _) ▸ h).bot_lt
+        convert hf.ennnorm measurableSet_Iic
+      rcases aux1 with ⟨B, hB⟩
+
+      let g : SimpleFunc α ℂ := {
+        toFun := B.indicator (fun _ ↦ ((μ B)⁻¹.toReal : ℂ))
+        measurableSet_fiber' := by
+          intro x
+          simp [indicator_preimage]
+          rcases eq_or_ne x ((μ B)⁻¹.toReal : ℂ) with (H | H)
+          simp [H]
+          apply MeasurableSet.ite hB.1 (by simp only [MeasurableSet.univ, M])
+          apply measurableSet_preimage measurable_zero (MeasurableSet.singleton _)
+          apply MeasurableSet.ite hB.1 _ (measurableSet_preimage measurable_zero
+          (MeasurableSet.singleton _))
+          rw [preimage_const_of_not_mem]
+          apply MeasurableSet.empty
+          rw [mem_singleton_iff]
+          exact H.symm
+        finite_range' := by
+          have : range (B.indicator fun _ ↦ ((μ B)⁻¹.toReal : ℂ))
+          ⊆ {0, ((μ B)⁻¹.toReal : ℂ)}  := by
+            intro x
+            rw [Set.mem_range_indicator]
+            simp
+            rintro (h | h)
+            exact Or.intro_left _ h.1
+            exact Or.intro_right _ h.2.symm
+          apply Set.Finite.subset _ this
+          simp only [finite_singleton, Finite.insert]
+      }
+
+      have aux_μB : (μ B)⁻¹ =  ‖(μ B)⁻¹.toReal‖₊  := by
+        have : (μ B)⁻¹ < ⊤ := by simp [hB.2.2.1]
+        generalize (μ B)⁻¹ = y at this -- better solution???
+        cases y
+        simp only [lt_self_iff_false] at this
+        simp only [coe_toReal, nnnorm_eq]
+
+      have : ¬ (M < snorm (f * (g : α → ℂ)) 1 μ) := by
+        simp
+        apply le_sSup
+        use g
+        constructor
+        simp [snorm, snorm', lintegral_indicator_const]
+        have : ∫⁻ (a : α), (B.indicator (fun _ ↦ (μ B)⁻¹) a) ∂ μ ≤ 1 := by
+          rw [lintegral_indicator_const hB.1,
+              ENNReal.inv_mul_cancel hB.2.2.1.ne.symm hB.2.2.2.ne]
+        convert this
+        rename α => x
+        by_cases hx : x ∈ B
+        simp [indicator_of_mem hx, aux_μB.symm]
+        simp [indicator_of_not_mem hx]
+        rfl
+
+      apply this
+      calc M = ∫⁻ _ in B, (μ B)⁻¹ * M ∂ μ := by {
+        rw [setLIntegral_const, mul_assoc, mul_comm M, ← mul_assoc,
+        ENNReal.inv_mul_cancel hB.2.2.1.ne.symm hB.2.2.2.ne, one_mul]
+      }
+      _ < ∫⁻ x in B, (μ B)⁻¹ * ‖f x‖₊ ∂ μ := by
+          apply setLIntegral_strict_mono hB.1 hB.2.2.1.ne.symm (hf.ennnorm.const_mul _)
+          rw [setLIntegral_const]
+          apply mul_ne_top (mul_ne_top (ENNReal.inv_ne_top.mpr
+          hB.2.2.1.ne.symm) hf'.ne) hB.2.2.2.ne
+          apply eventually_of_forall
+          intro x hx
+          rw [ENNReal.mul_lt_mul_left (ENNReal.inv_ne_zero.mpr hB.2.2.2.ne)
+          (ENNReal.inv_ne_top.mpr hB.2.2.1.ne.symm)]
+          convert hB.2.1 hx
+          simp only [mem_compl_iff, mem_setOf_eq, not_le]
+      _ = ∫⁻ x : α, B.indicator (fun a ↦ ‖f a‖₊ * ‖(fun _ ↦ ((μ B)⁻¹.toReal : ℂ)) a‖₊) x ∂μ := by
+          rw [lintegral_indicator _ hB.1]
+          simp [mul_comm]
+          congr with x; congr
+      _ = snorm (f * B.indicator fun _ ↦ ((μ B)⁻¹.toReal : ℂ)) 1 μ := by
+          simp [snorm, snorm']
+          congr with x
+          by_cases hx : x ∈ B
+          simp only [indicator_of_mem hx, nnnorm_real]
+          simp only [indicator_of_not_mem hx, nnnorm_zero, ENNReal.coe_zero, mul_zero]
+
+lemma snormEssSup_eq_sSup_snorm' [SigmaFinite μ] (f : α → ℂ) (hf : AEMeasurable f μ)
+(hf' : sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
+x = snorm (f * (g : α → ℂ)) 1 μ} < ⊤):
+snormEssSup f μ = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1
+∧ x = snorm (f * (g : α → ℂ)) 1 μ} := by
+
+  have aux1 {g : α → ℂ} : snorm (f * g) 1 μ = snorm (hf.mk * g) 1 μ := by
+    rw [snorm_congr_ae]
+    apply EventuallyEq.mul hf.ae_eq_mk EventuallyEq.rfl
+
+  have : sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
+    x = snorm (hf.mk * (g : α → ℂ)) 1 μ} = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1
+      ∧ x = snorm (f * (g : α → ℂ)) 1 μ} := by
+      congr with x; simp
+      constructor
+      . rintro ⟨g, hg⟩; use g; rw [aux1]; exact hg --- need better solution
+      . rintro ⟨g, hg⟩; use g; rw [← aux1]; exact hg
+
+  calc snormEssSup f μ = snormEssSup hf.mk μ := snormEssSup_congr_ae hf.ae_eq_mk
+  _ = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧ x
+      = snorm (hf.mk * (g : α → ℂ)) 1 μ} := by
+        apply snormEssSup_eq_sSup_snorm hf.mk hf.measurable_mk
+        . rwa [this]
+  _ = sSup {x |∃ g : SimpleFunc α ℂ, snorm g 1 μ ≤ 1 ∧
+      x = snorm (f * (g : α → ℂ)) 1 μ} := this
+
+
 end MeasureTheory
 end
 
@@ -1110,7 +1282,8 @@ x ^ (y + z) = x ^ y * x ^ z := by
       simp only [hx0, coe_zero, add_pos hy hz, zero_rpow_of_pos, hy, hz, mul_zero]
       apply ENNReal.rpow_add <;> simp [hx0']
 
-lemma ENNReal.essSup_const_rpow (f : α → ℝ≥0∞) {r : ℝ} (hr : 0 < r) : (essSup f μ) ^ r = essSup (fun x ↦ (f x) ^ r) μ :=
+lemma ENNReal.essSup_const_rpow (f : α → ℝ≥0∞) {r : ℝ} (hr : 0 < r) :
+(essSup f μ) ^ r = essSup (fun x ↦ (f x) ^ r) μ :=
   OrderIso.essSup_apply (g := ENNReal.orderIsoRpow r hr) _ _
 
 def InSegment.toIsConjugateExponent (p₀ p₁ p : ℝ≥0∞) (t s : ℝ≥0)  (hp₀ : 0 < p₀)
@@ -1119,16 +1292,26 @@ def InSegment.toIsConjugateExponent (p₀ p₁ p : ℝ≥0∞) (t s : ℝ≥0)  
 Real.IsConjExponent (p₀⁻¹ * (s : ℝ≥0∞) * p).toReal ⁻¹ (p₁⁻¹ * (t : ℝ≥0∞) * p).toReal ⁻¹ where
   one_lt := by
     --- [one_lt_inv (a := (p₀⁻¹ * ↑s * p).toReal)] does not work ha??
-    rw [lt_inv zero_lt_one (ENNReal.toReal_pos (mul_ne_zero (mul_ne_zero (ENNReal.inv_ne_zero.mpr (LT.lt.ne_top hp₀₁)) (by rwa [ENNReal.coe_ne_zero])) hp0') (ENNReal.mul_ne_top (ENNReal.mul_ne_top (ENNReal.inv_ne_top.mpr hp₀.ne.symm) ENNReal.coe_ne_top) hpt')), mul_comm p₀⁻¹]
+    rw [lt_inv zero_lt_one (ENNReal.toReal_pos (mul_ne_zero (mul_ne_zero (ENNReal.inv_ne_zero.mpr
+        (LT.lt.ne_top hp₀₁)) (by rwa [ENNReal.coe_ne_zero])) hp0') (ENNReal.mul_ne_top
+        (ENNReal.mul_ne_top (ENNReal.inv_ne_top.mpr hp₀.ne.symm) ENNReal.coe_ne_top) hpt')),
+        mul_comm p₀⁻¹]
     apply_fun (fun x ↦ x * p) at hp
     rw [add_mul, ENNReal.inv_mul_cancel hp0' hpt'] at hp
-    calc (↑s * p₀⁻¹ * p).toReal < (↑s * p₀⁻¹ * p + ↑t * p₁⁻¹ * p).toReal := ENNReal.toReal_strict_mono (hp ▸ one_ne_top) <| ENNReal.lt_add_right ((ENNReal.add_ne_top (b := ↑t * p₁⁻¹ * p)).mp (hp ▸ one_ne_top)).1 (mul_ne_zero (mul_ne_zero (by rwa [ENNReal.coe_ne_zero]) (by rwa [ENNReal.inv_ne_zero])) hp0')
+    calc (↑s * p₀⁻¹ * p).toReal < (↑s * p₀⁻¹ * p + ↑t * p₁⁻¹ * p).toReal :=
+    ENNReal.toReal_strict_mono (hp ▸ one_ne_top) <| ENNReal.lt_add_right (
+      (ENNReal.add_ne_top (b := ↑t * p₁⁻¹ * p)).mp (hp ▸ one_ne_top)).1 (
+      mul_ne_zero (mul_ne_zero (by rwa [ENNReal.coe_ne_zero]) (by rwa [ENNReal.inv_ne_zero])) hp0')
     _ = 1⁻¹ := by simp [hp]
   inv_add_inv_conj := by
-    rw [inv_inv, inv_inv, ← ENNReal.toReal_add (ENNReal.mul_ne_top (ENNReal.mul_ne_top (ENNReal.inv_ne_top.mpr hp₀.ne.symm) ENNReal.coe_ne_top) hpt') (ENNReal.mul_ne_top (ENNReal.mul_ne_top (ENNReal.inv_ne_top.mpr hp₁.ne.symm) ENNReal.coe_ne_top) hpt'), ← ENNReal.one_toReal]
+    rw [inv_inv, inv_inv, ← ENNReal.toReal_add (ENNReal.mul_ne_top (ENNReal.mul_ne_top (
+      ENNReal.inv_ne_top.mpr hp₀.ne.symm) ENNReal.coe_ne_top) hpt') (ENNReal.mul_ne_top (
+      ENNReal.mul_ne_top (ENNReal.inv_ne_top.mpr hp₁.ne.symm) ENNReal.coe_ne_top) hpt'),
+      ← ENNReal.one_toReal]
     congr
     apply_fun (fun x ↦ x * p) at hp
-    rwa [add_mul, ENNReal.inv_mul_cancel hp0' hpt', mul_comm (ofNNReal s), mul_comm (ofNNReal t)] at hp
+    rwa [add_mul, ENNReal.inv_mul_cancel hp0' hpt',
+         mul_comm (ofNNReal s), mul_comm (ofNNReal t)] at hp
 
 lemma lintegral_mul_le_segment_exponent_aux {p₀ p₁ p : ℝ≥0∞} {t s : ℝ≥0} (hp₀ : 0 < p₀)
 (hp₁ : 0 < p₁) (hp₀₁ : p₀ < p₁) (hp : p⁻¹ = s / p₀ + t / p₁)
@@ -1136,7 +1319,9 @@ lemma lintegral_mul_le_segment_exponent_aux {p₀ p₁ p : ℝ≥0∞} {t s : �
 ∫⁻ (a : α), ↑‖f a‖₊ ^ (↑s * p.toReal) * ↑‖f a‖₊ ^ (↑t * p.toReal) ∂μ ≤
   snorm (↑f) p₀ μ ^ (↑s * p.toReal) * snorm (↑f) p₁ μ ^ (↑t * p.toReal) := by
   rw [eq_comm] at hp
+  rw [eq_comm] at hp
   rcases eq_or_ne p ⊤ with hpt | hpt'
+  symm at hp
   simp [hpt, add_eq_zero, hs0', ht0'] at hp
   exact False.elim <| ne_top_of_lt hp₀₁ hp.1
 
@@ -1146,7 +1331,7 @@ lemma lintegral_mul_le_segment_exponent_aux {p₀ p₁ p : ℝ≥0∞} {t s : �
   simp only [hp₁t, div_top, add_zero] at hp
   apply_fun (fun x ↦ x * p₀) at hp
   rw [ENNReal.div_mul_cancel hp₀.ne.symm (ne_top_of_lt hp₀₁)] at hp
-  have hp_aux : s * p = p₀ := by rw [hp, mul_assoc, mul_comm p₀, ← mul_assoc,
+  have hp_aux : s * p = p₀ := by rw [← hp, mul_assoc, mul_comm p₀, ← mul_assoc,
   ENNReal.inv_mul_cancel hp0' hpt', one_mul]
 
   apply le_trans (lintegral_mul_le_one_top _ (AEMeasurable.pow_const hf.ennnorm _)) (le_of_eq _)
@@ -1154,33 +1339,41 @@ lemma lintegral_mul_le_segment_exponent_aux {p₀ p₁ p : ℝ≥0∞} {t s : �
   rw [← ENNReal.rpow_mul, ← ENNReal.rpow_one (∫⁻ (a : α), ↑‖f a‖₊ ^ (↑s * p.toReal) ∂μ)]
   congr; ext; congr
   simp only [← hp_aux, toReal_mul, coe_toReal] -- lemma? to rw
-  simp only [← hp_aux, toReal_mul, coe_toReal, mul_inv_rev, mul_assoc p.toReal⁻¹, ← mul_assoc, inv_mul_cancel (by rwa [NNReal.coe_ne_zero]), one_mul,
+  simp only [← hp_aux, toReal_mul, coe_toReal, mul_inv_rev, mul_assoc p.toReal⁻¹,
+    ← mul_assoc, inv_mul_cancel (by rwa [NNReal.coe_ne_zero]), one_mul,
     inv_mul_cancel (ENNReal.toReal_ne_zero.mpr ⟨hp0', hpt'⟩)]
 
   apply (ENNReal.essSup_const_rpow _ ?_).symm
-  exact Real.mul_pos (lt_of_le_of_ne (NNReal.coe_nonneg t) (NNReal.coe_ne_zero.mpr ht0').symm) (ENNReal.toReal_pos hp0' hpt')
+  exact Real.mul_pos (lt_of_le_of_ne (NNReal.coe_nonneg t) (NNReal.coe_ne_zero.mpr ht0').symm)
+   (ENNReal.toReal_pos hp0' hpt')
 
   simp only [snorm, (ne_of_lt hp₀).symm, ↓reduceIte, LT.lt.ne_top hp₀₁, snorm',
   one_div, (ne_of_lt hp₁).symm, hp₁t', ge_iff_le]
-  apply le_trans (ENNReal.lintegral_mul_le_Lp_mul_Lq μ (by apply InSegment.toIsConjugateExponent p₀ p₁ p t s; repeat assumption) (AEMeasurable.pow_const hf.ennnorm _) (AEMeasurable.pow_const hf.ennnorm _)) (le_of_eq _)
-
+  apply le_trans (ENNReal.lintegral_mul_le_Lp_mul_Lq μ
+    (InSegment.toIsConjugateExponent p₀ p₁ p t s hp₀ hp₁ hp₀₁ hp.symm hp0' ht0' hs0' hpt' hp₁t')
+    (AEMeasurable.pow_const hf.ennnorm _) (AEMeasurable.pow_const hf.ennnorm _)) (le_of_eq _)
   simp only [← ENNReal.rpow_mul]
   congr
 
   simp only [toReal_mul, coe_toReal, mul_inv_rev]
-  rw [toReal_inv, inv_inv, ← mul_assoc, ← mul_assoc, mul_comm _ p.toReal, mul_assoc p.toReal, mul_comm s.toReal, ← mul_assoc, mul_assoc _ s.toReal,
-  mul_inv_cancel (ENNReal.toReal_ne_zero.mpr ⟨hp0', hpt'⟩), mul_inv_cancel (by rwa [NNReal.coe_ne_zero]), one_mul, one_mul]
+  rw [toReal_inv, inv_inv, ← mul_assoc, ← mul_assoc, mul_comm _ p.toReal,
+    mul_assoc p.toReal, mul_comm s.toReal, ← mul_assoc, mul_assoc _ s.toReal,
+    mul_inv_cancel (ENNReal.toReal_ne_zero.mpr ⟨hp0', hpt'⟩), mul_inv_cancel
+    (by rwa [NNReal.coe_ne_zero]), one_mul, one_mul]
 
   rotate_left 1
 
   simp only [toReal_mul, coe_toReal, mul_inv_rev]
-  rw [toReal_inv, inv_inv, ← mul_assoc, ← mul_assoc, mul_comm _ p.toReal, mul_assoc p.toReal, mul_comm t.toReal, ← mul_assoc, mul_assoc _ t.toReal,
-  mul_inv_cancel (ENNReal.toReal_ne_zero.mpr ⟨hp0', hpt'⟩), mul_inv_cancel (by rwa [NNReal.coe_ne_zero]), one_mul, one_mul]
+  rw [toReal_inv, inv_inv, ← mul_assoc, ← mul_assoc, mul_comm _ p.toReal,
+      mul_assoc p.toReal, mul_comm t.toReal, ← mul_assoc, mul_assoc _ t.toReal,
+      mul_inv_cancel (ENNReal.toReal_ne_zero.mpr ⟨hp0', hpt'⟩), mul_inv_cancel
+      (by rwa [NNReal.coe_ne_zero]), one_mul, one_mul]
 
   repeat' simp [← mul_assoc, ENNReal.toReal_inv]
 
-lemma lintegral_mul_le_segment_exponent {p₀ p₁ p : ℝ≥0∞} {s t : ℝ≥0} (hp₀ : 0 < p₀) (hp₁ : 0 < p₁) (hp₀₁ : p₀ < p₁) (hp : p⁻¹ = s / p₀ + t / p₁) (hst : s + t = 1)
-(f : α → E) (hf : AEMeasurable f μ)
+lemma lintegral_mul_le_segment_exponent {p₀ p₁ p : ℝ≥0∞} {s t : ℝ≥0}
+(hp₀ : 0 < p₀) (hp₁ : 0 < p₁) (hp₀₁ : p₀ < p₁) (hp : p⁻¹ = s / p₀ + t / p₁)
+(hst : s + t = 1) (f : α → E) (hf : AEMeasurable f μ)
  : snorm f p μ ≤ (snorm f p₀ μ) ^ (s : ℝ) * (snorm f p₁ μ) ^ (t : ℝ) := by
   rw [eq_comm] at hp
   have hp0' : p ≠ 0 := by
@@ -1205,11 +1398,14 @@ lemma lintegral_mul_le_segment_exponent {p₀ p₁ p : ℝ≥0∞} {s t : ℝ≥
   . simp [hpt, add_eq_zero, hs0', ht0'] at hp
     exact False.elim <| ne_top_of_lt hp₀₁ hp.1
 
-  . calc snorm f p μ = (∫⁻ (a : α), ↑‖f a‖₊ ^ p.toReal ∂μ) ^ p.toReal⁻¹ := by simp [snorm, hp0', hpt', snorm']
+  . calc snorm f p μ = (∫⁻ (a : α), ↑‖f a‖₊ ^ p.toReal ∂μ) ^ p.toReal⁻¹ := by
+      {simp [snorm, hp0', hpt', snorm']}
     _ = (∫⁻ (a : α), ↑‖f a‖₊ ^ (s * p.toReal) *  ↑‖f a‖₊ ^ (t * p.toReal) ∂μ) ^ p.toReal⁻¹ := by
       congr; ext
-      rw [← ENNReal.rpow_add_of_pos (s * p.toReal) (t * p.toReal) ?_ ?_, ← add_mul, ← NNReal.coe_add, hst, NNReal.coe_one, one_mul]
-      <;> apply Real.mul_pos (lt_of_le_of_ne (NNReal.coe_nonneg _) (NNReal.coe_ne_zero.mpr (by assumption)).symm) (ENNReal.toReal_pos hp0' hpt')
+      rw [← ENNReal.rpow_add_of_pos (s * p.toReal) (t * p.toReal) ?_ ?_, ← add_mul,
+          ← NNReal.coe_add, hst, NNReal.coe_one, one_mul]
+      <;> apply Real.mul_pos (lt_of_le_of_ne (NNReal.coe_nonneg _)
+        (NNReal.coe_ne_zero.mpr (by assumption)).symm) (ENNReal.toReal_pos hp0' hpt')
     _ ≤ ((snorm f p₀ μ) ^ (s * p.toReal) *  (snorm f p₁ μ) ^ (t * p.toReal)) ^ p.toReal⁻¹ := by
       gcongr
       rw [eq_comm] at hp
@@ -1227,12 +1423,14 @@ theorem exists_lnorm_le_of_subadditive_of_lbounded {p₀ p₁ q₀ q₁ : ℝ≥
     (T : (α → E₁) →ₗ[ℂ] β → E₂)
     (h₀T : HasStrongType T p₀ q₀ μ ν M₀)
     (h₁T : HasStrongType T p₁ q₁ μ ν M₁)
-    {θ η : ℝ≥0} (hθη : θ + η = 1)
+    {θ η : ℝ≥0} (hθη : θ + η = 1) (hθ : 0 < θ) (hη : 0 < η)
+    -- when θ = 0 it is trivial should discard this assumtption later
     {p q : ℝ≥0∞} (hp : p⁻¹ = θ / p₀ + η / p₁) (hq : q⁻¹ = θ / q₀ + η / q₁)
     (hp₀ : 0 < p₀) (hp₁ : 0 < p₁) (hq₀ : 0 < q₀) (hq₁ : 0 < q₁) :
     HasStrongType T p q μ ν (M₀ ^ (θ : ℝ) * M₁ ^ (η : ℝ)) := by
       rcases eq_or_ne p₀ p₁ with (hp₀₁ | hp₀₁)
-      . simp only [hp₀₁, ← ENNReal.add_div, ← ENNReal.coe_add, hθη, ENNReal.coe_one, one_div, inv_inj] at hp
+      . simp only [hp₀₁, ← ENNReal.add_div, ← ENNReal.coe_add, hθη, ENNReal.coe_one,
+          one_div, inv_inj] at hp
         intro f hf
         have aesm := (h₀T f (by rwa [hp₀₁, ← hp])).1
         constructor
@@ -1242,9 +1440,12 @@ theorem exists_lnorm_le_of_subadditive_of_lbounded {p₀ p₁ q₀ q₁ : ℝ≥
           exact lintegral_mul_le_segment_exponent hq₀ hq₁ hq₀₁ hq hθη _ aesm.aemeasurable
           rcases lt_or_eq_of_le hq₀₁ with hq₀₁ | hq₀₁
           rw [mul_comm]
-          apply lintegral_mul_le_segment_exponent hq₁ hq₀ hq₀₁ (by rwa [add_comm]) (by rwa [add_comm]) _ aesm.aemeasurable
-          simp only [hq₀₁, ← ENNReal.add_div, ← ENNReal.coe_add, hθη, ENNReal.coe_one, one_div, inv_inj] at hq
-          rw [hq₀₁, ← hq, ← ENNReal.rpow_add_of_nonneg _ _ (by norm_num) (by norm_num), ← NNReal.coe_add, hθη, NNReal.coe_one, ENNReal.rpow_one]
+          apply lintegral_mul_le_segment_exponent hq₁ hq₀ hq₀₁ (by rwa [add_comm])
+           (by rwa [add_comm]) _ aesm.aemeasurable
+          simp only [hq₀₁, ← ENNReal.add_div, ← ENNReal.coe_add, hθη, ENNReal.coe_one,
+            one_div, inv_inj] at hq
+          rw [hq₀₁, ← hq, ← ENNReal.rpow_add_of_nonneg _ _ (by norm_num)
+            (by norm_num), ← NNReal.coe_add, hθη, NNReal.coe_one, ENNReal.rpow_one]
         }
         _ ≤ (M₀ * snorm f p μ) ^ (θ : ℝ) * (M₁ * snorm f p μ) ^ (η : ℝ) := by
           gcongr
@@ -1253,5 +1454,11 @@ theorem exists_lnorm_le_of_subadditive_of_lbounded {p₀ p₁ q₀ q₁ : ℝ≥
           rw [hp] at *
           apply (h₁T f hf).2
         _ = ↑(M₀ ^ (θ : ℝ) * M₁ ^ (η : ℝ)) * snorm f p μ := by
-          rw [ENNReal.mul_rpow_of_nonneg _ _ (by norm_num), ENNReal.mul_rpow_of_nonneg _ _ (by norm_num), ← mul_assoc, mul_assoc ((M₀ : ℝ≥0∞) ^ (θ : ℝ)), mul_comm _ ((M₁ : ℝ≥0∞) ^ (η : ℝ)), ← mul_assoc, mul_assoc, ← ENNReal.rpow_add_of_nonneg _ _ (by norm_num) (by norm_num), ← NNReal.coe_add, hθη, NNReal.coe_one, ENNReal.rpow_one, coe_mul, ENNReal.coe_rpow_of_ne_zero hM₀.ne.symm, ENNReal.coe_rpow_of_ne_zero hM₁.ne.symm]
-      .  sorry
+          rw [ENNReal.mul_rpow_of_nonneg _ _ (by norm_num),
+              ENNReal.mul_rpow_of_nonneg _ _ (by norm_num),
+              ← mul_assoc, mul_assoc ((M₀ : ℝ≥0∞) ^ (θ : ℝ)), mul_comm _ ((M₁ : ℝ≥0∞) ^ (η : ℝ)),
+              ← mul_assoc, mul_assoc, ← ENNReal.rpow_add_of_nonneg _ _ (by norm_num) (by norm_num),
+              ← NNReal.coe_add, hθη, NNReal.coe_one, ENNReal.rpow_one,
+              coe_mul, ENNReal.coe_rpow_of_ne_zero hM₀.ne.symm,
+              ENNReal.coe_rpow_of_ne_zero hM₁.ne.symm]
+      . sorry
